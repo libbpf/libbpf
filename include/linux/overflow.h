@@ -3,10 +3,14 @@
 #ifndef __LINUX_OVERFLOW_H
 #define __LINUX_OVERFLOW_H
 
-#define is_signed_type(type)       (((type)(-1)) < (type)1)
+#define is_signed_type(type)	(((type)(-1)) < (type)1)
 #define __type_half_max(type) ((type)1 << (8*sizeof(type) - 1 - is_signed_type(type)))
 #define type_max(T) ((T)((__type_half_max(T) - 1) + __type_half_max(T)))
 #define type_min(T) ((T)((T)-type_max(T)-(T)1))
+
+#ifndef unlikely
+#define unlikely(x)	__builtin_expect(!!(x), 0)
+#endif
 
 #ifdef __GNUC__
 #define GCC_VERSION (__GNUC__ * 10000           \
@@ -30,26 +34,6 @@
 
 #else
 
-
-/* Checking for unsigned overflow is relatively easy without causing UB. */
-#define __unsigned_add_overflow(a, b, d) ({	\
-	typeof(a) __a = (a);			\
-	typeof(b) __b = (b);			\
-	typeof(d) __d = (d);			\
-	(void) (&__a == &__b);			\
-	(void) (&__a == __d);			\
-	*__d = __a + __b;			\
-	*__d < __a;				\
-})
-#define __unsigned_sub_overflow(a, b, d) ({	\
-	typeof(a) __a = (a);			\
-	typeof(b) __b = (b);			\
-	typeof(d) __d = (d);			\
-	(void) (&__a == &__b);			\
-	(void) (&__a == __d);			\
-	*__d = __a - __b;			\
-	__a < __b;				\
-})
 /*
  * If one of a or b is a compile-time constant, this avoids a division.
  */
@@ -63,49 +47,6 @@
 	__builtin_constant_p(__b) ?			\
 	  __b > 0 && __a > type_max(typeof(__a)) / __b : \
 	  __a > 0 && __b > type_max(typeof(__b)) / __a;	 \
-})
-
-/*
- * For signed types, detecting overflow is much harder, especially if
- * we want to avoid UB. But the interface of these macros is such that
- * we must provide a result in *d, and in fact we must produce the
- * result promised by gcc's builtins, which is simply the possibly
- * wrapped-around value. Fortunately, we can just formally do the
- * operations in the widest relevant unsigned type (u64) and then
- * truncate the result - gcc is smart enough to generate the same code
- * with and without the (u64) casts.
- */
-
-/*
- * Adding two signed integers can overflow only if they have the same
- * sign, and overflow has happened iff the result has the opposite
- * sign.
- */
-#define __signed_add_overflow(a, b, d) ({	\
-	typeof(a) __a = (a);			\
-	typeof(b) __b = (b);			\
-	typeof(d) __d = (d);			\
-	(void) (&__a == &__b);			\
-	(void) (&__a == __d);			\
-	*__d = (u64)__a + (u64)__b;		\
-	(((~(__a ^ __b)) & (*__d ^ __a))	\
-		& type_min(typeof(__a))) != 0;	\
-})
-
-/*
- * Subtraction is similar, except that overflow can now happen only
- * when the signs are opposite. In this case, overflow has happened if
- * the result has the opposite sign of a.
- */
-#define __signed_sub_overflow(a, b, d) ({	\
-	typeof(a) __a = (a);			\
-	typeof(b) __b = (b);			\
-	typeof(d) __d = (d);			\
-	(void) (&__a == &__b);			\
-	(void) (&__a == __d);			\
-	*__d = (u64)__a - (u64)__b;		\
-	((((__a ^ __b)) & (*__d ^ __a))		\
-		& type_min(typeof(__a))) != 0;	\
 })
 
 /*
@@ -132,22 +73,11 @@
 	typeof(a) __tmin = type_min(typeof(a));				\
 	(void) (&__a == &__b);						\
 	(void) (&__a == __d);						\
-	*__d = (u64)__a * (u64)__b;					\
+	*__d = (__u64)__a * (__u64)__b;					\
 	(__b > 0   && (__a > __tmax/__b || __a < __tmin/__b)) ||	\
 	(__b < (typeof(__b))-1  && (__a > __tmin/__b || __a < __tmax/__b)) || \
 	(__b == (typeof(__b))-1 && __a == __tmin);			\
 })
-
-
-#define check_add_overflow(a, b, d)					\
-	__builtin_choose_expr(is_signed_type(typeof(a)),		\
-			__signed_add_overflow(a, b, d),			\
-			__unsigned_add_overflow(a, b, d))
-
-#define check_sub_overflow(a, b, d)					\
-	__builtin_choose_expr(is_signed_type(typeof(a)),		\
-			__signed_sub_overflow(a, b, d),			\
-			__unsigned_sub_overflow(a, b, d))
 
 #define check_mul_overflow(a, b, d)					\
 	__builtin_choose_expr(is_signed_type(typeof(a)),		\
@@ -156,62 +86,5 @@
 
 
 #endif /* COMPILER_HAS_GENERIC_BUILTIN_OVERFLOW */
-
-/**
- * array_size() - Calculate size of 2-dimensional array.
- *
- * @a: dimension one
- * @b: dimension two
- *
- * Calculates size of 2-dimensional array: @a * @b.
- *
- * Returns: number of bytes needed to represent the array or SIZE_MAX on
- * overflow.
- */
-static inline size_t array_size(size_t a, size_t b)
-{
-	size_t bytes;
-
-	if (check_mul_overflow(a, b, &bytes))
-		return SIZE_MAX;
-
-	return bytes;
-}
-
-/**
- * array3_size() - Calculate size of 3-dimensional array.
- *
- * @a: dimension one
- * @b: dimension two
- * @c: dimension three
- *
- * Calculates size of 3-dimensional array: @a * @b * @c.
- *
- * Returns: number of bytes needed to represent the array or SIZE_MAX on
- * overflow.
- */
-static inline size_t array3_size(size_t a, size_t b, size_t c)
-{
-	size_t bytes;
-
-	if (check_mul_overflow(a, b, &bytes))
-		return SIZE_MAX;
-	if (check_mul_overflow(bytes, c, &bytes))
-		return SIZE_MAX;
-
-	return bytes;
-}
-
-static inline size_t __ab_c_size(size_t n, size_t size, size_t c)
-{
-	size_t bytes;
-
-	if (check_mul_overflow(n, size, &bytes))
-		return SIZE_MAX;
-	if (check_add_overflow(bytes, c, &bytes))
-		return SIZE_MAX;
-
-	return bytes;
-}
 
 #endif

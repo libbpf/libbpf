@@ -1,0 +1,21 @@
+
+This is a mirror of bpf-next linux tree
+(https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)
+bpf-next/tools/lib/bpf directory plus its supporting header files.
+
+The following files will by sync'ed with bpf-next repo:
+  src/ <-> bpf-next/tools/lib/bpf/
+  include/uapi/linux/{bpf.h,btf.h} <-> bpf-next/tools/include/uapi/linux/{bpf.h,btf.h}
+  include/tools/libc_compat.h <-> bpf-next/tools/include/tools/libc_compat.h
+
+Other header files at this repo (include/linux/*.h) are reduced versions of
+their counterpart files at bpf-next/tools/include/linux/*.h to make compilation
+successful.
+
+Build
+=====
+
+To build,
+  cd src
+  make
+and it will build libbpf.a library
