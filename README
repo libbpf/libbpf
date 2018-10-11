@@ -18,7 +18,13 @@ successful.
 Build
 =====
 
-To build,
+To build static library libbpf.a:
   cd src
   make
-and it will build libbpf.a library
+
+To build both static libbpf.a and shared libbpf.so libraries in directory
+build/ and install them together with libbpf headers in a staging directory
+root/:
+  cd src
+  mkdir build root
+  BUILD_SHARED=y OBJDIR=build DESTDIR=root make install
