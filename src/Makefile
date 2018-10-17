@@ -11,7 +11,7 @@ ifneq ($(FEATURE_REALLOCARRAY),)
 endif
 
 ifdef BUILD_SHARED
-	ALL_CFLAGS += -fPIC
+	ALL_CFLAGS += -fPIC -fvisibility=hidden
 endif
 
 CFLAGS ?= -g -O2 -Werror -Wall
