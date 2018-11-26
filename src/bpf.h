@@ -27,6 +27,10 @@
 #include <stdbool.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #ifndef LIBBPF_API
 #define LIBBPF_API __attribute__((visibility("default")))
 #endif
@@ -74,6 +78,10 @@ struct bpf_load_program_attr {
 	const char *license;
 	__u32 kern_version;
 	__u32 prog_ifindex;
+	__u32 prog_btf_fd;
+	__u32 func_info_rec_size;
+	const void *func_info;
+	__u32 func_info_cnt;
 };
 
 /* Flags to direct loading requirements */
@@ -99,6 +107,8 @@ LIBBPF_API int bpf_map_update_elem(int fd, const void *key, const void *value,
 				   __u64 flags);
 
 LIBBPF_API int bpf_map_lookup_elem(int fd, const void *key, void *value);
+LIBBPF_API int bpf_map_lookup_and_delete_elem(int fd, const void *key,
+					      void *value);
 LIBBPF_API int bpf_map_delete_elem(int fd, const void *key);
 LIBBPF_API int bpf_map_get_next_key(int fd, const void *key, void *next_key);
 LIBBPF_API int bpf_obj_pin(int fd, const char *pathname);
@@ -126,4 +136,9 @@ LIBBPF_API int bpf_load_btf(void *btf, __u32 btf_size, char *log_buf,
 LIBBPF_API int bpf_task_fd_query(int pid, int fd, __u32 flags, char *buf,
 				 __u32 *buf_len, __u32 *prog_id, __u32 *fd_type,
 				 __u64 *probe_offset, __u64 *probe_addr);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
+
 #endif /* __LIBBPF_BPF_H */
