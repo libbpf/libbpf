@@ -1,4 +1,4 @@
-#/bin/sh
+#!/bin/sh
 
 tfile=$(mktemp /tmp/test_reallocarray_XXXXXXXX.c)
 ofile=${tfile%.c}.o
@@ -13,6 +13,6 @@ int main(void)
 }
 EOL
 
-gcc $tfile -o $ofile >& /dev/null
+gcc $tfile -o $ofile >/dev/null 2>&1
 if [ $? -ne 0 ]; then echo "FAIL"; fi
 /bin/rm -f $tfile $ofile
