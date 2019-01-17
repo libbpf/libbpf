@@ -4,6 +4,7 @@
 #define __LINUX_ERR_H
 
 #include <linux/types.h>
+#include <asm/errno.h>
 
 #define MAX_ERRNO       4095
 
