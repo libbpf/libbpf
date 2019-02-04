@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 /* Copyright (c) 2018 Facebook */
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -9,8 +10,9 @@
 #include <linux/btf.h>
 #include "btf.h"
 #include "bpf.h"
+#include "libbpf.h"
+#include "libbpf_util.h"
 
-#define elog(fmt, ...) { if (err_log) err_log(fmt, ##__VA_ARGS__); }
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
@@ -107,54 +109,54 @@ static int btf_add_type(struct btf *btf, struct btf_type *t)
 	return 0;
 }
 
-static int btf_parse_hdr(struct btf *btf, btf_print_fn_t err_log)
+static int btf_parse_hdr(struct btf *btf)
 {
 	const struct btf_header *hdr = btf->hdr;
 	__u32 meta_left;
 
 	if (btf->data_size < sizeof(struct btf_header)) {
-		elog("BTF header not found\n");
+		pr_debug("BTF header not found\n");
 		return -EINVAL;
 	}
 
 	if (hdr->magic != BTF_MAGIC) {
-		elog("Invalid BTF magic:%x\n", hdr->magic);
+		pr_debug("Invalid BTF magic:%x\n", hdr->magic);
 		return -EINVAL;
 	}
 
 	if (hdr->version != BTF_VERSION) {
-		elog("Unsupported BTF version:%u\n", hdr->version);
+		pr_debug("Unsupported BTF version:%u\n", hdr->version);
 		return -ENOTSUP;
 	}
 
 	if (hdr->flags) {
-		elog("Unsupported BTF flags:%x\n", hdr->flags);
+		pr_debug("Unsupported BTF flags:%x\n", hdr->flags);
 		return -ENOTSUP;
 	}
 
 	meta_left = btf->data_size - sizeof(*hdr);
 	if (!meta_left) {
-		elog("BTF has no data\n");
+		pr_debug("BTF has no data\n");
 		return -EINVAL;
 	}
 
 	if (meta_left < hdr->type_off) {
-		elog("Invalid BTF type section offset:%u\n", hdr->type_off);
+		pr_debug("Invalid BTF type section offset:%u\n", hdr->type_off);
 		return -EINVAL;
 	}
 
 	if (meta_left < hdr->str_off) {
-		elog("Invalid BTF string section offset:%u\n", hdr->str_off);
+		pr_debug("Invalid BTF string section offset:%u\n", hdr->str_off);
 		return -EINVAL;
 	}
 
 	if (hdr->type_off >= hdr->str_off) {
-		elog("BTF type section offset >= string section offset. No type?\n");
+		pr_debug("BTF type section offset >= string section offset. No type?\n");
 		return -EINVAL;
 	}
 
 	if (hdr->type_off & 0x02) {
-		elog("BTF type section is not aligned to 4 bytes\n");
+		pr_debug("BTF type section is not aligned to 4 bytes\n");
 		return -EINVAL;
 	}
 
@@ -163,7 +165,7 @@ static int btf_parse_hdr(struct btf *btf, btf_print_fn_t err_log)
 	return 0;
 }
 
-static int btf_parse_str_sec(struct btf *btf, btf_print_fn_t err_log)
+static int btf_parse_str_sec(struct btf *btf)
 {
 	const struct btf_header *hdr = btf->hdr;
 	const char *start = btf->nohdr_data + hdr->str_off;
@@ -171,7 +173,7 @@ static int btf_parse_str_sec(struct btf *btf, btf_print_fn_t err_log)
 
 	if (!hdr->str_len || hdr->str_len - 1 > BTF_MAX_NAME_OFFSET ||
 	    start[0] || end[-1]) {
-		elog("Invalid BTF string section\n");
+		pr_debug("Invalid BTF string section\n");
 		return -EINVAL;
 	}
 
@@ -180,7 +182,7 @@ static int btf_parse_str_sec(struct btf *btf, btf_print_fn_t err_log)
 	return 0;
 }
 
-static int btf_parse_type_sec(struct btf *btf, btf_print_fn_t err_log)
+static int btf_parse_type_sec(struct btf *btf)
 {
 	struct btf_header *hdr = btf->hdr;
 	void *nohdr_data = btf->nohdr_data;
@@ -219,7 +221,7 @@ static int btf_parse_type_sec(struct btf *btf, btf_print_fn_t err_log)
 		case BTF_KIND_RESTRICT:
 			break;
 		default:
-			elog("Unsupported BTF_KIND:%u\n",
+			pr_debug("Unsupported BTF_KIND:%u\n",
 			     BTF_INFO_KIND(t->info));
 			return -EINVAL;
 		}
@@ -363,7 +365,7 @@ void btf__free(struct btf *btf)
 	free(btf);
 }
 
-struct btf *btf__new(__u8 *data, __u32 size, btf_print_fn_t err_log)
+struct btf *btf__new(__u8 *data, __u32 size)
 {
 	__u32 log_buf_size = 0;
 	char *log_buf = NULL;
@@ -376,15 +378,14 @@ struct btf *btf__new(__u8 *data, __u32 size, btf_print_fn_t err_log)
 
 	btf->fd = -1;
 
-	if (err_log) {
-		log_buf = malloc(BPF_LOG_BUF_SIZE);
-		if (!log_buf) {
-			err = -ENOMEM;
-			goto done;
-		}
-		*log_buf = 0;
-		log_buf_size = BPF_LOG_BUF_SIZE;
+	log_buf = malloc(BPF_LOG_BUF_SIZE);
+	if (!log_buf) {
+		err = -ENOMEM;
+		goto done;
 	}
+
+	*log_buf = 0;
+	log_buf_size = BPF_LOG_BUF_SIZE;
 
 	btf->data = malloc(size);
 	if (!btf->data) {
@@ -400,21 +401,21 @@ struct btf *btf__new(__u8 *data, __u32 size, btf_print_fn_t err_log)
 
 	if (btf->fd == -1) {
 		err = -errno;
-		elog("Error loading BTF: %s(%d)\n", strerror(errno), errno);
+		pr_warning("Error loading BTF: %s(%d)\n", strerror(errno), errno);
 		if (log_buf && *log_buf)
-			elog("%s\n", log_buf);
+			pr_warning("%s\n", log_buf);
 		goto done;
 	}
 
-	err = btf_parse_hdr(btf, err_log);
+	err = btf_parse_hdr(btf);
 	if (err)
 		goto done;
 
-	err = btf_parse_str_sec(btf, err_log);
+	err = btf_parse_str_sec(btf);
 	if (err)
 		goto done;
 
-	err = btf_parse_type_sec(btf, err_log);
+	err = btf_parse_type_sec(btf);
 
 done:
 	free(log_buf);
@@ -491,7 +492,7 @@ int btf__get_from_id(__u32 id, struct btf **btf)
 		goto exit_free;
 	}
 
-	*btf = btf__new((__u8 *)(long)btf_info.btf, btf_info.btf_size, NULL);
+	*btf = btf__new((__u8 *)(long)btf_info.btf, btf_info.btf_size);
 	if (IS_ERR(*btf)) {
 		err = PTR_ERR(*btf);
 		*btf = NULL;
@@ -504,6 +505,78 @@ exit_free:
 	return err;
 }
 
+int btf__get_map_kv_tids(const struct btf *btf, char *map_name,
+			 __u32 expected_key_size, __u32 expected_value_size,
+			 __u32 *key_type_id, __u32 *value_type_id)
+{
+	const struct btf_type *container_type;
+	const struct btf_member *key, *value;
+	const size_t max_name = 256;
+	char container_name[max_name];
+	__s64 key_size, value_size;
+	__s32 container_id;
+
+	if (snprintf(container_name, max_name, "____btf_map_%s", map_name) ==
+	    max_name) {
+		pr_warning("map:%s length of '____btf_map_%s' is too long\n",
+			   map_name, map_name);
+		return -EINVAL;
+	}
+
+	container_id = btf__find_by_name(btf, container_name);
+	if (container_id < 0) {
+		pr_warning("map:%s container_name:%s cannot be found in BTF. Missing BPF_ANNOTATE_KV_PAIR?\n",
+			   map_name, container_name);
+		return container_id;
+	}
+
+	container_type = btf__type_by_id(btf, container_id);
+	if (!container_type) {
+		pr_warning("map:%s cannot find BTF type for container_id:%u\n",
+			   map_name, container_id);
+		return -EINVAL;
+	}
+
+	if (BTF_INFO_KIND(container_type->info) != BTF_KIND_STRUCT ||
+	    BTF_INFO_VLEN(container_type->info) < 2) {
+		pr_warning("map:%s container_name:%s is an invalid container struct\n",
+			   map_name, container_name);
+		return -EINVAL;
+	}
+
+	key = (struct btf_member *)(container_type + 1);
+	value = key + 1;
+
+	key_size = btf__resolve_size(btf, key->type);
+	if (key_size < 0) {
+		pr_warning("map:%s invalid BTF key_type_size\n", map_name);
+		return key_size;
+	}
+
+	if (expected_key_size != key_size) {
+		pr_warning("map:%s btf_key_type_size:%u != map_def_key_size:%u\n",
+			   map_name, (__u32)key_size, expected_key_size);
+		return -EINVAL;
+	}
+
+	value_size = btf__resolve_size(btf, value->type);
+	if (value_size < 0) {
+		pr_warning("map:%s invalid BTF value_type_size\n", map_name);
+		return value_size;
+	}
+
+	if (expected_value_size != value_size) {
+		pr_warning("map:%s btf_value_type_size:%u != map_def_value_size:%u\n",
+			   map_name, (__u32)value_size, expected_value_size);
+		return -EINVAL;
+	}
+
+	*key_type_id = key->type;
+	*value_type_id = value->type;
+
+	return 0;
+}
+
 struct btf_ext_sec_copy_param {
 	__u32 off;
 	__u32 len;
@@ -514,8 +587,7 @@ struct btf_ext_sec_copy_param {
 
 static int btf_ext_copy_info(struct btf_ext *btf_ext,
 			     __u8 *data, __u32 data_size,
-			     struct btf_ext_sec_copy_param *ext_sec,
-			     btf_print_fn_t err_log)
+			     struct btf_ext_sec_copy_param *ext_sec)
 {
 	const struct btf_ext_header *hdr = (struct btf_ext_header *)data;
 	const struct btf_ext_info_sec *sinfo;
@@ -529,14 +601,14 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 	data_size -= hdr->hdr_len;
 
 	if (ext_sec->off & 0x03) {
-		elog(".BTF.ext %s section is not aligned to 4 bytes\n",
+		pr_debug(".BTF.ext %s section is not aligned to 4 bytes\n",
 		     ext_sec->desc);
 		return -EINVAL;
 	}
 
 	if (data_size < ext_sec->off ||
 	    ext_sec->len > data_size - ext_sec->off) {
-		elog("%s section (off:%u len:%u) is beyond the end of the ELF section .BTF.ext\n",
+		pr_debug("%s section (off:%u len:%u) is beyond the end of the ELF section .BTF.ext\n",
 		     ext_sec->desc, ext_sec->off, ext_sec->len);
 		return -EINVAL;
 	}
@@ -546,7 +618,7 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 
 	/* At least a record size */
 	if (info_left < sizeof(__u32)) {
-		elog(".BTF.ext %s record size not found\n", ext_sec->desc);
+		pr_debug(".BTF.ext %s record size not found\n", ext_sec->desc);
 		return -EINVAL;
 	}
 
@@ -554,7 +626,7 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 	record_size = *(__u32 *)info;
 	if (record_size < ext_sec->min_rec_size ||
 	    record_size & 0x03) {
-		elog("%s section in .BTF.ext has invalid record size %u\n",
+		pr_debug("%s section in .BTF.ext has invalid record size %u\n",
 		     ext_sec->desc, record_size);
 		return -EINVAL;
 	}
@@ -564,7 +636,7 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 
 	/* If no records, return failure now so .BTF.ext won't be used. */
 	if (!info_left) {
-		elog("%s section in .BTF.ext has no records", ext_sec->desc);
+		pr_debug("%s section in .BTF.ext has no records", ext_sec->desc);
 		return -EINVAL;
 	}
 
@@ -574,14 +646,14 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 		__u32 num_records;
 
 		if (info_left < sec_hdrlen) {
-			elog("%s section header is not found in .BTF.ext\n",
+			pr_debug("%s section header is not found in .BTF.ext\n",
 			     ext_sec->desc);
 			return -EINVAL;
 		}
 
 		num_records = sinfo->num_info;
 		if (num_records == 0) {
-			elog("%s section has incorrect num_records in .BTF.ext\n",
+			pr_debug("%s section has incorrect num_records in .BTF.ext\n",
 			     ext_sec->desc);
 			return -EINVAL;
 		}
@@ -589,7 +661,7 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 		total_record_size = sec_hdrlen +
 				    (__u64)num_records * record_size;
 		if (info_left < total_record_size) {
-			elog("%s section has incorrect num_records in .BTF.ext\n",
+			pr_debug("%s section has incorrect num_records in .BTF.ext\n",
 			     ext_sec->desc);
 			return -EINVAL;
 		}
@@ -610,8 +682,7 @@ static int btf_ext_copy_info(struct btf_ext *btf_ext,
 }
 
 static int btf_ext_copy_func_info(struct btf_ext *btf_ext,
-				  __u8 *data, __u32 data_size,
-				  btf_print_fn_t err_log)
+				  __u8 *data, __u32 data_size)
 {
 	const struct btf_ext_header *hdr = (struct btf_ext_header *)data;
 	struct btf_ext_sec_copy_param param = {
@@ -622,12 +693,11 @@ static int btf_ext_copy_func_info(struct btf_ext *btf_ext,
 		.desc = "func_info"
 	};
 
-	return btf_ext_copy_info(btf_ext, data, data_size, &param, err_log);
+	return btf_ext_copy_info(btf_ext, data, data_size, &param);
 }
 
 static int btf_ext_copy_line_info(struct btf_ext *btf_ext,
-				  __u8 *data, __u32 data_size,
-				  btf_print_fn_t err_log)
+				  __u8 *data, __u32 data_size)
 {
 	const struct btf_ext_header *hdr = (struct btf_ext_header *)data;
 	struct btf_ext_sec_copy_param param = {
@@ -638,37 +708,36 @@ static int btf_ext_copy_line_info(struct btf_ext *btf_ext,
 		.desc = "line_info",
 	};
 
-	return btf_ext_copy_info(btf_ext, data, data_size, &param, err_log);
+	return btf_ext_copy_info(btf_ext, data, data_size, &param);
 }
 
-static int btf_ext_parse_hdr(__u8 *data, __u32 data_size,
-			     btf_print_fn_t err_log)
+static int btf_ext_parse_hdr(__u8 *data, __u32 data_size)
 {
 	const struct btf_ext_header *hdr = (struct btf_ext_header *)data;
 
 	if (data_size < offsetof(struct btf_ext_header, func_info_off) ||
 	    data_size < hdr->hdr_len) {
-		elog("BTF.ext header not found");
+		pr_debug("BTF.ext header not found");
 		return -EINVAL;
 	}
 
 	if (hdr->magic != BTF_MAGIC) {
-		elog("Invalid BTF.ext magic:%x\n", hdr->magic);
+		pr_debug("Invalid BTF.ext magic:%x\n", hdr->magic);
 		return -EINVAL;
 	}
 
 	if (hdr->version != BTF_VERSION) {
-		elog("Unsupported BTF.ext version:%u\n", hdr->version);
+		pr_debug("Unsupported BTF.ext version:%u\n", hdr->version);
 		return -ENOTSUP;
 	}
 
 	if (hdr->flags) {
-		elog("Unsupported BTF.ext flags:%x\n", hdr->flags);
+		pr_debug("Unsupported BTF.ext flags:%x\n", hdr->flags);
 		return -ENOTSUP;
 	}
 
 	if (data_size == hdr->hdr_len) {
-		elog("BTF.ext has no data\n");
+		pr_debug("BTF.ext has no data\n");
 		return -EINVAL;
 	}
 
@@ -685,12 +754,12 @@ void btf_ext__free(struct btf_ext *btf_ext)
 	free(btf_ext);
 }
 
-struct btf_ext *btf_ext__new(__u8 *data, __u32 size, btf_print_fn_t err_log)
+struct btf_ext *btf_ext__new(__u8 *data, __u32 size)
 {
 	struct btf_ext *btf_ext;
 	int err;
 
-	err = btf_ext_parse_hdr(data, size, err_log);
+	err = btf_ext_parse_hdr(data, size);
 	if (err)
 		return ERR_PTR(err);
 
@@ -698,13 +767,13 @@ struct btf_ext *btf_ext__new(__u8 *data, __u32 size, btf_print_fn_t err_log)
 	if (!btf_ext)
 		return ERR_PTR(-ENOMEM);
 
-	err = btf_ext_copy_func_info(btf_ext, data, size, err_log);
+	err = btf_ext_copy_func_info(btf_ext, data, size);
 	if (err) {
 		btf_ext__free(btf_ext);
 		return ERR_PTR(err);
 	}
 
-	err = btf_ext_copy_line_info(btf_ext, data, size, err_log);
+	err = btf_ext_copy_line_info(btf_ext, data, size);
 	if (err) {
 		btf_ext__free(btf_ext);
 		return ERR_PTR(err);
