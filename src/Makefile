@@ -28,7 +28,8 @@ ifdef BUILD_SHARED
 endif
 
 HEADERS := bpf.h libbpf.h btf.h
-UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h btf.h)
+UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h bpf_common.h \
+	btf.h)
 
 INSTALL = install
 
