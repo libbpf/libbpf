@@ -1113,6 +1113,20 @@ err_free_new_name:
 	return -errno;
 }
 
+int bpf_map__resize(struct bpf_map *map, __u32 max_entries)
+{
+	if (!map || !max_entries)
+		return -EINVAL;
+
+	/* If map already created, its attributes can't be changed. */
+	if (map->fd >= 0)
+		return -EBUSY;
+
+	map->def.max_entries = max_entries;
+
+	return 0;
+}
+
 static int
 bpf_object__probe_name(struct bpf_object *obj)
 {
@@ -2315,6 +2329,11 @@ const char *bpf_object__name(struct bpf_object *obj)
 unsigned int bpf_object__kversion(struct bpf_object *obj)
 {
 	return obj ? obj->kern_version : 0;
+}
+
+struct btf *bpf_object__btf(struct bpf_object *obj)
+{
+	return obj ? obj->btf : NULL;
 }
 
 int bpf_object__btf_fd(const struct bpf_object *obj)
