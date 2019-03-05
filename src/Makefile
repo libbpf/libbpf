@@ -20,7 +20,7 @@ ALL_CFLAGS += $(CFLAGS)
 OBJDIR ?= .
 
 OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
-	nlattr.o str_error.o libbpf_probes.o)
+	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o)
 
 LIBS := $(OBJDIR)/libbpf.a
 ifdef BUILD_SHARED
