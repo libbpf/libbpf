@@ -9,6 +9,7 @@ The following files will by sync'ed with bpf-next repo:
   include/uapi/linux/bpf.h <-> bpf-next/tools/include/uapi/linux/bpf.h
   include/uapi/linux/btf.h <-> bpf-next/tools/include/uapi/linux/btf.h
   include/uapi/linux/if_link.h <-> bpf-next/tools/include/uapi/linux/if_link.h
+  include/uapi/linux/if_xdp.h <-> bpf-next/tools/include/uapi/linux/if_xdp.h
   include/uapi/linux/netlink.h <-> bpf-next/tools/include/uapi/linux/netlink.h
   include/tools/libc_compat.h <-> bpf-next/tools/include/tools/libc_compat.h
 

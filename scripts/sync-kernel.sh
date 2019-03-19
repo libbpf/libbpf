@@ -71,12 +71,13 @@ for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
 	git cherry-pick ${LIBBPF_NEW_COMMIT}
 done
 
-LIBBPF_TREE_FILTER='												      \
-    mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools &&						      \
-    git mv -kf tools/lib/bpf __libbpf/src &&									      \
-    git mv -kf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,netlink.h} __libbpf/include/uapi/linux && \
-    git mv -kf tools/include/tools/libc_compat.h __libbpf/include/tools &&					      \
-    git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}				      \
+LIBBPF_TREE_FILTER='												\
+    mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools &&						\
+    git mv -kf tools/lib/bpf __libbpf/src &&									\
+    git mv -kf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h}			\
+	       __libbpf/include/uapi/linux &&									\
+    git mv -kf tools/include/tools/libc_compat.h __libbpf/include/tools &&					\
+    git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}				\
 '
 # Move all libbpf files into __libbpf directory.
 git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
@@ -117,7 +118,7 @@ git commit --file=-
 echo "SUCCESS! ${COMMIT_CNT} commits synced."
 
 echo "Verifying Linux's and Github's libbpf state"
-LIBBPF_VIEW_PATHS=(src include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,netlink.h} include/tools/libc_compat.h)
+LIBBPF_VIEW_PATHS=(src include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h} include/tools/libc_compat.h)
 LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf.cpp|\.gitignore)$'
 
 cd ${WORKDIR} && cd ${LINUX_REPO}
