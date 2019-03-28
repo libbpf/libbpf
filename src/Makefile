@@ -31,6 +31,8 @@ HEADERS := bpf.h libbpf.h btf.h
 UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h bpf_common.h \
 	btf.h)
 
+PC_FILE := libbpf.pc
+
 INSTALL = install
 
 DESTDIR ?=
@@ -46,13 +48,19 @@ LIBDIR ?= $(PREFIX)/$(LIBSUBDIR)
 INCLUDEDIR ?= $(PREFIX)/include
 UAPIDIR ?= $(PREFIX)/include
 
-all: $(LIBS)
+all: $(LIBS) $(PC_FILE)
 
 $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/libbpf.so: $(OBJS)
 	$(CC) -shared $(LDFLAGS) $^ -o $@
+
+$(OBJDIR)/libbpf.pc:
+	sed -e "s|@PREFIX@|$(PREFIX)|" \
+		-e "s|@LIBDIR@|$(LIBDIR)|" \
+		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
+		< libbpf.pc.template > $@
 
 $(OBJDIR)/%.o: %.c
 	$(CC) $(ALL_CFLAGS) -c $< -o $@
@@ -64,7 +72,7 @@ define do_install
 	$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
 endef
 
-install: all install_headers
+install: all install_headers install_pkgconfig
 	$(call do_install,$(LIBS),$(LIBDIR))
 
 install_headers:
@@ -75,5 +83,8 @@ install_headers:
 install_uapi_headers:
 	$(call do_install,$(UAPI_HEADERS),$(UAPIDIR)/linux,644)
 
+install_pkgconfig: $(PC_FILE)
+	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
+
 clean:
-	rm -f *.o *.a *.so
+	rm -f *.o *.a *.so *.pc
