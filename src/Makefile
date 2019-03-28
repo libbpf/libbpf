@@ -63,7 +63,7 @@ $(OBJDIR)/libbpf.pc:
 		< libbpf.pc.template > $@
 
 $(OBJDIR)/%.o: %.c
-	$(CC) $(ALL_CFLAGS) -c $< -o $@
+	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 define do_install
 	if [ ! -d '$(DESTDIR)$2' ]; then		\
