@@ -66,7 +66,18 @@ git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 
 # Cherry-pick new commits onto squashed baseline commit
 LIBBPF_PATHS=(tools/lib/bpf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,netlink.h} tools/include/tools/libc_compat.h)
-LIBBPF_NEW_COMMITS=$(git rev-list --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
+
+LIBBPF_NEW_MERGES=$(git rev-list --merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
+for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
+	printf "MERGE:\t" && git log --oneline -n1 ${LIBBPF_NEW_MERGE}
+	MERGE_CHANGES=$(git log --format='' -n1 ${LIBBPF_NEW_MERGE} | wc -l)
+	if ((${MERGE_CHANGES} > 0)); then
+		echo "Merge is non empty, aborting!.."
+		exit 3
+	fi
+done
+
+LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
 	git cherry-pick ${LIBBPF_NEW_COMMIT}
 done
