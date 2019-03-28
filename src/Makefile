@@ -16,6 +16,14 @@ endif
 
 CFLAGS ?= -g -O2 -Werror -Wall
 ALL_CFLAGS += $(CFLAGS)
+ALL_LDFLAGS += $(LDFLAGS)
+ifdef NO_PKG_CONFIG
+	ALL_LDFLAGS += -lelf
+else
+	PKG_CONFIG ?= pkg-config
+	ALL_CFLAGS += $(shell $(PKG_CONFIG) --cflags libelf)
+	ALL_LDFLAGS += $(shell $(PKG_CONFIG) --libs libelf)
+endif
 
 OBJDIR ?= .
 
@@ -54,7 +62,7 @@ $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/libbpf.so: $(OBJS)
-	$(CC) -shared $(LDFLAGS) $^ -o $@
+	$(CC) -shared $(ALL_LDFLAGS) $^ -o $@
 
 $(OBJDIR)/libbpf.pc:
 	sed -e "s|@PREFIX@|$(PREFIX)|" \
