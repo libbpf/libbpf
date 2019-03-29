@@ -10,7 +10,7 @@ ifneq ($(FEATURE_REALLOCARRAY),)
 	ALL_CFLAGS += -DCOMPAT_NEED_REALLOCARRAY
 endif
 
-ifdef BUILD_SHARED
+ifndef BUILD_STATIC_ONLY
 	ALL_CFLAGS += -fPIC -fvisibility=hidden
 endif
 
@@ -23,7 +23,7 @@ OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o)
 
 LIBS := $(OBJDIR)/libbpf.a
-ifdef BUILD_SHARED
+ifndef BUILD_STATIC_ONLY
 	LIBS += $(OBJDIR)/libbpf.so
 endif
 
