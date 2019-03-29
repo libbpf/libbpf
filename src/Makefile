@@ -39,7 +39,7 @@ HEADERS := bpf.h libbpf.h btf.h
 UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h bpf_common.h \
 	btf.h)
 
-PC_FILE := libbpf.pc
+PC_FILE := $(OBJDIR)/libbpf.pc
 
 INSTALL = install
 
