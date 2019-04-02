@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 
+VERSION = 0
+PATCHLEVEL = 0
+EXTRAVERSION = 2
+
+LIBBPF_VERSION	= $(VERSION).$(PATCHLEVEL).$(EXTRAVERSION)
+
 TOPDIR = ..
 
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
