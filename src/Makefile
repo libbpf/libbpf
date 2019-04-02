@@ -33,6 +33,7 @@ OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
 	LIBS += $(OBJDIR)/libbpf.so
+	VERSION_SCRIPT := libbpf.map
 endif
 
 HEADERS := bpf.h libbpf.h btf.h
@@ -62,7 +63,8 @@ $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/libbpf.so: $(OBJS)
-	$(CC) -shared $(ALL_LDFLAGS) $^ -o $@
+	$(CC) -shared $(ALL_LDFLAGS) -Wl,--version-script=$(VERSION_SCRIPT) \
+				     $^ -o $@
 
 $(OBJDIR)/libbpf.pc:
 	sed -e "s|@PREFIX@|$(PREFIX)|" \
