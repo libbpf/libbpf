@@ -1,5 +1,11 @@
 # SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 
+VERSION = 0
+PATCHLEVEL = 0
+EXTRAVERSION = 2
+
+LIBBPF_VERSION	= $(VERSION).$(PATCHLEVEL).$(EXTRAVERSION)
+
 TOPDIR = ..
 
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
@@ -32,7 +38,10 @@ OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 
 LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
-	LIBS += $(OBJDIR)/libbpf.so
+	LIBS += $(OBJDIR)/libbpf.so \
+		$(OBJDIR)/libbpf.so.$(VERSION) \
+		$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
+	VERSION_SCRIPT := libbpf.map
 endif
 
 HEADERS := bpf.h libbpf.h btf.h
@@ -61,8 +70,16 @@ all: $(LIBS) $(PC_FILE)
 $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
-$(OBJDIR)/libbpf.so: $(OBJS)
-	$(CC) -shared $(ALL_LDFLAGS) $^ -o $@
+$(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(VERSION)
+	ln -sf $(^F) $@
+
+$(OBJDIR)/libbpf.so.$(VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
+	ln -sf $(^F) $@
+
+$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(OBJS)
+	$(CC) -shared $(ALL_LDFLAGS) -Wl,--version-script=$(VERSION_SCRIPT) \
+				     -Wl,-soname,libbpf.so.$(VERSION) \
+				     $^ -o $@
 
 $(OBJDIR)/libbpf.pc:
 	sed -e "s|@PREFIX@|$(PREFIX)|" \
@@ -80,8 +97,16 @@ define do_install
 	$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
 endef
 
+# Preserve symlinks at installation.
+define do_s_install
+	if [ ! -d '$(DESTDIR)$2' ]; then		\
+		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
+	fi;						\
+	cp -fpR $1 '$(DESTDIR)$2'
+endef
+
 install: all install_headers install_pkgconfig
-	$(call do_install,$(LIBS),$(LIBDIR))
+	$(call do_s_install,$(LIBS),$(LIBDIR))
 
 install_headers:
 	$(call do_install,$(HEADERS),$(INCLUDEDIR)/bpf,644)
@@ -95,4 +120,4 @@ install_pkgconfig: $(PC_FILE)
 	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
 
 clean:
-	rm -f *.o *.a *.so *.pc
+	rm -f *.o *.a *.so *.so.* *.pc
