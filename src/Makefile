@@ -38,7 +38,9 @@ OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 
 LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
-	LIBS += $(OBJDIR)/libbpf.so
+	LIBS += $(OBJDIR)/libbpf.so \
+		$(OBJDIR)/libbpf.so.$(VERSION) \
+		$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
 	VERSION_SCRIPT := libbpf.map
 endif
 
@@ -68,7 +70,13 @@ all: $(LIBS) $(PC_FILE)
 $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
-$(OBJDIR)/libbpf.so: $(OBJS)
+$(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(VERSION)
+	ln -sf $(^F) $@
+
+$(OBJDIR)/libbpf.so.$(VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
+	ln -sf $(^F) $@
+
+$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(OBJS)
 	$(CC) -shared $(ALL_LDFLAGS) -Wl,--version-script=$(VERSION_SCRIPT) \
 				     $^ -o $@
 
@@ -88,8 +96,16 @@ define do_install
 	$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
 endef
 
+# Preserve symlinks at installation.
+define do_s_install
+	if [ ! -d '$(DESTDIR)$2' ]; then		\
+		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
+	fi;						\
+	cp -fpR $1 '$(DESTDIR)$2'
+endef
+
 install: all install_headers install_pkgconfig
-	$(call do_install,$(LIBS),$(LIBDIR))
+	$(call do_s_install,$(LIBS),$(LIBDIR))
 
 install_headers:
 	$(call do_install,$(HEADERS),$(INCLUDEDIR)/bpf,644)
@@ -103,4 +119,4 @@ install_pkgconfig: $(PC_FILE)
 	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
 
 clean:
-	rm -f *.o *.a *.so *.pc
+	rm -f *.o *.a *.so *.so.* *.pc
