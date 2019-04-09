@@ -43,3 +43,20 @@ headers in a build directory /build/root/:
 
   cd src
   PKG_CONFIG_PATH=/build/root/lib64/pkgconfig DESTDIR=/build/root make install
+
+To integrate libbpf into a project which uses Meson building system define
+[wrap-git] file in `subprojects` folder.
+To add libbpf dependency to the parent parent project, e.g. for
+libbpf_static_dep:
+
+   libbpf_obj = subproject('libbpf', required : true)
+   libbpf_static_dep = libbpf_proj.get_variable('libbpf_static_dep')
+
+To validate changes to meson.build
+
+   python3 meson.py build
+   ninja -C build/
+
+To install headers, libs and pkgconfig
+   cd build
+   ninja install
