@@ -1,0 +1,91 @@
+sudo: required
+dist: xenial
+services:
+    - docker
+
+env:
+    global:
+        - AUTHOR_EMAIL="$(git log -1 $TRAVIS_COMMIT --pretty=\"%aE\")"
+        - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
+        - REPO_ROOT="$TRAVIS_BUILD_DIR"
+
+jobs:
+    include:
+        - stage: Build & test
+          name: Debian Testing
+          language: bash
+          env:
+              - DEBIAN_RELEASE="testing"
+              - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
+              - DOCKER_EXEC="docker exec -ti $CONT_NAME"
+          before_install:
+              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+              - docker --version
+          install:
+              - $CI_MANAGERS/debian.sh SETUP
+          script:
+              - set -e
+              - $CI_MANAGERS/debian.sh RUN
+              - set +e
+          after_script:
+              - $CI_MANAGERS/debian.sh CLEANUP
+
+        - name: Debian Testing (ASan+UBSan)
+          language: bash
+          env:
+              - DEBIAN_RELEASE="testing"
+              - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
+              - DOCKER_EXEC="docker exec -ti $CONT_NAME"
+          before_install:
+              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+              - docker --version
+          install:
+              - $CI_MANAGERS/debian.sh SETUP
+          script:
+              - set -e
+              - $CI_MANAGERS/debian.sh RUN_ASAN
+              - set +e
+          after_script:
+              - $CI_MANAGERS/debian.sh CLEANUP
+
+        - name: Debian Testing (clang)
+          language: bash
+          env:
+              - DEBIAN_RELEASE="testing"
+              - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
+              - DOCKER_EXEC="docker exec -ti $CONT_NAME"
+          before_install:
+              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+              - docker --version
+          install:
+              - $CI_MANAGERS/debian.sh SETUP
+          script:
+              - set -e
+              - $CI_MANAGERS/debian.sh RUN_CLANG
+              - set +e
+          after_script:
+              - $CI_MANAGERS/debian.sh CLEANUP
+
+        - name: Debian Testing (clang ASan+UBSan)
+          language: bash
+          env:
+              - DEBIAN_RELEASE="testing"
+              - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
+              - DOCKER_EXEC="docker exec -ti $CONT_NAME"
+          before_install:
+              - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+              - docker --version
+          install:
+              - $CI_MANAGERS/debian.sh SETUP
+          script:
+              - set -e
+              - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN
+              - set +e
+          after_script:
+              - $CI_MANAGERS/debian.sh CLEANUP
+        - name: Ubuntu Xenial
+          language: bash
+          script:
+              - set -e
+              - sudo $CI_MANAGERS/xenial.sh
+              - set +e
