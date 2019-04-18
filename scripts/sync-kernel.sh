@@ -77,9 +77,31 @@ for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
 	fi
 done
 
+cd ${WORKDIR} && cd ${LIBBPF_REPO}
+git log --oneline -n500 > ${TMP_DIR}/libbpf_commits.txt
+cd ${WORKDIR} && cd ${LINUX_REPO}
+
 LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
-	git cherry-pick ${LIBBPF_NEW_COMMIT}
+	echo "Checking commit '${LIBBPF_NEW_COMMIT}'"
+	SYNCED_COMMITS=$(grep -F "$(git log -n1 --pretty=format:%s ${LIBBPF_NEW_COMMIT})" ${TMP_DIR}/libbpf_commits.txt || echo "")
+	if [ -n "${SYNCED_COMMITS}" ]; then
+		# commit with the same subject is already in libbpf, but it's not 100% the same commit, so check with user
+		echo "Commit '$(git log -n1 --oneline ${LIBBPF_NEW_COMMIT})' appears to be already synced into libbpf..."
+		echo "Corresponding libbpf commit(s):"
+		echo "${SYNCED_COMMITS}"
+		read -p "Do you want to skip it? [y/N]: " SHOULD_SKIP
+		case "${SHOULD_SKIP}" in 
+			"y" | "Y")
+				echo "Skipping '$(git log -n1 --oneline ${LIBBPF_NEW_COMMIT})'..."
+				continue
+				;;
+		esac
+	fi
+	# commit hasn't been synced into libbpf yet
+	if ! git cherry-pick ${LIBBPF_NEW_COMMIT}; then 
+		read -p "Cherry-picking '$(git log --oneline -n1 ${LIBBPF_NEW_COMMIT})' failed, please fix manually and press <return> to proceed..."
+	fi
 done
 
 LIBBPF_TREE_FILTER='												\
