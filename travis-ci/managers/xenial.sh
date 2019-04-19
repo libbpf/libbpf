@@ -10,6 +10,8 @@ source "$(dirname $0)/travis_wait.bash"
 
 cd $REPO_ROOT
 
+CFLAGS="-g -O2 -Werror -Wall -fsanitize=address,undefined"
 mkdir build
-make CFLAGS='-Werror -Db_sanitize=address,undefined' -C ./src -B OBJDIR=../build
+cc --version
+make CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
 rm -rf build
