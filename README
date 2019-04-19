@@ -60,3 +60,5 @@ To validate changes to meson.build
 To install headers, libs and pkgconfig
    cd build
    ninja install
+
+[![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
