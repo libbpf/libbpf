@@ -6,7 +6,7 @@ CONT_NAME="${CONT_NAME:-debian-$DEBIAN_RELEASE-$RANDOM}"
 ENV_VARS="${ENV_VARS:-}"
 DOCKER_RUN="${DOCKER_RUN:-docker run}"
 REPO_ROOT="${REPO_ROOT:-$PWD}"
-ADDITIONAL_DEPS=(clang pkg-config)
+ADDITIONAL_DEPS=(clang pkg-config gcc-8)
 CFLAGS="-g -O2 -Werror -Wall"
 
 function info() {
@@ -37,20 +37,26 @@ for phase in "${PHASES[@]}"; do
             docker_exec apt-get -y install libelf-dev
             docker_exec apt-get -y install "${ADDITIONAL_DEPS[@]}"
             ;;
-        RUN|RUN_CLANG)
+        RUN|RUN_CLANG|RUN_GCC8)
             if [[ "$phase" = "RUN_CLANG" ]]; then
                 ENV_VARS="-e CC=clang -e CXX=clang++"
                 CC="clang"
+            elif [[ "$phase" = "RUN_GCC8" ]]; then
+                ENV_VARS="-e CC=gcc-8 -e CXX=g++-8"
+                CC="gcc-8"
             fi
             docker_exec mkdir build
             docker_exec ${CC:-cc} --version
             docker_exec make CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
             docker_exec rm -rf build
             ;;
-        RUN_ASAN|RUN_CLANG_ASAN)
+        RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC8_ASAN)
             if [[ "$phase" = "RUN_CLANG_ASAN" ]]; then
                 ENV_VARS="-e CC=clang -e CXX=clang++"
                 CC="clang"
+            elif [[ "$phase" = "RUN_GCC8_ASAN" ]]; then
+                ENV_VARS="-e CC=gcc-8 -e CXX=g++-8"
+                CC="gcc-8"
             fi
             CFLAGS="${CFLAGS} -fsanitize=address,undefined"
             docker_exec mkdir build
