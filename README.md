@@ -17,7 +17,7 @@ Other header files at this repo (include/linux/*.h) are reduced versions of
 their counterpart files at bpf-next/tools/include/linux/*.h to make compilation
 successful.
 
-Build
+Build [![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
 =====
 libelf is an internal dependency of libbpf and thus it is required to link
 against and must be installed on the system for applications to work.
@@ -61,4 +61,3 @@ To install headers, libs and pkgconfig
    cd build
    ninja install
 
-[![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
