@@ -44,7 +44,7 @@ ifndef BUILD_STATIC_ONLY
 	VERSION_SCRIPT := libbpf.map
 endif
 
-HEADERS := bpf.h libbpf.h btf.h
+HEADERS := bpf.h libbpf.h btf.h xsk.h libbpf_util.h
 UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h bpf_common.h \
 	btf.h)
 
