@@ -34,7 +34,8 @@ endif
 OBJDIR ?= .
 
 OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
-	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o)
+	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o \
+	btf_dump.o hashmap.o)
 
 LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
