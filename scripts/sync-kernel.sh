@@ -65,7 +65,7 @@ git branch ${SQUASH_BASE_TAG} ${SQUASH_COMMIT}
 git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 
 # Cherry-pick new commits onto squashed baseline commit
-LIBBPF_PATHS=(tools/lib/bpf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,netlink.h} tools/include/tools/libc_compat.h)
+LIBBPF_PATHS=(tools/lib/bpf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h} tools/include/tools/libc_compat.h)
 
 LIBBPF_NEW_MERGES=$(git rev-list --merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
