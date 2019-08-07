@@ -1047,9 +1047,9 @@ static bool get_map_field_int(const char *map_name, const struct btf *btf,
 	const struct btf_array *arr_info;
 	const struct btf_type *arr_t;
 
-	if (BTF_INFO_KIND(t->info) != BTF_KIND_PTR) {
+	if (!btf_is_ptr(t)) {
 		pr_warning("map '%s': attr '%s': expected PTR, got %u.\n",
-			   map_name, name, BTF_INFO_KIND(t->info));
+			   map_name, name, btf_kind(t));
 		return false;
 	}
 
@@ -1059,12 +1059,12 @@ static bool get_map_field_int(const char *map_name, const struct btf *btf,
 			   map_name, name, t->type);
 		return false;
 	}
-	if (BTF_INFO_KIND(arr_t->info) != BTF_KIND_ARRAY) {
+	if (!btf_is_array(arr_t)) {
 		pr_warning("map '%s': attr '%s': expected ARRAY, got %u.\n",
-			   map_name, name, BTF_INFO_KIND(arr_t->info));
+			   map_name, name, btf_kind(arr_t));
 		return false;
 	}
-	arr_info = (const void *)(arr_t + 1);
+	arr_info = btf_array(arr_t);
 	*res = arr_info->nelems;
 	return true;
 }
@@ -1082,11 +1082,11 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 	struct bpf_map *map;
 	int vlen, i;
 
-	vi = (const struct btf_var_secinfo *)(const void *)(sec + 1) + var_idx;
+	vi = btf_var_secinfos(sec) + var_idx;
 	var = btf__type_by_id(obj->btf, vi->type);
-	var_extra = (const void *)(var + 1);
+	var_extra = btf_var(var);
 	map_name = btf__name_by_offset(obj->btf, var->name_off);
-	vlen = BTF_INFO_VLEN(var->info);
+	vlen = btf_vlen(var);
 
 	if (map_name == NULL || map_name[0] == '\0') {
 		pr_warning("map #%d: empty name.\n", var_idx);
@@ -1096,9 +1096,9 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 		pr_warning("map '%s' BTF data is corrupted.\n", map_name);
 		return -EINVAL;
 	}
-	if (BTF_INFO_KIND(var->info) != BTF_KIND_VAR) {
+	if (!btf_is_var(var)) {
 		pr_warning("map '%s': unexpected var kind %u.\n",
-			   map_name, BTF_INFO_KIND(var->info));
+			   map_name, btf_kind(var));
 		return -EINVAL;
 	}
 	if (var_extra->linkage != BTF_VAR_GLOBAL_ALLOCATED &&
@@ -1109,9 +1109,9 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 	}
 
 	def = skip_mods_and_typedefs(obj->btf, var->type);
-	if (BTF_INFO_KIND(def->info) != BTF_KIND_STRUCT) {
+	if (!btf_is_struct(def)) {
 		pr_warning("map '%s': unexpected def kind %u.\n",
-			   map_name, BTF_INFO_KIND(var->info));
+			   map_name, btf_kind(var));
 		return -EINVAL;
 	}
 	if (def->size > vi->size) {
@@ -1134,8 +1134,8 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 	pr_debug("map '%s': at sec_idx %d, offset %zu.\n",
 		 map_name, map->sec_idx, map->sec_offset);
 
-	vlen = BTF_INFO_VLEN(def->info);
-	m = (const void *)(def + 1);
+	vlen = btf_vlen(def);
+	m = btf_members(def);
 	for (i = 0; i < vlen; i++, m++) {
 		const char *name = btf__name_by_offset(obj->btf, m->name_off);
 
@@ -1185,9 +1185,9 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 					   map_name, m->type);
 				return -EINVAL;
 			}
-			if (BTF_INFO_KIND(t->info) != BTF_KIND_PTR) {
+			if (!btf_is_ptr(t)) {
 				pr_warning("map '%s': key spec is not PTR: %u.\n",
-					   map_name, BTF_INFO_KIND(t->info));
+					   map_name, btf_kind(t));
 				return -EINVAL;
 			}
 			sz = btf__resolve_size(obj->btf, t->type);
@@ -1228,9 +1228,9 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 					   map_name, m->type);
 				return -EINVAL;
 			}
-			if (BTF_INFO_KIND(t->info) != BTF_KIND_PTR) {
+			if (!btf_is_ptr(t)) {
 				pr_warning("map '%s': value spec is not PTR: %u.\n",
-					   map_name, BTF_INFO_KIND(t->info));
+					   map_name, btf_kind(t));
 				return -EINVAL;
 			}
 			sz = btf__resolve_size(obj->btf, t->type);
@@ -1291,7 +1291,7 @@ static int bpf_object__init_user_btf_maps(struct bpf_object *obj, bool strict)
 	nr_types = btf__get_nr_types(obj->btf);
 	for (i = 1; i <= nr_types; i++) {
 		t = btf__type_by_id(obj->btf, i);
-		if (BTF_INFO_KIND(t->info) != BTF_KIND_DATASEC)
+		if (!btf_is_datasec(t))
 			continue;
 		name = btf__name_by_offset(obj->btf, t->name_off);
 		if (strcmp(name, MAPS_ELF_SEC) == 0) {
@@ -1305,7 +1305,7 @@ static int bpf_object__init_user_btf_maps(struct bpf_object *obj, bool strict)
 		return -ENOENT;
 	}
 
-	vlen = BTF_INFO_VLEN(sec->info);
+	vlen = btf_vlen(sec);
 	for (i = 0; i < vlen; i++) {
 		err = bpf_object__init_user_btf_map(obj, sec, i,
 						    obj->efile.btf_maps_shndx,
@@ -1366,16 +1366,14 @@ static void bpf_object__sanitize_btf(struct bpf_object *obj)
 	struct btf *btf = obj->btf;
 	struct btf_type *t;
 	int i, j, vlen;
-	__u16 kind;
 
 	if (!obj->btf || (has_func && has_datasec))
 		return;
 
 	for (i = 1; i <= btf__get_nr_types(btf); i++) {
 		t = (struct btf_type *)btf__type_by_id(btf, i);
-		kind = BTF_INFO_KIND(t->info);
 
-		if (!has_datasec && kind == BTF_KIND_VAR) {
+		if (!has_datasec && btf_is_var(t)) {
 			/* replace VAR with INT */
 			t->info = BTF_INFO_ENC(BTF_KIND_INT, 0, 0);
 			/*
@@ -1384,11 +1382,11 @@ static void bpf_object__sanitize_btf(struct bpf_object *obj)
 			 * original variable took less than 4 bytes
 			 */
 			t->size = 1;
-			*(int *)(t+1) = BTF_INT_ENC(0, 0, 8);
-		} else if (!has_datasec && kind == BTF_KIND_DATASEC) {
+			*(int *)(t + 1) = BTF_INT_ENC(0, 0, 8);
+		} else if (!has_datasec && btf_is_datasec(t)) {
 			/* replace DATASEC with STRUCT */
-			struct btf_var_secinfo *v = (void *)(t + 1);
-			struct btf_member *m = (void *)(t + 1);
+			const struct btf_var_secinfo *v = btf_var_secinfos(t);
+			struct btf_member *m = btf_members(t);
 			struct btf_type *vt;
 			char *name;
 
@@ -1399,7 +1397,7 @@ static void bpf_object__sanitize_btf(struct bpf_object *obj)
 				name++;
 			}
 
-			vlen = BTF_INFO_VLEN(t->info);
+			vlen = btf_vlen(t);
 			t->info = BTF_INFO_ENC(BTF_KIND_STRUCT, 0, vlen);
 			for (j = 0; j < vlen; j++, v++, m++) {
 				/* order of field assignments is important */
@@ -1409,12 +1407,12 @@ static void bpf_object__sanitize_btf(struct bpf_object *obj)
 				vt = (void *)btf__type_by_id(btf, v->type);
 				m->name_off = vt->name_off;
 			}
-		} else if (!has_func && kind == BTF_KIND_FUNC_PROTO) {
+		} else if (!has_func && btf_is_func_proto(t)) {
 			/* replace FUNC_PROTO with ENUM */
-			vlen = BTF_INFO_VLEN(t->info);
+			vlen = btf_vlen(t);
 			t->info = BTF_INFO_ENC(BTF_KIND_ENUM, 0, vlen);
 			t->size = sizeof(__u32); /* kernel enforced */
-		} else if (!has_func && kind == BTF_KIND_FUNC) {
+		} else if (!has_func && btf_is_func(t)) {
 			/* replace FUNC with TYPEDEF */
 			t->info = BTF_INFO_ENC(BTF_KIND_TYPEDEF, 0, 0);
 		}
