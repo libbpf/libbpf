@@ -44,6 +44,11 @@ LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,tes
 WORKDIR=$(pwd)
 trap "cd ${WORKDIR}; exit" INT TERM EXIT
 
+cd_to()
+{
+	cd ${WORKDIR} && cd "$1"
+}
+
 echo "WORKDIR:         ${WORKDIR}"
 echo "LINUX REPO:      ${LINUX_REPO}"
 echo "LIBBPF REPO:     ${LIBBPF_REPO}"
@@ -52,7 +57,7 @@ SUFFIX=$(date --utc +%Y-%m-%dT%H-%M-%S.%3NZ)
 BASELINE_COMMIT=${3-$(cat ${LIBBPF_REPO}/CHECKPOINT-COMMIT)}
 
 # Use current kernel repo HEAD as a source of patches
-cd ${LINUX_REPO}
+cd_to ${LINUX_REPO}
 TIP_SYM_REF=$(git symbolic-ref -q --short HEAD || git rev-parse HEAD)
 TIP_COMMIT=$(git rev-parse HEAD)
 BASELINE_TAG=libbpf-baseline-${SUFFIX}
@@ -97,9 +102,9 @@ for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
 	fi
 done
 
-cd ${WORKDIR} && cd ${LIBBPF_REPO}
+cd_to ${LIBBPF_REPO}
 git log --oneline -n500 > ${TMP_DIR}/libbpf_commits.txt
-cd ${WORKDIR} && cd ${LINUX_REPO}
+cd_to ${LINUX_REPO}
 
 LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
@@ -142,7 +147,7 @@ git format-patch ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --cover-letter -o ${TMP_D
 git format-patch ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --stdout > ${TMP_DIR}/patchset.patch
 
 # Now is time to re-apply libbpf-related linux  patches to libbpf repo
-cd ${WORKDIR} && cd ${LIBBPF_REPO}
+cd_to ${LIBBPF_REPO}
 git checkout -b ${LIBBPF_SYNC_TAG}
 git am --committer-date-is-author-date ${TMP_DIR}/patchset.patch
 
@@ -164,14 +169,14 @@ echo "SUCCESS! ${COMMIT_CNT} commits synced."
 
 echo "Verifying Linux's and Github's libbpf state"
 
-cd ${WORKDIR} && cd ${LINUX_REPO}
+cd_to ${LINUX_REPO}
 LINUX_ABS_DIR=$(pwd)
 git checkout -b ${VIEW_TAG} ${TIP_COMMIT}
 git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
 git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} > ${TMP_DIR}/linux-view.ls
 
-cd ${WORKDIR} && cd ${LIBBPF_REPO}
+cd_to ${LIBBPF_REPO}
 GITHUB_ABS_DIR=$(pwd)
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
 
@@ -185,10 +190,10 @@ echo "Contents appear identical!"
 
 echo "Cleaning up..."
 rm -r ${TMP_DIR}
-cd ${WORKDIR} && cd ${LINUX_REPO}
+cd_to ${LINUX_REPO}
 git checkout ${TIP_SYM_REF}
 git branch -D ${BASELINE_TAG} ${TIP_TAG} ${SQUASH_BASE_TAG} ${SQUASH_TIP_TAG} ${VIEW_TAG}
 
-cd ${WORKDIR}
+cd_to .
 echo "DONE."
 
