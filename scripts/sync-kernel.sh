@@ -19,6 +19,28 @@ fi
 
 set -eu
 
+declare -A PATH_MAP
+PATH_MAP=(									\
+	[tools/lib/bpf]=src							\
+	[tools/include/uapi/linux/bpf_common.h]=include/uapi/linux/bpf_common.h	\
+	[tools/include/uapi/linux/bpf.h]=include/uapi/linux/bpf.h		\
+	[tools/include/uapi/linux/btf.h]=include/uapi/linux/btf.h		\
+	[tools/include/uapi/linux/if_link.h]=include/uapi/linux/if_link.h	\
+	[tools/include/uapi/linux/if_xdp.h]=include/uapi/linux/if_xdp.h		\
+	[tools/include/uapi/linux/netlink.h]=include/uapi/linux/netlink.h	\
+	[tools/include/tools/libc_compat.h]=include/tools/libc_compat.h		\
+)
+
+LIBBPF_PATHS="${!PATH_MAP[@]}"
+LIBBPF_VIEW_PATHS="${PATH_MAP[@]}"
+LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf.cpp|\.gitignore)$'
+
+LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools && "$'\\\n'
+for p in "${!PATH_MAP[@]}"; do
+	LIBBPF_TREE_FILTER+="git mv -kf ${p} __libbpf/${PATH_MAP[${p}]} && "$'\\\n'
+done
+LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}"
+
 WORKDIR=$(pwd)
 trap "cd ${WORKDIR}; exit" INT TERM EXIT
 
@@ -65,8 +87,6 @@ git branch ${SQUASH_BASE_TAG} ${SQUASH_COMMIT}
 git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 
 # Cherry-pick new commits onto squashed baseline commit
-LIBBPF_PATHS=(tools/lib/bpf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h} tools/include/tools/libc_compat.h)
-
 LIBBPF_NEW_MERGES=$(git rev-list --merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
 	printf "MERGE:\t" && git log --oneline -n1 ${LIBBPF_NEW_MERGE}
@@ -104,14 +124,6 @@ for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
 	fi
 done
 
-LIBBPF_TREE_FILTER='												\
-    mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools &&						\
-    git mv -kf tools/lib/bpf __libbpf/src &&									\
-    git mv -kf tools/include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h}			\
-	       __libbpf/include/uapi/linux &&									\
-    git mv -kf tools/include/tools/libc_compat.h __libbpf/include/tools &&					\
-    git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}				\
-'
 # Move all libbpf files into __libbpf directory.
 git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
 # Make __libbpf a new root directory
@@ -151,8 +163,6 @@ git commit --file=-
 echo "SUCCESS! ${COMMIT_CNT} commits synced."
 
 echo "Verifying Linux's and Github's libbpf state"
-LIBBPF_VIEW_PATHS=(src include/uapi/linux/{bpf_common.h,bpf.h,btf.h,if_link.h,if_xdp.h,netlink.h} include/tools/libc_compat.h)
-LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf.cpp|\.gitignore)$'
 
 cd ${WORKDIR} && cd ${LINUX_REPO}
 LINUX_ABS_DIR=$(pwd)
