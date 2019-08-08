@@ -56,14 +56,30 @@ commit_desc()
 	git log -n1 --pretty='%h ("%s")' $1
 }
 
+# Create commit single-line signature, which consists of:
+# - full commit hash
+# - author date in ISO8601 format
+# - full commit body with newlines replaced with vertical bars (|)
+# - shortstat appended at the end
+# The idea is that this single-line signature is good enough to make final
+# decision about whether two commits are the same, across different repos.
+# $1 - commit ref
+commit_signature()
+{
+	git log -n1 --pretty='("%s")|%aI|%b' --shortstat $1 | tr '\n' '|'
+}
+
 TMP_DIR=$(mktemp -d)
 
 cd_to ${LIBBPF_REPO}
+
 SUFFIX=$(date --utc +%Y-%m-%dT%H-%M-%S.%3NZ)
 BASELINE_COMMIT=${3-$(cat CHECKPOINT-COMMIT)}
 
 echo "Dumping existing libbpf commit signatures..."
-git log --oneline -n500 > ${TMP_DIR}/libbpf_commits.txt
+for h in $(git log --pretty='%h' -n500); do
+	echo $h "$(commit_signature $h)" >> ${TMP_DIR}/libbpf_commits.txt
+done
 
 # Use current kernel repo HEAD as a source of patches
 cd_to ${LINUX_REPO}
@@ -118,12 +134,19 @@ LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_
 for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
 	COMMIT_DESC="$(commit_desc ${LIBBPF_NEW_COMMIT})"
 	echo "Checking '${COMMIT_DESC}'..."
-	SYNCED_COMMITS=$(grep -F "$(git log -n1 --pretty=format:%s ${LIBBPF_NEW_COMMIT})" ${TMP_DIR}/libbpf_commits.txt || echo "")
-	if [ -n "${SYNCED_COMMITS}" ]; then
-		# commit with the same subject is already in libbpf, but it's not 100% the same commit, so check with user
-		echo "Commit '$(git log -n1 --oneline ${LIBBPF_NEW_COMMIT})' appears to be already synced into libbpf..."
-		echo "Corresponding libbpf commit(s):"
-		echo "${SYNCED_COMMITS}"
+	SYNCED_COMMIT_CNT=$(grep -F "$(commit_signature ${LIBBPF_NEW_COMMIT})" ${TMP_DIR}/libbpf_commits.txt | wc -l)
+	if ((${SYNCED_COMMIT_CNT} > 0)); then
+		# commit with the same subject is already in libbpf, but it's
+		# not 100% the same commit, so check with user
+		echo "Commit '${COMMIT_DESC}' is synced into libbpf as:"
+		grep -F "$(commit_signature ${LIBBPF_NEW_COMMIT})"	\
+			${TMP_DIR}/libbpf_commits.txt |			\
+			cut -d'|' -f1 | sed -e 's/^/- /'
+		if ((${SYNCED_COMMIT_CNT} == 1)); then
+			echo "Skipping '${COMMIT_DESC}' due to unique match..."
+			continue
+		fi
+		echo "'${COMMIT_DESC} matches multiple commits, please, double-check!"
 		read -p "Do you want to skip it? [y/N]: " SHOULD_SKIP
 		case "${SHOULD_SKIP}" in 
 			"y" | "Y")
