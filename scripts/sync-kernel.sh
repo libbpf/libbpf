@@ -3,7 +3,8 @@
 usage () {
     echo "USAGE: ./sync-kernel.sh <kernel-repo> <libbpf-repo> [<baseline-commit>]"
     echo ""
-    echo "If <baseline-commit> is not specified, it's read from <libbpf-repo>/CHECKPOINT-COMMIT"
+    echo "If <baseline-commit> is not specified, it's read from <libbpf-repo>/CHECKPOINT-COMMIT."
+    echo "Set MANUAL_MODE envvar to 1 to manually control every cherry-picked commita."
     exit 1
 }
 
@@ -95,12 +96,14 @@ validate_merges()
 # $2 - tip_tag
 cherry_pick_commits()
 {
+	local manual_mode=${MANUAL_MODE:-0}
 	local baseline_tag=$1
 	local tip_tag=$2
 	local new_commits
 	local signature
 	local should_skip
 	local synced_cnt
+	local manual_check
 	local desc
 
 	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
@@ -108,18 +111,24 @@ cherry_pick_commits()
 		desc="$(commit_desc ${new_commit})"
 		signature="$(commit_signature ${new_commit})"
 		synced_cnt=$(grep -F "${signature}" ${TMP_DIR}/libbpf_commits.txt | wc -l)
+		manual_check=0
 		if ((${synced_cnt} > 0)); then
 			# commit with the same subject is already in libbpf, but it's
 			# not 100% the same commit, so check with user
 			echo "Commit '${desc}' is synced into libbpf as:"
 			grep -F "${signature}" ${TMP_DIR}/libbpf_commits.txt | \
 				cut -d'|' -f1 | sed -e 's/^/- /'
-			if ((${synced_cnt} == 1)); then
+			if ((${manual_mode} != 1 && ${synced_cnt} == 1)); then
 				echo "Skipping '${desc}' due to unique match..."
 				continue
 			fi
-			echo "'${desc} matches multiple commits, please, double-check!"
-			read -p "Do you want to skip it? [y/N]: " should_skip
+			if ((${synced_cnt} > 1)); then
+				echo "'${desc} matches multiple commits, please, double-check!"
+				manual_check=1
+			fi
+		fi
+		if ((${manual_mode} == 1 || ${manual_check} == 1)); then
+			read -p "Do you want to skip '${desc}'? [y/N]: " should_skip
 			case "${should_skip}" in
 				"y" | "Y")
 					echo "Skipping '${desc}'..."
@@ -129,9 +138,8 @@ cherry_pick_commits()
 		fi
 		# commit hasn't been synced into libbpf yet
 		echo "Picking '${desc}'..."
-		if ! git cherry-pick ${new_commit}; then
-			read -p "Cherry-picking '${desc}' failed, \
-				 please fix manually and press <return> to proceed..."
+		if ! git cherry-pick ${new_commit} &>/dev/null; then
+			read -p "Error! Cherry-picking '${desc}' failed, please fix manually and press <return> to proceed..."
 		fi
 	done
 }
