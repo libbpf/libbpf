@@ -69,6 +69,73 @@ commit_signature()
 	git log -n1 --pretty='("%s")|%aI|%b' --shortstat $1 | tr '\n' '|'
 }
 
+# Validate there are no non-empty merges (we can't handle them)
+# $1 - baseline tag
+# $2 - tip tag
+validate_merges()
+{
+	local baseline_tag=$1
+	local tip_tag=$2
+	local new_merges
+	local merge_change_cnt
+
+	new_merges=$(git rev-list --merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
+	for new_merge in ${new_merges}; do
+		printf "MERGE:\t" && commit_desc ${new_merge}
+		merge_change_cnt=$(git log --format='' -n1 ${new_merge} | wc -l)
+		if ((${merge_change_cnt} > 0)); then
+			echo "Merge $(commit_desc ${new_merge}) is non-empty, aborting!.."
+			exit 3
+		fi
+	done
+}
+
+# Cherry-pick commits touching libbpf-related files
+# $1 - baseline_tag
+# $2 - tip_tag
+cherry_pick_commits()
+{
+	local baseline_tag=$1
+	local tip_tag=$2
+	local new_commits
+	local signature
+	local should_skip
+	local synced_cnt
+	local desc
+
+	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
+	for new_commit in ${new_commits}; do
+		desc="$(commit_desc ${new_commit})"
+		signature="$(commit_signature ${new_commit})"
+		synced_cnt=$(grep -F "${signature}" ${TMP_DIR}/libbpf_commits.txt | wc -l)
+		if ((${synced_cnt} > 0)); then
+			# commit with the same subject is already in libbpf, but it's
+			# not 100% the same commit, so check with user
+			echo "Commit '${desc}' is synced into libbpf as:"
+			grep -F "${signature}" ${TMP_DIR}/libbpf_commits.txt | \
+				cut -d'|' -f1 | sed -e 's/^/- /'
+			if ((${synced_cnt} == 1)); then
+				echo "Skipping '${desc}' due to unique match..."
+				continue
+			fi
+			echo "'${desc} matches multiple commits, please, double-check!"
+			read -p "Do you want to skip it? [y/N]: " should_skip
+			case "${should_skip}" in
+				"y" | "Y")
+					echo "Skipping '${desc}'..."
+					continue
+					;;
+			esac
+		fi
+		# commit hasn't been synced into libbpf yet
+		echo "Picking '${desc}'..."
+		if ! git cherry-pick ${new_commit}; then
+			read -p "Cherry-picking '${desc}' failed, \
+				 please fix manually and press <return> to proceed..."
+		fi
+	done
+}
+
 TMP_DIR=$(mktemp -d)
 
 cd_to ${LIBBPF_REPO}
@@ -117,50 +184,11 @@ git branch ${TIP_TAG} ${TIP_COMMIT}
 git branch ${SQUASH_BASE_TAG} ${SQUASH_COMMIT}
 git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 
+# Validate there are no non-empty merges in bpf-next and bpf trees
+validate_merges ${BASELINE_TAG} ${TIP_TAG}
+
 # Cherry-pick new commits onto squashed baseline commit
-LIBBPF_NEW_MERGES=$(git rev-list --merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
-for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
-	printf "MERGE:\t" && commit_desc ${LIBBPF_NEW_MERGE}
-	MERGE_CHANGES=$(git log --format='' -n1 ${LIBBPF_NEW_MERGE} | wc -l)
-	if ((${MERGE_CHANGES} > 0)); then
-		echo "Merge is non empty, aborting!.."
-		exit 3
-	fi
-done
-
-cd_to ${LINUX_REPO}
-
-LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
-for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
-	COMMIT_DESC="$(commit_desc ${LIBBPF_NEW_COMMIT})"
-	echo "Checking '${COMMIT_DESC}'..."
-	SYNCED_COMMIT_CNT=$(grep -F "$(commit_signature ${LIBBPF_NEW_COMMIT})" ${TMP_DIR}/libbpf_commits.txt | wc -l)
-	if ((${SYNCED_COMMIT_CNT} > 0)); then
-		# commit with the same subject is already in libbpf, but it's
-		# not 100% the same commit, so check with user
-		echo "Commit '${COMMIT_DESC}' is synced into libbpf as:"
-		grep -F "$(commit_signature ${LIBBPF_NEW_COMMIT})"	\
-			${TMP_DIR}/libbpf_commits.txt |			\
-			cut -d'|' -f1 | sed -e 's/^/- /'
-		if ((${SYNCED_COMMIT_CNT} == 1)); then
-			echo "Skipping '${COMMIT_DESC}' due to unique match..."
-			continue
-		fi
-		echo "'${COMMIT_DESC} matches multiple commits, please, double-check!"
-		read -p "Do you want to skip it? [y/N]: " SHOULD_SKIP
-		case "${SHOULD_SKIP}" in 
-			"y" | "Y")
-				echo "Skipping '${COMMIT_DESC}'..."
-				continue
-				;;
-		esac
-	fi
-	# commit hasn't been synced into libbpf yet
-	if ! git cherry-pick ${LIBBPF_NEW_COMMIT}; then 
-		read -p "Cherry-picking '${COMMIT_DESC}' failed, \
-			 please fix manually and press <return> to proceed..."
-	fi
-done
+cherry_pick_commits ${BASELINE_TAG} ${TIP_TAG}
 
 # Move all libbpf files into __libbpf directory.
 git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
