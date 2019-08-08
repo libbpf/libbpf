@@ -19,6 +19,9 @@ fi
 
 set -eu
 
+WORKDIR=$(pwd)
+trap "cd ${WORKDIR}; exit" INT TERM EXIT
+
 declare -A PATH_MAP
 PATH_MAP=(									\
 	[tools/lib/bpf]=src							\
@@ -41,20 +44,26 @@ for p in "${!PATH_MAP[@]}"; do
 done
 LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}"
 
-WORKDIR=$(pwd)
-trap "cd ${WORKDIR}; exit" INT TERM EXIT
-
 cd_to()
 {
 	cd ${WORKDIR} && cd "$1"
 }
 
-echo "WORKDIR:         ${WORKDIR}"
-echo "LINUX REPO:      ${LINUX_REPO}"
-echo "LIBBPF REPO:     ${LIBBPF_REPO}"
+# Output brief single-line commit description
+# $1 - commit ref
+commit_desc()
+{
+	git log -n1 --pretty='%h ("%s")' $1
+}
 
+TMP_DIR=$(mktemp -d)
+
+cd_to ${LIBBPF_REPO}
 SUFFIX=$(date --utc +%Y-%m-%dT%H-%M-%S.%3NZ)
-BASELINE_COMMIT=${3-$(cat ${LIBBPF_REPO}/CHECKPOINT-COMMIT)}
+BASELINE_COMMIT=${3-$(cat CHECKPOINT-COMMIT)}
+
+echo "Dumping existing libbpf commit signatures..."
+git log --oneline -n500 > ${TMP_DIR}/libbpf_commits.txt
 
 # Use current kernel repo HEAD as a source of patches
 cd_to ${LINUX_REPO}
@@ -70,9 +79,13 @@ SQUASH_BASE_TAG=libbpf-squash-base-${SUFFIX}
 SQUASH_TIP_TAG=libbpf-squash-tip-${SUFFIX}
 SQUASH_COMMIT=$(git commit-tree ${BASELINE_COMMIT}^{tree} -m "BASELINE SQUASH ${BASELINE_COMMIT}")
 
+echo "WORKDIR:         ${WORKDIR}"
+echo "LINUX REPO:      ${LINUX_REPO}"
+echo "LIBBPF REPO:     ${LIBBPF_REPO}"
+echo "TEMP DIR:        ${TMP_DIR}"
 echo "SUFFIX:          ${SUFFIX}"
-echo "BASELINE COMMIT: $(git log --pretty=oneline --no-walk ${BASELINE_COMMIT})"
-echo "TIP COMMIT:      $(git log --pretty=oneline --no-walk ${TIP_COMMIT})"
+echo "BASELINE COMMIT: '$(commit_desc ${BASELINE_COMMIT})'"
+echo "TIP COMMIT:      '$(commit_desc ${TIP_COMMIT})'"
 echo "SQUASH COMMIT:   ${SQUASH_COMMIT}"
 echo "BASELINE TAG:    ${BASELINE_TAG}"
 echo "TIP TAG:         ${TIP_TAG}"
@@ -80,9 +93,6 @@ echo "SQUASH BASE TAG: ${SQUASH_BASE_TAG}"
 echo "SQUASH TIP TAG:  ${SQUASH_TIP_TAG}"
 echo "VIEW TAG:        ${VIEW_TAG}"
 echo "LIBBPF SYNC TAG: ${LIBBPF_SYNC_TAG}"
-
-TMP_DIR=$(mktemp -d)
-echo "TEMP DIR:        ${TMP_DIR}"
 echo "PATCHES+COVER:   ${TMP_DIR}/patches"
 echo "PATCHSET:        ${TMP_DIR}/patchset.patch"
 
@@ -94,7 +104,7 @@ git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 # Cherry-pick new commits onto squashed baseline commit
 LIBBPF_NEW_MERGES=$(git rev-list --merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
-	printf "MERGE:\t" && git log --oneline -n1 ${LIBBPF_NEW_MERGE}
+	printf "MERGE:\t" && commit_desc ${LIBBPF_NEW_MERGE}
 	MERGE_CHANGES=$(git log --format='' -n1 ${LIBBPF_NEW_MERGE} | wc -l)
 	if ((${MERGE_CHANGES} > 0)); then
 		echo "Merge is non empty, aborting!.."
@@ -102,13 +112,12 @@ for LIBBPF_NEW_MERGE in ${LIBBPF_NEW_MERGES}; do
 	fi
 done
 
-cd_to ${LIBBPF_REPO}
-git log --oneline -n500 > ${TMP_DIR}/libbpf_commits.txt
 cd_to ${LINUX_REPO}
 
 LIBBPF_NEW_COMMITS=$(git rev-list --no-merges --topo-order --reverse ${BASELINE_TAG}..${TIP_TAG} ${LIBBPF_PATHS[@]})
 for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
-	echo "Checking commit '${LIBBPF_NEW_COMMIT}'"
+	COMMIT_DESC="$(commit_desc ${LIBBPF_NEW_COMMIT})"
+	echo "Checking '${COMMIT_DESC}'..."
 	SYNCED_COMMITS=$(grep -F "$(git log -n1 --pretty=format:%s ${LIBBPF_NEW_COMMIT})" ${TMP_DIR}/libbpf_commits.txt || echo "")
 	if [ -n "${SYNCED_COMMITS}" ]; then
 		# commit with the same subject is already in libbpf, but it's not 100% the same commit, so check with user
@@ -118,14 +127,15 @@ for LIBBPF_NEW_COMMIT in ${LIBBPF_NEW_COMMITS}; do
 		read -p "Do you want to skip it? [y/N]: " SHOULD_SKIP
 		case "${SHOULD_SKIP}" in 
 			"y" | "Y")
-				echo "Skipping '$(git log -n1 --oneline ${LIBBPF_NEW_COMMIT})'..."
+				echo "Skipping '${COMMIT_DESC}'..."
 				continue
 				;;
 		esac
 	fi
 	# commit hasn't been synced into libbpf yet
 	if ! git cherry-pick ${LIBBPF_NEW_COMMIT}; then 
-		read -p "Cherry-picking '$(git log --oneline -n1 ${LIBBPF_NEW_COMMIT})' failed, please fix manually and press <return> to proceed..."
+		read -p "Cherry-picking '${COMMIT_DESC}' failed, \
+			 please fix manually and press <return> to proceed..."
 	fi
 done
 
