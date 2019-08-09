@@ -104,6 +104,7 @@ cherry_pick_commits()
 	local should_skip
 	local synced_cnt
 	local manual_check
+	local libbpf_conflict_cnt
 	local desc
 
 	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
@@ -139,6 +140,21 @@ cherry_pick_commits()
 		# commit hasn't been synced into libbpf yet
 		echo "Picking '${desc}'..."
 		if ! git cherry-pick ${new_commit} &>/dev/null; then
+			echo "Warning! Cherry-picking '${desc} failed, checking if it's non-libbpf files causing problems..."
+			libbpf_conflict_cnt=$(git diff --name-only --diff-filter=U -- ${LIBBPF_PATHS[@]} | wc -l)
+
+			if ((${libbpf_conflict_cnt} == 0)); then
+				echo "Looks like only non-libbpf files have conflicts, ignoring..."
+				git add .
+				# GIT_EDITOR=true to avoid editor popping up to edit commit message
+				if ! GIT_EDITOR=true git cherry-pick --continue; then
+					echo "Error! That still failed! Please resolve manually."
+				else
+					echo "Success! All cherry-pick conflicts were resolved for '${desc}'!"
+					continue
+				fi
+			fi
+
 			read -p "Error! Cherry-picking '${desc}' failed, please fix manually and press <return> to proceed..."
 		fi
 	done
