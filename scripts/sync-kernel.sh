@@ -4,7 +4,8 @@ usage () {
     echo "USAGE: ./sync-kernel.sh <kernel-repo> <libbpf-repo> [<baseline-commit>]"
     echo ""
     echo "If <baseline-commit> is not specified, it's read from <libbpf-repo>/CHECKPOINT-COMMIT."
-    echo "Set MANUAL_MODE envvar to 1 to manually control every cherry-picked commita."
+    echo "Set MANUAL_MODE envvar to 1 to manually control every cherry-picked commits."
+    echo "Set IGNORE_CONSISTENCY envvar to 1 to ignore failed final contents consistency check."
     exit 1
 }
 
@@ -43,7 +44,7 @@ LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools 
 for p in "${!PATH_MAP[@]}"; do
 	LIBBPF_TREE_FILTER+="git mv -kf ${p} __libbpf/${PATH_MAP[${p}]} && "$'\\\n'
 done
-LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore}"
+LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore} >/dev/null"
 
 cd_to()
 {
@@ -147,7 +148,7 @@ cherry_pick_commits()
 				echo "Looks like only non-libbpf files have conflicts, ignoring..."
 				git add .
 				# GIT_EDITOR=true to avoid editor popping up to edit commit message
-				if ! GIT_EDITOR=true git cherry-pick --continue; then
+				if ! GIT_EDITOR=true git cherry-pick --continue &>/dev/null; then
 					echo "Error! That still failed! Please resolve manually."
 				else
 					echo "Success! All cherry-pick conflicts were resolved for '${desc}'!"
@@ -200,8 +201,7 @@ echo "SQUASH BASE TAG: ${SQUASH_BASE_TAG}"
 echo "SQUASH TIP TAG:  ${SQUASH_TIP_TAG}"
 echo "VIEW TAG:        ${VIEW_TAG}"
 echo "LIBBPF SYNC TAG: ${LIBBPF_SYNC_TAG}"
-echo "PATCHES+COVER:   ${TMP_DIR}/patches"
-echo "PATCHSET:        ${TMP_DIR}/patchset.patch"
+echo "PATCHES:         ${TMP_DIR}/patches"
 
 git branch ${BASELINE_TAG} ${BASELINE_COMMIT}
 git branch ${TIP_TAG} ${TIP_COMMIT}
@@ -228,13 +228,16 @@ fi
 
 # Exclude baseline commit and generate nice cover letter with summary
 git format-patch ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --cover-letter -o ${TMP_DIR}/patches
-# Now generate single-file patchset w/o cover to apply on top of libbpf repo
-git format-patch ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --stdout > ${TMP_DIR}/patchset.patch
 
-# Now is time to re-apply libbpf-related linux  patches to libbpf repo
+# Now is time to re-apply libbpf-related linux patches to libbpf repo
 cd_to ${LIBBPF_REPO}
 git checkout -b ${LIBBPF_SYNC_TAG}
-git am --committer-date-is-author-date ${TMP_DIR}/patchset.patch
+
+for patch in $(ls -1 ${TMP_DIR}/patches | tail -n +2); do
+	if ! git am --committer-date-is-author-date "${TMP_DIR}/patches/${patch}"; then
+		read -p "Applying ${TMP_DIR}/patches/${patch} failed, please resolve manually and press <return> to proceed..."
+	fi
+done
 
 # Use generated cover-letter as a template for "sync commit" with
 # baseline and checkpoint commits from kernel repo (and leave summary
@@ -268,10 +271,21 @@ git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGE
 echo "Comparing list of files..."
 diff ${TMP_DIR}/linux-view.ls ${TMP_DIR}/github-view.ls
 echo "Comparing file contents..."
+CONSISTENT=1
 for F in $(cat ${TMP_DIR}/linux-view.ls); do
-	diff "${LINUX_ABS_DIR}/${F}" "${GITHUB_ABS_DIR}/${F}"
+	if ! diff "${LINUX_ABS_DIR}/${F}" "${GITHUB_ABS_DIR}/${F}"; then
+		echo "${LINUX_ABS_DIR}/${F} and ${GITHUB_ABS_DIR}/${F} are different!"
+		CONSISTENT=0
+	fi
 done
-echo "Contents appear identical!"
+if ((${CONSISTENT} == 1)); then
+	echo "Great! Content is identical!"
+else
+	echo "Unfortunately, there are consistency problems!"
+	if ((${IGNORE_CONSISTENCY} != 1)); then
+		exit 4
+	fi
+fi
 
 echo "Cleaning up..."
 rm -r ${TMP_DIR}
