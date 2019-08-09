@@ -1,27 +1,40 @@
 #!/bin/bash
 
 usage () {
-    echo "USAGE: ./sync-kernel.sh <kernel-repo> <libbpf-repo> [<baseline-commit>]"
-    echo ""
-    echo "If <baseline-commit> is not specified, it's read from <libbpf-repo>/CHECKPOINT-COMMIT."
-    echo "Set MANUAL_MODE envvar to 1 to manually control every cherry-picked commits."
-    echo "Set IGNORE_CONSISTENCY envvar to 1 to ignore failed final contents consistency check."
-    exit 1
+	echo "USAGE: ./sync-kernel.sh <libbpf-repo> <kernel-repo> <bpf-branch>"
+	echo ""
+	echo "Set BPF_NEXT_BASELINE to override bpf-next tree commit, otherwise read from <libbpf-repo>/CHECKPOINT-COMMIT."
+	echo "Set BPF_BASELINE to override bpf tree commit, otherwise read from <libbpf-repo>/BPF-CHECKPOINT-COMMIT."
+	echo "Set MANUAL_MODE to 1 to manually control every cherry-picked commits."
+	echo "Set IGNORE_CONSISTENCY to 1 to ignore failed contents consistency check."
+	exit 1
 }
-
-LINUX_REPO=${1-""}
-LIBBPF_REPO=${2-""}
-
-if [ -z "${LINUX_REPO}" ]; then
-    usage
-fi
-if [ -z "${LIBBPF_REPO}" ]; then
-    usage
-fi
 
 set -eu
 
+LIBBPF_REPO=${1-""}
+LINUX_REPO=${2-""}
+BPF_BRANCH=${3-""}
+BASELINE_COMMIT=${BPF_NEXT_BASELINE:-$(cat ${LIBBPF_REPO}/CHECKPOINT-COMMIT)}
+BPF_BASELINE_COMMIT=${BPF_BASELINE:-$(cat ${LIBBPF_REPO}/BPF-CHECKPOINT-COMMIT)}
+
+if [ -z "${LIBBPF_REPO}" ] || [ -z "${LINUX_REPO}" ] || [ -z "${BPF_BRANCH}" ]; then
+	echo "Error: libbpf or linux repos are not specified"
+	usage
+fi
+if [ -z "${BPF_BRANCH}" ]; then
+	echo "Error: linux's bpf tree branch is not specified"
+	usage
+fi
+if [ -z "${BASELINE_COMMIT}" ] || [ -z "${BPF_BASELINE_COMMIT}" ]; then
+	echo "Error: bpf or bpf-next baseline commits are not provided"
+	usage
+fi
+
+SUFFIX=$(date --utc +%Y-%m-%dT%H-%M-%S.%3NZ)
 WORKDIR=$(pwd)
+TMP_DIR=$(mktemp -d)
+
 trap "cd ${WORKDIR}; exit" INT TERM EXIT
 
 declare -A PATH_MAP
@@ -161,13 +174,7 @@ cherry_pick_commits()
 	done
 }
 
-TMP_DIR=$(mktemp -d)
-
 cd_to ${LIBBPF_REPO}
-
-SUFFIX=$(date --utc +%Y-%m-%dT%H-%M-%S.%3NZ)
-BASELINE_COMMIT=${3-$(cat CHECKPOINT-COMMIT)}
-
 echo "Dumping existing libbpf commit signatures..."
 for h in $(git log --pretty='%h' -n500); do
 	echo $h "$(commit_signature $h)" >> ${TMP_DIR}/libbpf_commits.txt
@@ -177,8 +184,11 @@ done
 cd_to ${LINUX_REPO}
 TIP_SYM_REF=$(git symbolic-ref -q --short HEAD || git rev-parse HEAD)
 TIP_COMMIT=$(git rev-parse HEAD)
+BPF_TIP_COMMIT=$(git rev-parse ${BPF_BRANCH})
 BASELINE_TAG=libbpf-baseline-${SUFFIX}
 TIP_TAG=libbpf-tip-${SUFFIX}
+BPF_BASELINE_TAG=libbpf-bpf-baseline-${SUFFIX}
+BPF_TIP_TAG=libbpf-bpf-tip-${SUFFIX}
 VIEW_TAG=libbpf-view-${SUFFIX}
 LIBBPF_SYNC_TAG=libbpf-sync-${SUFFIX}
 
@@ -187,32 +197,40 @@ SQUASH_BASE_TAG=libbpf-squash-base-${SUFFIX}
 SQUASH_TIP_TAG=libbpf-squash-tip-${SUFFIX}
 SQUASH_COMMIT=$(git commit-tree ${BASELINE_COMMIT}^{tree} -m "BASELINE SQUASH ${BASELINE_COMMIT}")
 
-echo "WORKDIR:         ${WORKDIR}"
-echo "LINUX REPO:      ${LINUX_REPO}"
-echo "LIBBPF REPO:     ${LIBBPF_REPO}"
-echo "TEMP DIR:        ${TMP_DIR}"
-echo "SUFFIX:          ${SUFFIX}"
-echo "BASELINE COMMIT: '$(commit_desc ${BASELINE_COMMIT})'"
-echo "TIP COMMIT:      '$(commit_desc ${TIP_COMMIT})'"
-echo "SQUASH COMMIT:   ${SQUASH_COMMIT}"
-echo "BASELINE TAG:    ${BASELINE_TAG}"
-echo "TIP TAG:         ${TIP_TAG}"
-echo "SQUASH BASE TAG: ${SQUASH_BASE_TAG}"
-echo "SQUASH TIP TAG:  ${SQUASH_TIP_TAG}"
-echo "VIEW TAG:        ${VIEW_TAG}"
-echo "LIBBPF SYNC TAG: ${LIBBPF_SYNC_TAG}"
-echo "PATCHES:         ${TMP_DIR}/patches"
+echo "WORKDIR:          ${WORKDIR}"
+echo "LINUX REPO:       ${LINUX_REPO}"
+echo "LIBBPF REPO:      ${LIBBPF_REPO}"
+echo "TEMP DIR:         ${TMP_DIR}"
+echo "SUFFIX:           ${SUFFIX}"
+echo "BASE COMMIT:      '$(commit_desc ${BASELINE_COMMIT})'"
+echo "TIP COMMIT:       '$(commit_desc ${TIP_COMMIT})'"
+echo "BPF BASE COMMIT:  '$(commit_desc ${BPF_BASELINE_COMMIT})'"
+echo "BPF TIP COMMIT:   '$(commit_desc ${BPF_TIP_COMMIT})'"
+echo "SQUASH COMMIT:    ${SQUASH_COMMIT}"
+echo "BASELINE TAG:     ${BASELINE_TAG}"
+echo "TIP TAG:          ${TIP_TAG}"
+echo "BPF BASELINE TAG: ${BPF_BASELINE_TAG}"
+echo "BPF TIP TAG:      ${BPF_TIP_TAG}"
+echo "SQUASH BASE TAG:  ${SQUASH_BASE_TAG}"
+echo "SQUASH TIP TAG:   ${SQUASH_TIP_TAG}"
+echo "VIEW TAG:         ${VIEW_TAG}"
+echo "LIBBPF SYNC TAG:  ${LIBBPF_SYNC_TAG}"
+echo "PATCHES:          ${TMP_DIR}/patches"
 
 git branch ${BASELINE_TAG} ${BASELINE_COMMIT}
 git branch ${TIP_TAG} ${TIP_COMMIT}
+git branch ${BPF_BASELINE_TAG} ${BPF_BASELINE_COMMIT}
+git branch ${BPF_TIP_TAG} ${BPF_TIP_COMMIT}
 git branch ${SQUASH_BASE_TAG} ${SQUASH_COMMIT}
 git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
 
 # Validate there are no non-empty merges in bpf-next and bpf trees
 validate_merges ${BASELINE_TAG} ${TIP_TAG}
+validate_merges ${BPF_BASELINE_TAG} ${BPF_TIP_TAG}
 
 # Cherry-pick new commits onto squashed baseline commit
 cherry_pick_commits ${BASELINE_TAG} ${TIP_TAG}
+cherry_pick_commits ${BPF_BASELINE_TAG} ${BPF_TIP_TAG}
 
 # Move all libbpf files into __libbpf directory.
 git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
@@ -243,14 +261,18 @@ done
 # baseline and checkpoint commits from kernel repo (and leave summary
 # from cover letter intact, of course)
 echo ${TIP_COMMIT} > CHECKPOINT-COMMIT &&					      \
+echo ${BPF_TIP_COMMIT} > BPF-CHECKPOINT-COMMIT &&				      \
 git add CHECKPOINT-COMMIT &&							      \
+git add BPF-CHECKPOINT-COMMIT &&						      \
 awk '/\*\*\* BLURB HERE \*\*\*/ {p=1} p' ${TMP_DIR}/patches/0000-cover-letter.patch | \
 sed "s/\*\*\* BLURB HERE \*\*\*/\
 sync: latest libbpf changes from kernel\n\
 \n\
 Syncing latest libbpf commits from kernel repository.\n\
-Baseline commit:   ${BASELINE_COMMIT}\n\
-Checkpoint commit: ${TIP_COMMIT}/" |						      \
+Baseline bpf-next commit:   ${BASELINE_COMMIT}\n\
+Checkpoint bpf-next commit: ${TIP_COMMIT}\n\
+Baseline bpf commit:        ${BPF_BASELINE_COMMIT}\n\
+Checkpoint bpf commit:      ${BPF_TIP_COMMIT}/" |				      \
 git commit --file=-
 
 echo "SUCCESS! ${COMMIT_CNT} commits synced."
@@ -291,7 +313,8 @@ echo "Cleaning up..."
 rm -r ${TMP_DIR}
 cd_to ${LINUX_REPO}
 git checkout ${TIP_SYM_REF}
-git branch -D ${BASELINE_TAG} ${TIP_TAG} ${SQUASH_BASE_TAG} ${SQUASH_TIP_TAG} ${VIEW_TAG}
+git branch -D ${BASELINE_TAG} ${TIP_TAG} ${BPF_BASELINE_TAG} ${BPF_TIP_TAG} \
+	      ${SQUASH_BASE_TAG} ${SQUASH_TIP_TAG} ${VIEW_TAG}
 
 cd_to .
 echo "DONE."
