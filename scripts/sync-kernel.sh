@@ -93,13 +93,22 @@ validate_merges()
 	local tip_tag=$2
 	local new_merges
 	local merge_change_cnt
+	local ignore_merge_resolutions
+	local desc
 
 	new_merges=$(git rev-list --merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
 	for new_merge in ${new_merges}; do
-		printf "MERGE:\t" && commit_desc ${new_merge}
-		merge_change_cnt=$(git log --format='' -n1 ${new_merge} | wc -l)
+		desc=$(commit_desc ${new_merge})
+		echo "MERGE: ${desc}"
+		merge_change_cnt=$(git show --format='' ${new_merge} | wc -l)
 		if ((${merge_change_cnt} > 0)); then
-			echo "Merge $(commit_desc ${new_merge}) is non-empty, aborting!.."
+			read -p "Merge '${desc}' is non-empty, which will cause conflicts! Do you want to proceed? [y/N]: " ignore_merge_resolutions
+			case "${ignore_merge_resolutions}" in
+				"y" | "Y")
+					echo "Skipping '${desc}'..."
+					continue
+					;;
+			esac
 			exit 3
 		fi
 	done
@@ -291,11 +300,11 @@ GITHUB_ABS_DIR=$(pwd)
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
 
 echo "Comparing list of files..."
-diff ${TMP_DIR}/linux-view.ls ${TMP_DIR}/github-view.ls
+diff -u ${TMP_DIR}/linux-view.ls ${TMP_DIR}/github-view.ls
 echo "Comparing file contents..."
 CONSISTENT=1
 for F in $(cat ${TMP_DIR}/linux-view.ls); do
-	if ! diff "${LINUX_ABS_DIR}/${F}" "${GITHUB_ABS_DIR}/${F}"; then
+	if ! diff -u "${LINUX_ABS_DIR}/${F}" "${GITHUB_ABS_DIR}/${F}"; then
 		echo "${LINUX_ABS_DIR}/${F} and ${GITHUB_ABS_DIR}/${F} are different!"
 		CONSISTENT=0
 	fi
