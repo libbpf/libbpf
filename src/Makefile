@@ -1,10 +1,9 @@
 # SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 
-VERSION = 0
-PATCHLEVEL = 0
-EXTRAVERSION = 4
-
-LIBBPF_VERSION	= $(VERSION).$(PATCHLEVEL).$(EXTRAVERSION)
+LIBBPF_VERSION := $(shell \
+	grep -oE '^LIBBPF_([0-9.]+)' libbpf.map | \
+	sort -rV | head -n1 | cut -d'_' -f2)
+LIBBPF_MAJOR_VERSION := $(firstword $(subst ., ,$(LIBBPF_VERSION)))
 
 TOPDIR = ..
 
@@ -40,7 +39,7 @@ OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
 	LIBS += $(OBJDIR)/libbpf.so \
-		$(OBJDIR)/libbpf.so.$(VERSION) \
+		$(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION) \
 		$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
 	VERSION_SCRIPT := libbpf.map
 endif
@@ -71,15 +70,15 @@ all: $(LIBS) $(PC_FILE)
 $(OBJDIR)/libbpf.a: $(OBJS)
 	$(AR) rcs $@ $^
 
-$(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(VERSION)
+$(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION)
 	ln -sf $(^F) $@
 
-$(OBJDIR)/libbpf.so.$(VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
+$(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
 	ln -sf $(^F) $@
 
 $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(OBJS)
 	$(CC) -shared $(ALL_LDFLAGS) -Wl,--version-script=$(VERSION_SCRIPT) \
-				     -Wl,-soname,libbpf.so.$(VERSION) \
+				     -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
 				     $^ -o $@
 
 $(OBJDIR)/libbpf.pc:
