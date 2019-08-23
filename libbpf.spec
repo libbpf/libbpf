@@ -1,5 +1,5 @@
 Name:           libbpf
-Version:        0.0.4
+Version:        0.0.5
 Release:        1%{?dist}
 Summary:        Libbpf library
 Group:          Development/System
@@ -50,5 +50,5 @@ rm -rf "%{buildroot}"
 %attr(0644,-,-) %{_libdir}/pkgconfig/libbpf.pc
 
 %changelog
-* Thu Aug 8 2019 Julia Kartseva <hex@fb.com> - 0.0.4-1%{?dist}
+* Thu Aug 22 2019 Julia Kartseva <hex@fb.com> - 0.0.5-1%{?dist}
 - Initial release
