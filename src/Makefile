@@ -77,9 +77,9 @@ $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSIO
 	ln -sf $(^F) $@
 
 $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(OBJS)
-	$(CC) -shared $(ALL_LDFLAGS) -Wl,--version-script=$(VERSION_SCRIPT) \
-				     -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
-				     $^ -o $@
+	$(CC) -shared -Wl,--version-script=$(VERSION_SCRIPT) \
+		      -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
+		      $^ $(ALL_LDFLAGS) -o $@
 
 $(OBJDIR)/libbpf.pc:
 	sed -e "s|@PREFIX@|$(PREFIX)|" \
