@@ -165,9 +165,16 @@ cherry_pick_commits()
 		if ! git cherry-pick ${new_commit} &>/dev/null; then
 			echo "Warning! Cherry-picking '${desc} failed, checking if it's non-libbpf files causing problems..."
 			libbpf_conflict_cnt=$(git diff --name-only --diff-filter=U -- ${LIBBPF_PATHS[@]} | wc -l)
+			conflict_cnt=$(git diff --name-only | wc -l)
 
 			if ((${libbpf_conflict_cnt} == 0)); then
 				echo "Looks like only non-libbpf files have conflicts, ignoring..."
+				if ((${conflict_cnt} == 0)); then
+					echo "Empty cherry-pick, skipping it..."
+					git cherry-pick --abort
+					continue
+				fi
+
 				git add .
 				# GIT_EDITOR=true to avoid editor popping up to edit commit message
 				if ! GIT_EDITOR=true git cherry-pick --continue &>/dev/null; then
@@ -313,7 +320,7 @@ if ((${CONSISTENT} == 1)); then
 	echo "Great! Content is identical!"
 else
 	echo "Unfortunately, there are consistency problems!"
-	if ((${IGNORE_CONSISTENCY} != 1)); then
+	if ((${IGNORE_CONSISTENCY-0} != 1)); then
 		exit 4
 	fi
 fi
