@@ -2,3 +2,5 @@
 *.a
 /libbpf.pc
 /libbpf.so*
+/staticobjs
+/sharedobjs
