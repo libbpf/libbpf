@@ -30,27 +30,31 @@ for phase in "${PHASES[@]}"; do
         SETUP)
             info "Setup phase"
             info "Using Debian $DEBIAN_RELEASE"
-	    docker pull debian:$DEBIAN_RELEASE
+            docker pull debian:$DEBIAN_RELEASE
             info "Starting container $CONT_NAME"
             $DOCKER_RUN -v $REPO_ROOT:/build:rw \
                         -w /build --privileged=true --name $CONT_NAME \
-			-dit --net=host debian:$DEBIAN_RELEASE /bin/bash
+                        -dit --net=host debian:$DEBIAN_RELEASE /bin/bash
             docker_exec bash -c "echo deb-src http://deb.debian.org/debian $DEBIAN_RELEASE main >>/etc/apt/sources.list"
             docker_exec apt-get -y update
             docker_exec apt-get -y build-dep libelf-dev
             docker_exec apt-get -y install libelf-dev
             docker_exec apt-get -y install "${ADDITIONAL_DEPS[@]}"
             ;;
-        RUN|RUN_CLANG|RUN_GCC8)
-            if [[ "$phase" = "RUN_CLANG" ]]; then
+        RUN|RUN_CLANG|RUN_GCC8|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC8_ASAN)
+            if [[ "$phase" = *"CLANG"* ]]; then
                 ENV_VARS="-e CC=clang -e CXX=clang++"
                 CC="clang"
-            elif [[ "$phase" = "RUN_GCC8" ]]; then
+            elif [[ "$phase" = *"GCC8"* ]]; then
                 ENV_VARS="-e CC=gcc-8 -e CXX=g++-8"
                 CC="gcc-8"
             fi
-            docker_exec mkdir build
+            if [[ "$phase" = *"ASAN"* ]]; then
+                CFLAGS="${CFLAGS} -fsanitize=address,undefined"
+            fi
+            docker_exec mkdir build install
             docker_exec ${CC:-cc} --version
+            info "build"
             docker_exec make CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
             docker_exec ldd build/libbpf.so
@@ -58,27 +62,9 @@ for phase in "${PHASES[@]}"; do
                 error "No reference to libelf.so in libbpf.so!"
                 exit 1
             fi
-            docker_exec rm -rf build
-            ;;
-        RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC8_ASAN)
-            if [[ "$phase" = "RUN_CLANG_ASAN" ]]; then
-                ENV_VARS="-e CC=clang -e CXX=clang++"
-                CC="clang"
-            elif [[ "$phase" = "RUN_GCC8_ASAN" ]]; then
-                ENV_VARS="-e CC=gcc-8 -e CXX=g++-8"
-                CC="gcc-8"
-            fi
-            CFLAGS="${CFLAGS} -fsanitize=address,undefined"
-            docker_exec mkdir build
-            docker_exec ${CC:-cc} --version
-            docker_exec make CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
-            info "ldd build/libbpf.so:"
-            docker_exec ldd build/libbpf.so
-            if ! docker_exec ldd build/libbpf.so | grep -q libelf; then
-                error "No reference to libelf.so in libbpf.so!"
-                exit 1
-            fi
-            docker_exec rm -rf build
+            info "install"
+            docker_exec make -C src OBJDIR=../build DESTDIR=../install install
+            docker_exec rm -rf build install
             ;;
         CLEANUP)
             info "Cleanup phase"
