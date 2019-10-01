@@ -15,9 +15,7 @@ ifneq ($(FEATURE_REALLOCARRAY),)
 	ALL_CFLAGS += -DCOMPAT_NEED_REALLOCARRAY
 endif
 
-ifndef BUILD_STATIC_ONLY
-	ALL_CFLAGS += -fPIC -fvisibility=hidden
-endif
+SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall
 ALL_CFLAGS += $(CFLAGS)
@@ -31,22 +29,25 @@ else
 endif
 
 OBJDIR ?= .
-
-OBJS := $(addprefix $(OBJDIR)/,bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
+SHARED_OBJDIR := $(OBJDIR)/sharedobjs
+STATIC_OBJDIR := $(OBJDIR)/staticobjs
+OBJS := bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o \
-	btf_dump.o hashmap.o)
+	btf_dump.o hashmap.o
+SHARED_OBJS := $(addprefix $(SHARED_OBJDIR)/,$(OBJS))
+STATIC_OBJS := $(addprefix $(STATIC_OBJDIR)/,$(OBJS))
 
-LIBS := $(OBJDIR)/libbpf.a
+STATIC_LIBS := $(OBJDIR)/libbpf.a
 ifndef BUILD_STATIC_ONLY
-	LIBS += $(OBJDIR)/libbpf.so \
-		$(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION) \
-		$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
+	SHARED_LIBS := $(OBJDIR)/libbpf.so \
+		       $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION) \
+		       $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
 	VERSION_SCRIPT := libbpf.map
 endif
 
 HEADERS := bpf.h libbpf.h btf.h xsk.h libbpf_util.h
-UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,bpf.h bpf_common.h \
-	btf.h)
+UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,\
+			    bpf.h bpf_common.h btf.h)
 
 PC_FILE := $(OBJDIR)/libbpf.pc
 
@@ -65,9 +66,9 @@ LIBDIR ?= $(PREFIX)/$(LIBSUBDIR)
 INCLUDEDIR ?= $(PREFIX)/include
 UAPIDIR ?= $(PREFIX)/include
 
-all: $(LIBS) $(PC_FILE)
+all: $(STATIC_LIBS) $(SHARED_LIBS) $(PC_FILE)
 
-$(OBJDIR)/libbpf.a: $(OBJS)
+$(OBJDIR)/libbpf.a: $(STATIC_OBJS)
 	$(AR) rcs $@ $^
 
 $(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION)
@@ -76,7 +77,7 @@ $(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION)
 $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
 	ln -sf $(^F) $@
 
-$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(OBJS)
+$(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(SHARED_OBJS)
 	$(CC) -shared -Wl,--version-script=$(VERSION_SCRIPT) \
 		      -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
 		      $^ $(ALL_LDFLAGS) -o $@
@@ -87,8 +88,17 @@ $(OBJDIR)/libbpf.pc:
 		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
 		< libbpf.pc.template > $@
 
-$(OBJDIR)/%.o: %.c
+$(STATIC_OBJDIR):
+	mkdir -p $(STATIC_OBJDIR)
+
+$(SHARED_OBJDIR):
+	mkdir -p $(SHARED_OBJDIR)
+
+$(STATIC_OBJDIR)/%.o: %.c | $(STATIC_OBJDIR)
 	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(SHARED_OBJDIR)/%.o: %.c | $(SHARED_OBJDIR)
+	$(CC) $(ALL_CFLAGS) $(SHARED_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 define do_install
 	if [ ! -d '$(DESTDIR)$2' ]; then		\
@@ -120,4 +130,4 @@ install_pkgconfig: $(PC_FILE)
 	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
 
 clean:
-	rm -f *.o *.a *.so *.so.* *.pc
+	rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
