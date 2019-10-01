@@ -116,7 +116,7 @@ define do_s_install
 endef
 
 install: all install_headers install_pkgconfig
-	$(call do_s_install,$(LIBS),$(LIBDIR))
+	$(call do_s_install,$(STATIC_LIBS) $(SHARED_LIBS),$(LIBDIR))
 
 install_headers:
 	$(call do_install,$(HEADERS),$(INCLUDEDIR)/bpf,644)
