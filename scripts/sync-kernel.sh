@@ -191,6 +191,7 @@ cherry_pick_commits()
 }
 
 cd_to ${LIBBPF_REPO}
+GITHUB_ABS_DIR=$(pwd)
 echo "Dumping existing libbpf commit signatures..."
 for h in $(git log --pretty='%h' -n500); do
 	echo $h "$(commit_signature $h)" >> ${TMP_DIR}/libbpf_commits.txt
@@ -198,6 +199,7 @@ done
 
 # Use current kernel repo HEAD as a source of patches
 cd_to ${LINUX_REPO}
+LINUX_ABS_DIR=$(pwd)
 TIP_SYM_REF=$(git symbolic-ref -q --short HEAD || git rev-parse HEAD)
 TIP_COMMIT=$(git rev-parse HEAD)
 BPF_TIP_COMMIT=$(git rev-parse ${BPF_BRANCH})
@@ -273,6 +275,24 @@ for patch in $(ls -1 ${TMP_DIR}/patches | tail -n +2); do
 	fi
 done
 
+# Generate bpf_helper_defs.h and commit, if anything changed
+# restore Linux tip to use bpf_helpers_doc.py
+cd_to ${LINUX_REPO}
+git checkout ${TIP_TAG}
+# re-generate bpf_helper_defs.h
+cd_to ${LIBBPF_REPO}
+"${LINUX_ABS_DIR}/scripts/bpf_helpers_doc.py" --header			    \
+	--file include/uapi/linux/bpf.h > src/bpf_helper_defs.h
+# if anything changed, commit it
+helpers_changes=$(git status --porcelain src/bpf_helper_defs.h | wc -l)
+if ((${helpers_changes} == 1)); then
+	git add src/bpf_helper_defs.h
+	git commit -m "sync: auto-generate latest BPF helpers
+
+Latest changes to BPF helper definitions.
+" -- src/bpf_helper_defs.h
+fi
+
 # Use generated cover-letter as a template for "sync commit" with
 # baseline and checkpoint commits from kernel repo (and leave summary
 # from cover letter intact, of course)
@@ -296,14 +316,12 @@ echo "SUCCESS! ${COMMIT_CNT} commits synced."
 echo "Verifying Linux's and Github's libbpf state"
 
 cd_to ${LINUX_REPO}
-LINUX_ABS_DIR=$(pwd)
 git checkout -b ${VIEW_TAG} ${TIP_COMMIT}
 git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
 git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} > ${TMP_DIR}/linux-view.ls
 
 cd_to ${LIBBPF_REPO}
-GITHUB_ABS_DIR=$(pwd)
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
 
 echo "Comparing list of files..."
