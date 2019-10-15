@@ -51,7 +51,7 @@ PATH_MAP=(									\
 
 LIBBPF_PATHS="${!PATH_MAP[@]}"
 LIBBPF_VIEW_PATHS="${PATH_MAP[@]}"
-LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf.cpp|\.gitignore)$'
+LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf\.cpp|bpf_helper_defs\.h|\.gitignore)$'
 
 LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools && "$'\\\n'
 for p in "${!PATH_MAP[@]}"; do
