@@ -48,6 +48,8 @@ for phase in "${PHASES[@]}"; do
             elif [[ "$phase" = *"GCC8"* ]]; then
                 ENV_VARS="-e CC=gcc-8 -e CXX=g++-8"
                 CC="gcc-8"
+            else
+                CFLAGS="${CFLAGS} -Wno-stringop-truncation"
             fi
             if [[ "$phase" = *"ASAN"* ]]; then
                 CFLAGS="${CFLAGS} -fsanitize=address,undefined"
