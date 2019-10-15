@@ -19,7 +19,7 @@ struct sockaddr;
 struct tcphdr;
 struct __sk_buff;
 struct sk_msg_md;
-struct xpd_md;
+struct xdp_md;
 
 /*
  * bpf_map_lookup_elem
