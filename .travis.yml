@@ -120,3 +120,11 @@ jobs:
               - set -e
               - sudo $CI_MANAGERS/xenial.sh
               - set +e
+
+        - name: Ubuntu Xenial (arm)
+          arch: arm64
+          language: bash
+          script:
+              - set -e
+              - sudo $CI_MANAGERS/xenial.sh
+              - set +e

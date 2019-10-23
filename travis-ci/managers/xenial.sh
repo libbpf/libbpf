@@ -2,9 +2,11 @@
 set -e
 set -x
 
+echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
+
 apt-get update
 apt-get -y build-dep libelf-dev
-apt-get install -y libelf-dev
+apt-get install -y libelf-dev pkg-config
 
 source "$(dirname $0)/travis_wait.bash"
 
