@@ -107,5 +107,12 @@
 		.off  = OFF,					\
 		.imm  = IMM })
 
+#define BPF_JMP32_IMM(OP, DST, IMM, OFF)			\
+	((struct bpf_insn) {					\
+		.code = BPF_JMP32 | BPF_OP(OP) | BPF_K,		\
+		.dst_reg = DST,					\
+		.src_reg = 0,					\
+		.off  = OFF,					\
+		.imm  = IMM })
 
 #endif
