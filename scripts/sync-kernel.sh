@@ -51,13 +51,13 @@ PATH_MAP=(									\
 
 LIBBPF_PATHS="${!PATH_MAP[@]}"
 LIBBPF_VIEW_PATHS="${PATH_MAP[@]}"
-LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf\.cpp|bpf_helper_defs\.h|\.gitignore)$'
+LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf\.c|bpf_helper_defs\.h|\.gitignore)$'
 
 LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools && "$'\\\n'
 for p in "${!PATH_MAP[@]}"; do
 	LIBBPF_TREE_FILTER+="git mv -kf ${p} __libbpf/${PATH_MAP[${p}]} && "$'\\\n'
 done
-LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.cpp,.gitignore} >/dev/null"
+LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.c,.gitignore} >/dev/null"
 
 cd_to()
 {
