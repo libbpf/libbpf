@@ -16,7 +16,9 @@ Other header files at this repo (`include/linux/*.h`) are reduced versions of
 their counterpart files at bpf-next's `tools/include/linux/*.h` to make compilation
 successful.
 
-Build [![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
+Build
+[![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
 =====
 libelf is an internal dependency of libbpf and thus it is required to link
 against and must be installed on the system for applications to work.
