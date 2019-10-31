@@ -5,9 +5,19 @@ services:
 
 env:
     global:
-        - AUTHOR_EMAIL="$(git log -1 $TRAVIS_COMMIT --pretty=\"%aE\")"
+        - AUTHOR_EMAIL="$(git log -1 --pretty=\"%aE\")"
         - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
         - REPO_ROOT="$TRAVIS_BUILD_DIR"
+
+stages:
+    # Run Coverity periodically instead of for each PR for following reasons:
+    # 1) Coverity jobs are heavily rate-limited
+    # 2) Due to security restrictions of encrypted environment variables
+    #    in Travis CI, pull requests made from forks can't access encrypted
+    #    env variables, making Coverity unusable
+    #    See: https://docs.travis-ci.com/user/pull-requests#pull-requests-and-security-restrictions
+    - name: Coverity
+      if: type = cron
 
 jobs:
     include:
@@ -127,4 +137,27 @@ jobs:
           script:
               - set -e
               - sudo $CI_MANAGERS/xenial.sh
+              - set +e
+
+        - stage: Coverity
+          language: bash
+          env:
+              # Coverity configuration
+              # COVERITY_SCAN_TOKEN=xxx
+              # Encrypted using `travis encrypt --repo libbpf/libbpf COVERITY_SCAN_TOKEN=xxx`
+              - secure: "I9OsMRHbb82IUivDp+I+w/jEQFOJgBDAqYqf1ollqCM1QhocxMcS9bwIAgfPhdXi2hohV7sRrVMZstahY67FAvJLGxNopi4tAPDIAaIFxgO0yDxMhaTMx5xDfMwlIm2FOP/9gB9BQsd6M7CmoQZgXYwBIv7xd1ooxoQrh2rOK1YrRl7UQu3+c3zPTjDfIYZzR3bFttMqZ9/c4U0v8Ry5IFXrel3hCshndHA1TtttJrUSrILlZcmVc1ch7JIy6zCbCU/2lGv0B/7rWXfF8MT7O9jPtFOhJ1DEcd2zhw2n4j9YT3a8OhtnM61LA6ask632mwCOsxpFLTun7AzuR1Cb5mdPHsxhxnCHcXXARa2mJjem0QG1NhwxwJE8sbRDapojexxCvweYlEN40ofwMDSnj/qNt95XIcrk0tiIhGFx0gVNWvAdmZwx+N4mwGPMTAN0AEOFjpgI+ZdB89m+tL/CbEgE1flc8QxUxJhcp5OhH6yR0z9qYOp0nXIbHsIaCiRvt/7LqFRQfheifztWVz4mdQlCdKS9gcOQ09oKicPevKO1L0Ue3cb7Ug7jOpMs+cdh3XokJtUeYEr1NijMHT9+CTAhhO5RToWXIZRon719z3fwoUBNDREATwVFMlVxqSO/pbYgaKminigYbl785S89YYaZ6E5UvaKRHM6KHKMDszs="
+              - COVERITY_SCAN_PROJECT_NAME="libbpf"
+              - COVERITY_SCAN_NOTIFICATION_EMAIL="${AUTHOR_EMAIL}"
+              - COVERITY_SCAN_BRANCH_PATTERN="$TRAVIS_BRANCH"
+              # Note: `make -C src/` as a BUILD_COMMAND will not work here
+              - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cd src/"
+              - COVERITY_SCAN_BUILD_COMMAND="make"
+          install:
+              - echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
+              - apt-get update
+              - apt-get -y build-dep libelf-dev
+              - apt-get install -y libelf-dev pkg-config
+          script:
+              - set -e
+              - scripts/coverity.sh
               - set +e
