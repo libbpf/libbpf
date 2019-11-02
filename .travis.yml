@@ -153,10 +153,10 @@ jobs:
               - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cd src/"
               - COVERITY_SCAN_BUILD_COMMAND="make"
           install:
-              - echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
-              - apt-get update
-              - apt-get -y build-dep libelf-dev
-              - apt-get install -y libelf-dev pkg-config
+              - sudo echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
+              - sudo apt-get update
+              - sudo apt-get -y build-dep libelf-dev
+              - sudo apt-get install -y libelf-dev pkg-config
           script:
               - set -e
               - scripts/coverity.sh
