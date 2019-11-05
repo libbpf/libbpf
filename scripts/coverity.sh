@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 # Taken from: https://scan.coverity.com/scripts/travisci_build_coverity_scan.sh
 # Local changes are annotated with "#[local]"
 
