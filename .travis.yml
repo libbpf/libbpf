@@ -1,5 +1,5 @@
 sudo: required
-dist: xenial
+dist: bionic
 services:
     - docker
 
@@ -124,27 +124,27 @@ jobs:
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
-        - name: Ubuntu Xenial
+        - name: Ubuntu Bionic
           language: bash
           script:
               - set -e
-              - sudo $CI_MANAGERS/xenial.sh
+              - sudo $CI_MANAGERS/ubuntu.sh
               - set +e
 
-        - name: Ubuntu Xenial (arm)
+        - name: Ubuntu Bionic (arm)
           arch: arm64
           language: bash
           script:
               - set -e
-              - sudo $CI_MANAGERS/xenial.sh
+              - sudo $CI_MANAGERS/ubuntu.sh
               - set +e
 
-        - name: Ubuntu Xenial (s390x)
+        - name: Ubuntu Bionic (s390x)
           arch: s390x
           language: bash
           script:
               - set -e
-              - sudo $CI_MANAGERS/xenial.sh
+              - sudo $CI_MANAGERS/ubuntu.sh
               - set +e
 
         - stage: Coverity
@@ -161,7 +161,7 @@ jobs:
               - COVERITY_SCAN_BUILD_COMMAND_PREPEND="cd src/"
               - COVERITY_SCAN_BUILD_COMMAND="make"
           install:
-              - sudo echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
+              - sudo echo 'deb-src http://archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse' >>/etc/apt/sources.list
               - sudo apt-get update
               - sudo apt-get -y build-dep libelf-dev
               - sudo apt-get install -y libelf-dev pkg-config
