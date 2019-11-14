@@ -2,7 +2,9 @@
 set -e
 set -x
 
-echo 'deb-src http://archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse' >>/etc/apt/sources.list
+RELEASE="bionic"
+
+echo "deb-src http://archive.ubuntu.com/ubuntu/ $RELEASE main restricted universe multiverse" >>/etc/apt/sources.list
 
 apt-get update
 apt-get -y build-dep libelf-dev
