@@ -33,9 +33,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
@@ -50,9 +48,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_ASAN
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN_ASAN || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
@@ -67,9 +63,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_CLANG
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN_CLANG || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
@@ -84,9 +78,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
@@ -101,9 +93,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_GCC8
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN_GCC8 || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
@@ -118,34 +108,26 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           script:
-              - set -e
-              - $CI_MANAGERS/debian.sh RUN_GCC8_ASAN
-              - set +e
+              - $CI_MANAGERS/debian.sh RUN_GCC8_ASAN || travis_terminate
           after_script:
               - $CI_MANAGERS/debian.sh CLEANUP
 
         - name: Ubuntu Bionic
           language: bash
           script:
-              - set -e
-              - sudo $CI_MANAGERS/ubuntu.sh
-              - set +e
+              - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (arm)
           arch: arm64
           language: bash
           script:
-              - set -e
-              - sudo $CI_MANAGERS/ubuntu.sh
-              - set +e
+              - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (s390x)
           arch: s390x
           language: bash
           script:
-              - set -e
-              - sudo $CI_MANAGERS/ubuntu.sh
-              - set +e
+              - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - stage: Coverity
           language: bash
@@ -166,6 +148,4 @@ jobs:
               - sudo apt-get -y build-dep libelf-dev
               - sudo apt-get install -y libelf-dev pkg-config
           script:
-              - set -e
-              - scripts/coverity.sh
-              - set +e
+              - scripts/coverity.sh || travis_terminate
