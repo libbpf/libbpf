@@ -139,6 +139,14 @@ jobs:
               - sudo $CI_MANAGERS/xenial.sh
               - set +e
 
+        - name: Ubuntu Xenial (s390x)
+          arch: s390x
+          language: bash
+          script:
+              - set -e
+              - sudo $CI_MANAGERS/xenial.sh
+              - set +e
+
         - stage: Coverity
           language: bash
           env:
