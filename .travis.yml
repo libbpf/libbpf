@@ -1,13 +1,37 @@
 sudo: required
+language: bash
 dist: bionic
 services:
     - docker
 
 env:
     global:
+        - PROJECT_NAME='libbpf'
         - AUTHOR_EMAIL="$(git log -1 --pretty=\"%aE\")"
         - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
+        - VMTEST_DIR="$TRAVIS_BUILD_DIR/travis-ci/vmtest"
         - REPO_ROOT="$TRAVIS_BUILD_DIR"
+        # Default setup command run on VM boot.
+        - VMTEST_SETUPCMD='echo 42'
+    jobs:
+        # Setup command override.
+        - KERNEL=5.4 VMTEST_SETUPCMD="PROJECT_NAME=${PROJECT_NAME} ./${PROJECT_NAME}/travis-ci/vmtest/setup_example.sh"
+        - KERNEL=5.3
+        - KERNEL=4.19.88
+
+addons:
+    apt:
+        packages:
+            - qemu-kvm
+            - zstd
+install: sudo adduser "${USER}" kvm
+before_script:
+    # Escape whitespace characters.
+    - setup_cmd=$(sed 's/\([[:space:]]\)/\\\1/g' <<< "${VMTEST_SETUPCMD}")
+    - sudo -E sudo -E -u "${USER}" "${VMTEST_DIR}/run.sh" -k "${KERNEL}"'*' -o -d ~ -s "${setup_cmd}" ~/root.img; exitstatus=$?
+    - test $exitstatus -le 1
+script:
+    - test $exitstatus -eq 0
 
 stages:
     # Run Coverity periodically instead of for each PR for following reasons:
@@ -27,11 +51,13 @@ jobs:
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
+          # Override before_install: so VMTEST before_install commands are not executed.
           before_install:
               - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN || travis_terminate
           after_script:
@@ -47,6 +73,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN_ASAN || travis_terminate
           after_script:
@@ -62,6 +89,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN_CLANG || travis_terminate
           after_script:
@@ -77,6 +105,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN || travis_terminate
           after_script:
@@ -92,6 +121,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN_GCC8 || travis_terminate
           after_script:
@@ -107,6 +137,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN_GCC8_ASAN || travis_terminate
           after_script:
@@ -114,24 +145,28 @@ jobs:
 
         - name: Ubuntu Bionic
           language: bash
+          before_script:
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (arm)
           arch: arm64
           language: bash
+          before_script:
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (s390x)
           arch: s390x
           language: bash
+          before_script:
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (ppc64le)
           arch: ppc64le
           language: bash
+          before_script:
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
