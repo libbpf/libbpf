@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <asm/unistd.h>
+#include <linux/stddef.h> // Not alphabetical - Get required macro definitions
 #include <linux/err.h>
 #include <linux/kernel.h>
 #include <linux/bpf.h>
