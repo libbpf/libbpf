@@ -50,3 +50,11 @@ headers in a build directory /build/root/:
 $ cd src
 $ PKG_CONFIG_PATH=/build/root/lib64/pkgconfig DESTDIR=/build/root make install
 ```
+
+License
+=====
+
+This work is dual-licensed under BSD 2-clause license and GNU LGPL v2.1 license.
+You can choose between one of them if you use this work.
+
+`SPDX-License-Identifier: BSD-2-Clause OR LGPL-2.1`
