@@ -16,6 +16,7 @@ ifneq ($(FEATURE_REALLOCARRAY),)
 endif
 
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
+STATIC_CFLAGS += -fPIC
 
 CFLAGS ?= -g -O2 -Werror -Wall
 ALL_CFLAGS += $(CFLAGS) -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
@@ -97,7 +98,7 @@ $(SHARED_OBJDIR):
 	mkdir -p $(SHARED_OBJDIR)
 
 $(STATIC_OBJDIR)/%.o: %.c | $(STATIC_OBJDIR)
-	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(CC) $(ALL_CFLAGS) $(STATIC_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(SHARED_OBJDIR)/%.o: %.c | $(SHARED_OBJDIR)
 	$(CC) $(ALL_CFLAGS) $(SHARED_CFLAGS) $(CPPFLAGS) -c $< -o $@
