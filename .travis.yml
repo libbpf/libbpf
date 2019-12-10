@@ -129,6 +129,12 @@ jobs:
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
+        - name: Ubuntu Bionic (ppc64le)
+          arch: ppc64le
+          language: bash
+          script:
+              - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
+
         - stage: Coverity
           language: bash
           env:
