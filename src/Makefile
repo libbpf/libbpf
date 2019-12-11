@@ -68,6 +68,8 @@ LIBDIR ?= $(PREFIX)/$(LIBSUBDIR)
 INCLUDEDIR ?= $(PREFIX)/include
 UAPIDIR ?= $(PREFIX)/include
 
+TAGS_PROG := $(if $(shell which etags 2>/dev/null),etags,ctags)
+
 all: $(STATIC_LIBS) $(SHARED_LIBS) $(PC_FILE)
 
 $(OBJDIR)/libbpf.a: $(STATIC_OBJS)
@@ -133,3 +135,12 @@ install_pkgconfig: $(PC_FILE)
 
 clean:
 	rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
+
+.PHONY: cscope tags
+cscope:
+	ls *.c *.h > cscope.files
+	cscope -b -q -f cscope.out
+
+tags:
+	rm -f TAGS tags
+	ls *.c *.h | xargs $(TAGS_PROG) -a
