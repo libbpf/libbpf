@@ -51,12 +51,12 @@ jobs:
           env:
               - DEBIAN_RELEASE="testing"
               - CONT_NAME="libbpf-debian-$DEBIAN_RELEASE"
-          # Override before_install: so VMTEST before_install commands are not executed.
           before_install:
               - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
+          # Override before_script: so VMTEST before_install commands are not executed.
           before_script:
           script:
               - $CI_MANAGERS/debian.sh RUN || travis_terminate
@@ -188,5 +188,7 @@ jobs:
               - sudo apt-get update
               - sudo apt-get -y build-dep libelf-dev
               - sudo apt-get install -y libelf-dev pkg-config
+          # Override before_script: so VMTEST before_script commands are not executed.
+          before_script:
           script:
               - scripts/coverity.sh || travis_terminate
