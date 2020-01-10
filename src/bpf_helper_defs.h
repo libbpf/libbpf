@@ -2756,4 +2756,15 @@ static int (*bpf_probe_read_user_str)(void *dst, __u32 size, const void *unsafe_
  */
 static int (*bpf_probe_read_kernel_str)(void *dst, __u32 size, const void *unsafe_ptr) = (void *) 115;
 
+/*
+ * bpf_tcp_send_ack
+ *
+ * 	Send out a tcp-ack. *tp* is the in-kernel struct tcp_sock.
+ * 	*rcv_nxt* is the ack_seq to be sent out.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static int (*bpf_tcp_send_ack)(void *tp, __u32 rcv_nxt) = (void *) 116;
+
 
