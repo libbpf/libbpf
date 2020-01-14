@@ -51,6 +51,28 @@ $ cd src
 $ PKG_CONFIG_PATH=/build/root/lib64/pkgconfig DESTDIR=/build/root make install
 ```
 
+Distributions
+=====
+
+Distributions packaging libbpf from this mirror:
+  - [Fedora](https://src.fedoraproject.org/rpms/libbpf)
+  - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
+
+Benefits of packaging from the mirror over packaging from kernel sources:
+  - Consistent versioning across distributions.
+  - No ties to any specific kernel, transparent handling of older kernels.
+    Libbpf is designed to be kernel-agnostic and work across multitude of kernel
+    versions. It has built-in mechanisms to gracefully handle older kernels,
+    that are missing some of the features, by working around or gracefully
+    degrading functionality. Thus libbpf is not tied to a specific kernel
+    version and can/should be packaged and versioned independently.
+  - Continuous integration testing via [TravisCI](https://travis-ci.org/libbpf/libbpf).
+  - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf) and [Coverity](https://scan.coverity.com/projects/libbpf).
+
+Package dependencies of libbpf, package names may vary across distros:
+  - zlib
+  - libelf
+
 License
 =====
 
