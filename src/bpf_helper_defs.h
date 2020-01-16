@@ -2600,7 +2600,8 @@ static int (*bpf_sk_storage_delete)(void *map, struct bpf_sock *sk) = (void *) 1
 /*
  * bpf_send_signal
  *
- * 	Send signal *sig* to the current task.
+ * 	Send signal *sig* to the process of the current task.
+ * 	The signal may be delivered to any of this process's threads.
  *
  * Returns
  * 	0 on success or successfully queued.
@@ -2766,5 +2767,23 @@ static int (*bpf_probe_read_kernel_str)(void *dst, __u32 size, const void *unsaf
  * 	0 on success, or a negative error in case of failure.
  */
 static int (*bpf_tcp_send_ack)(void *tp, __u32 rcv_nxt) = (void *) 116;
+
+/*
+ * bpf_send_signal_thread
+ *
+ * 	Send signal *sig* to the thread corresponding to the current task.
+ *
+ * Returns
+ * 	0 on success or successfully queued.
+ *
+ * 	**-EBUSY** if work queue under nmi is full.
+ *
+ * 	**-EINVAL** if *sig* is invalid.
+ *
+ * 	**-EPERM** if no permission to send the *sig*.
+ *
+ * 	**-EAGAIN** if bpf program can try again.
+ */
+static int (*bpf_send_signal_thread)(__u32 sig) = (void *) 117;
 
 
