@@ -57,7 +57,7 @@ jobs:
           install:
               - $CI_MANAGERS/debian.sh SETUP
           # Override before_script: so VMTEST before_install commands are not executed.
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN || travis_terminate
           after_script:
@@ -73,7 +73,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN_ASAN || travis_terminate
           after_script:
@@ -89,7 +89,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN_CLANG || travis_terminate
           after_script:
@@ -105,7 +105,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN_CLANG_ASAN || travis_terminate
           after_script:
@@ -121,7 +121,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN_GCC8 || travis_terminate
           after_script:
@@ -137,7 +137,7 @@ jobs:
               - docker --version
           install:
               - $CI_MANAGERS/debian.sh SETUP
-          before_script:
+          before_script: true
           script:
               - $CI_MANAGERS/debian.sh RUN_GCC8_ASAN || travis_terminate
           after_script:
@@ -145,28 +145,28 @@ jobs:
 
         - name: Ubuntu Bionic
           language: bash
-          before_script:
+          before_script: true
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (arm)
           arch: arm64
           language: bash
-          before_script:
+          before_script: true
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (s390x)
           arch: s390x
           language: bash
-          before_script:
+          before_script: true
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
         - name: Ubuntu Bionic (ppc64le)
           arch: ppc64le
           language: bash
-          before_script:
+          before_script: true
           script:
               - sudo $CI_MANAGERS/ubuntu.sh || travis_terminate
 
@@ -189,6 +189,6 @@ jobs:
               - sudo apt-get -y build-dep libelf-dev
               - sudo apt-get install -y libelf-dev pkg-config
           # Override before_script: so VMTEST before_script commands are not executed.
-          before_script:
+          before_script: true
           script:
               - scripts/coverity.sh || travis_terminate
