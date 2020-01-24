@@ -2786,4 +2786,14 @@ static int (*bpf_tcp_send_ack)(void *tp, __u32 rcv_nxt) = (void *) 116;
  */
 static int (*bpf_send_signal_thread)(__u32 sig) = (void *) 117;
 
+/*
+ * bpf_jiffies64
+ *
+ * 	Obtain the 64bit jiffies
+ *
+ * Returns
+ * 	The 64 bit jiffies
+ */
+static __u64 (*bpf_jiffies64)(void) = (void *) 118;
+
 
