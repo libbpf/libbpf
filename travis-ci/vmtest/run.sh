@@ -175,11 +175,10 @@ cache_urls() {
 	if ! declare -p URLS &> /dev/null; then
 		# This URL contains a mapping from file names to URLs where
 		# those files can be downloaded.
-		local INDEX='https://libbpf-vmtest.s3-us-west-1.amazonaws.com/x86_64/INDEX'
 		declare -gA URLS
 		while IFS=$'\t' read -r name url; do
 			URLS["$name"]="$url"
-		done < <(curl -LfsS "$INDEX")
+		done < <(cat "${VMTEST_ROOT}/configs/INDEX")
 	fi
 }
 
@@ -367,6 +366,11 @@ else
 	sudo chmod 644 "$vmlinux"
 fi
 
+LIBBPF_PATH="${REPO_ROOT}" \
+	REPO_PATH="travis-ci/vmtest/bpf-next" \
+	VMTEST_ROOT="${VMTEST_ROOT}" \
+	VMLINUX_BTF=${vmlinux} ${VMTEST_ROOT}/build_selftests.sh
+
 if (( SKIPSOURCE )); then
 	echo "Not copying source files..." >&2
 else
@@ -393,13 +397,17 @@ chmod 644 /exitstatus"
 if [[ ! -z SETUPCMD ]]; then
 	# Unescape whitespace characters.
 	setup_cmd=$(sed 's/\(\\\)\([[:space:]]\)/\2/g' <<< "${SETUPCMD}")
+	kernel="${KERNELRELEASE}"
+	if [[ -v BUILDDIR ]]; then kernel='latest'; fi
+	setup_envvars="export KERNEL=${kernel}"
 	setup_script=$(printf "#!/bin/sh
 set -e
 
 echo 'Running setup commands'
 %s
+%s
 echo $? > /exitstatus
-chmod 644 /exitstatus" "${setup_cmd}")
+chmod 644 /exitstatus" "${setup_envvars}" "${setup_cmd}")
 fi
 
 echo "${setup_script}" | sudo tee "$mnt/etc/rcS.d/S50-run-tests" > /dev/null

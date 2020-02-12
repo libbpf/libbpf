@@ -9,26 +9,43 @@ env:
         - PROJECT_NAME='libbpf'
         - AUTHOR_EMAIL="$(git log -1 --pretty=\"%aE\")"
         - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
-        - VMTEST_DIR="$TRAVIS_BUILD_DIR/travis-ci/vmtest"
+        - VMTEST_ROOT="$TRAVIS_BUILD_DIR/travis-ci/vmtest"
         - REPO_ROOT="$TRAVIS_BUILD_DIR"
-        # Default setup command run on VM boot.
-        - VMTEST_SETUPCMD='echo 42'
+        - GIT_FETCH_DEPTH=64
+        - VMTEST_SETUPCMD="PROJECT_NAME=${PROJECT_NAME} ./${PROJECT_NAME}/travis-ci/vmtest/run_selftests.sh"
     jobs:
         # Setup command override.
-        - KERNEL=5.4 VMTEST_SETUPCMD="PROJECT_NAME=${PROJECT_NAME} ./${PROJECT_NAME}/travis-ci/vmtest/setup_example.sh"
-        - KERNEL=5.3
-        - KERNEL=4.19.88
+        # 5.5.0-rc6 is built from bpf-next; TODO(hex@): remove when pahole v1.16 is available
+        - KERNEL=5.5.0-rc6
+        - KERNEL=5.5.0
+        - KERNEL=LATEST
 
 addons:
     apt:
         packages:
             - qemu-kvm
             - zstd
+            - binutils-dev
+            - elfutils
+            - libcap-dev
+            - libelf-dev
 install: sudo adduser "${USER}" kvm
 before_script:
+    - wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+    - echo "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic-10 main" | sudo tee -a /etc/apt/sources.list
+    - echo "deb http://archive.ubuntu.com/ubuntu eoan main restricted universe multiverse" | sudo tee -a /etc/apt/sources.list
+    - sudo apt-get -qq update
+    - sudo apt-get -y install dwarves=1.15-1
+    - sudo apt-get -qq -y install clang-10 lld-10 llvm-10
+    - if [[ "${KERNEL}" = 'LATEST' ]]; then ${VMTEST_ROOT}/build_latest_kernel.sh travis-ci/vmtest/bpf-next; fi
+    - ${VMTEST_ROOT}/prepare_selftests.sh travis-ci/vmtest/bpf-next
     # Escape whitespace characters.
     - setup_cmd=$(sed 's/\([[:space:]]\)/\\\1/g' <<< "${VMTEST_SETUPCMD}")
-    - sudo -E sudo -E -u "${USER}" "${VMTEST_DIR}/run.sh" -k "${KERNEL}"'*' -o -d ~ -s "${setup_cmd}" ~/root.img; exitstatus=$?
+    - if [[ "${KERNEL}" = 'LATEST' ]]; then
+        sudo -E sudo -E -u "${USER}" "${VMTEST_ROOT}/run.sh" -b travis-ci/vmtest/bpf-next -o -d ~ -s "${setup_cmd}" ~/root.img;
+      else
+        sudo -E sudo -E -u "${USER}" "${VMTEST_ROOT}/run.sh" -k "${KERNEL}*" -o -d ~ -s "${setup_cmd}" ~/root.img;
+      fi; exitstatus=$?
     - test $exitstatus -le 1
 script:
     - test $exitstatus -eq 0
