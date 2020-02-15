@@ -49,7 +49,7 @@ PATH_MAP=(									\
 	[tools/include/tools/libc_compat.h]=include/tools/libc_compat.h		\
 )
 
-LIBBPF_PATHS="${!PATH_MAP[@]}"
+LIBBPF_PATHS="${!PATH_MAP[@]} :^tools/lib/bpf/Makefile :^tools/lib/bpf/Build :^tools/lib/bpf/.gitignore"
 LIBBPF_VIEW_PATHS="${PATH_MAP[@]}"
 LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf\.c|bpf_helper_defs\.h|\.gitignore)$'
 
@@ -79,9 +79,10 @@ commit_desc()
 # The idea is that this single-line signature is good enough to make final
 # decision about whether two commits are the same, across different repos.
 # $1 - commit ref
+# $2 - paths filter
 commit_signature()
 {
-	git log -n1 --pretty='("%s")|%aI|%b' --shortstat $1 | tr '\n' '|'
+	git show --pretty='("%s")|%aI|%b' --shortstat $1 -- ${2-.} | tr '\n' '|'
 }
 
 # Validate there are no non-empty merges (we can't handle them)
@@ -133,7 +134,7 @@ cherry_pick_commits()
 	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
 	for new_commit in ${new_commits}; do
 		desc="$(commit_desc ${new_commit})"
-		signature="$(commit_signature ${new_commit})"
+		signature="$(commit_signature ${new_commit} "${LIBBPF_PATHS[@]}")"
 		synced_cnt=$(grep -F "${signature}" ${TMP_DIR}/libbpf_commits.txt | wc -l)
 		manual_check=0
 		if ((${synced_cnt} > 0)); then
