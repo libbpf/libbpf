@@ -17,8 +17,8 @@ if [ ! -d "${REPO_PATH}" ]; then
 	cd ${REPO_PATH}
 	git init
 	git remote add bpf-next ${BPF_NEXT_ORIGIN}
-	git fetch --depth ${GIT_FETCH_DEPTH} bpf-next
-	git reset --hard ${LINUX_SHA}
-else
-	cd ${REPO_PATH}
+	for depth in 32 64 128; do
+		git fetch --depth ${depth} bpf-next
+		git reset --hard ${LINUX_SHA} && break
+	done
 fi

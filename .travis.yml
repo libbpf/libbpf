@@ -11,7 +11,6 @@ env:
         - CI_MANAGERS="$TRAVIS_BUILD_DIR/travis-ci/managers"
         - VMTEST_ROOT="$TRAVIS_BUILD_DIR/travis-ci/vmtest"
         - REPO_ROOT="$TRAVIS_BUILD_DIR"
-        - GIT_FETCH_DEPTH=64
         - VMTEST_SETUPCMD="PROJECT_NAME=${PROJECT_NAME} ./${PROJECT_NAME}/travis-ci/vmtest/run_selftests.sh"
     jobs:
         # Setup command override.
@@ -37,8 +36,7 @@ before_script:
     - sudo apt-get -qq update
     - sudo apt-get -y install dwarves=1.15-1
     - sudo apt-get -qq -y install clang-10 lld-10 llvm-10
-    - if [[ "${KERNEL}" = 'LATEST' ]]; then ${VMTEST_ROOT}/build_latest_kernel.sh travis-ci/vmtest/bpf-next; fi
-    - ${VMTEST_ROOT}/prepare_selftests.sh travis-ci/vmtest/bpf-next
+    - KERNEL="${KERNEL}" ${VMTEST_ROOT}/prepare_selftests.sh travis-ci/vmtest/bpf-next
     # Escape whitespace characters.
     - setup_cmd=$(sed 's/\([[:space:]]\)/\\\1/g' <<< "${VMTEST_SETUPCMD}")
     - if [[ "${KERNEL}" = 'LATEST' ]]; then
