@@ -576,9 +576,9 @@ static __u64 (*bpf_perf_event_read)(void *map, __u64 flags) = (void *) 22;
  * 	supports redirection to the egress interface, and accepts no
  * 	flag at all.
  *
- * 	The same effect can be attained with the more generic
- * 	**bpf_redirect_map**\ (), which requires specific maps to be
- * 	used but offers better performance.
+ * 	The same effect can also be attained with the more generic
+ * 	**bpf_redirect_map**\ (), which uses a BPF map to store the
+ * 	redirect target instead of providing it directly to the helper.
  *
  * Returns
  * 	For XDP, the helper returns **XDP_REDIRECT** on success or
@@ -1242,14 +1242,12 @@ static int (*bpf_skb_adjust_room)(struct __sk_buff *skb, __s32 len_diff, __u32 m
  * 	the caller. Any higher bits in the *flags* argument must be
  * 	unset.
  *
- * 	When used to redirect packets to net devices, this helper
- * 	provides a high performance increase over **bpf_redirect**\ ().
- * 	This is due to various implementation details of the underlying
- * 	mechanisms, one of which is the fact that **bpf_redirect_map**\
- * 	() tries to send packet as a "bulk" to the device.
+ * 	See also bpf_redirect(), which only supports redirecting to an
+ * 	ifindex, but doesn't require a map to do so.
  *
  * Returns
- * 	**XDP_REDIRECT** on success, or **XDP_ABORTED** on error.
+ * 	**XDP_REDIRECT** on success, or the value of the two lower bits
+ * 	of the **flags* argument on error.
  */
 static int (*bpf_redirect_map)(void *map, __u32 key, __u64 flags) = (void *) 51;
 
@@ -2795,5 +2793,28 @@ static int (*bpf_send_signal_thread)(__u32 sig) = (void *) 117;
  * 	The 64 bit jiffies
  */
 static __u64 (*bpf_jiffies64)(void) = (void *) 118;
+
+/*
+ * bpf_read_branch_records
+ *
+ * 	For an eBPF program attached to a perf event, retrieve the
+ * 	branch records (struct perf_branch_entry) associated to *ctx*
+ * 	and store it in	the buffer pointed by *buf* up to size
+ * 	*size* bytes.
+ *
+ * Returns
+ * 	On success, number of bytes written to *buf*. On error, a
+ * 	negative value.
+ *
+ * 	The *flags* can be set to **BPF_F_GET_BRANCH_RECORDS_SIZE** to
+ * 	instead	return the number of bytes required to store all the
+ * 	branch entries. If this flag is set, *buf* may be NULL.
+ *
+ * 	**-EINVAL** if arguments invalid or **size** not a multiple
+ * 	of sizeof(struct perf_branch_entry).
+ *
+ * 	**-ENOENT** if architecture does not support branch records.
+ */
+static int (*bpf_read_branch_records)(struct bpf_perf_event_data *ctx, void *buf, __u32 size, __u64 flags) = (void *) 119;
 
 
