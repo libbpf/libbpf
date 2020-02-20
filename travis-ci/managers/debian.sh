@@ -2,7 +2,7 @@
 
 PHASES=(${@:-SETUP RUN RUN_ASAN CLEANUP})
 DEBIAN_RELEASE="${DEBIAN_RELEASE:-testing}"
-CONT_NAME="${CONT_NAME:-debian-$DEBIAN_RELEASE-$RANDOM}"
+CONT_NAME="${CONT_NAME:-libbpf-debian-$DEBIAN_RELEASE}"
 ENV_VARS="${ENV_VARS:-}"
 DOCKER_RUN="${DOCKER_RUN:-docker run}"
 REPO_ROOT="${REPO_ROOT:-$PWD}"
@@ -30,6 +30,10 @@ for phase in "${PHASES[@]}"; do
         SETUP)
             info "Setup phase"
             info "Using Debian $DEBIAN_RELEASE"
+
+            sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+            docker --version
+
             docker pull debian:$DEBIAN_RELEASE
             info "Starting container $CONT_NAME"
             $DOCKER_RUN -v $REPO_ROOT:/build:rw \
@@ -57,7 +61,7 @@ for phase in "${PHASES[@]}"; do
             docker_exec mkdir build install
             docker_exec ${CC:-cc} --version
             info "build"
-            docker_exec make CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
+	    docker_exec make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
             docker_exec ldd build/libbpf.so
             if ! docker_exec ldd build/libbpf.so | grep -q libelf; then
@@ -65,7 +69,7 @@ for phase in "${PHASES[@]}"; do
                 exit 1
             fi
             info "install"
-            docker_exec make -C src OBJDIR=../build DESTDIR=../install install
+            docker_exec make -j$((4*$(nproc))) -C src OBJDIR=../build DESTDIR=../install install
             docker_exec rm -rf build install
             ;;
         CLEANUP)
