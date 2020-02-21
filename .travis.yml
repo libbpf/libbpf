@@ -21,6 +21,7 @@ addons:
             - elfutils
             - libcap-dev
             - libelf-dev
+            - libdw-dev
 
 stages:
     # Run Coverity periodically instead of for each PR for following reasons:
@@ -94,13 +95,6 @@ jobs:
           name: Kernel 5.5.0 + selftests
           language: bash
           env: KERNEL=5.5.0
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate
-
-        # 5.5.0-rc6 is built from bpf-next; TODO(hex@): remove when pahole v1.16 is available
-        - name: Kernel 5.5.0-rc6 (pahole 1.16) + selftests
-          language: bash
-          env: KERNEL=5.5.0-rc6
-          install: sudo adduser "${USER}" kvm
           script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate
 
         - name: Kernel LATEST + selftests

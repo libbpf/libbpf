@@ -3,10 +3,6 @@ bpf_verif_scale
 cgroup_attach
 cubic
 dctcp
-fentry
-fexit_stress
-fexit_test
-kfree_skb
 mmap
 pinning
 select_reuseport
@@ -20,7 +16,6 @@ stacktrace_map
 strobemeta_nounroll2
 task_fd_query_tp
 tcp_rtt
-test_overhead
 test_syncookie
 tp_attach_query
 trampoline_count
