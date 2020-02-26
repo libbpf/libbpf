@@ -1,11 +1,22 @@
 #!/bin/bash
 
-set -eux
+set -euxo pipefail
 
-mount -t bpf bpffs /sys/fs/bpf
-mount -t debugfs none /sys/kernel/debug/
+test_progs() {
+	echo TEST_PROGS
+	./test_progs ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
+}
 
-ip link set lo up
+test_maps() {
+	echo TEST_MAPS
+	# Allow failing on older kernels.
+	./test_maps || [ ${KERNEL} != 'LATEST' ]
+}
+
+test_verifier() {
+	echo TEST_VERIFIER
+	./test_verifier
+}
 
 configs_path='libbpf/travis-ci/vmtest/configs'
 blacklist_path="$configs_path/blacklist/BLACKLIST-${KERNEL}"
@@ -20,5 +31,13 @@ fi
 
 cd libbpf/selftests/bpf
 
-echo TEST_PROGS
-./test_progs ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
+set +e
+exitcode=0
+for test_func in test_progs test_maps test_verifier; do
+	${test_func}; c=$?
+	if [[ $c -ne 0 ]]; then
+		exitcode=$c
+	fi
+done
+
+exit $exitcode
