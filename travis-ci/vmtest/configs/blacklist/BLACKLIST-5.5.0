@@ -1,13 +1,10 @@
 bpf_tcp_ca
-cgroup_attach_autodetach
 cgroup_attach_multi
-cgroup_attach_override
 fexit_bpf2bpf
 perf_branches
 select_reuseport
 send_signal
 skb_ctx
-sockmap_ktls
 sockmap_listen
 sockopt_inherit
 spinlock
