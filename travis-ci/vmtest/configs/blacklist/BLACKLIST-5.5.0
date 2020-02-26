@@ -10,6 +10,5 @@ skb_ctx
 sockmap_ktls
 sockmap_listen
 sockopt_inherit
-spinlock
 tcp_rtt
 test_global_funcs

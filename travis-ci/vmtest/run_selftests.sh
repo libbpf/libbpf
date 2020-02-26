@@ -4,6 +4,7 @@ set -eux
 
 mount -t bpf bpffs /sys/fs/bpf
 mount -t debugfs none /sys/kernel/debug/
+ip link set lo up
 
 configs_path='libbpf/travis-ci/vmtest/configs'
 blacklist_path="$configs_path/blacklist/BLACKLIST-${KERNEL}"
