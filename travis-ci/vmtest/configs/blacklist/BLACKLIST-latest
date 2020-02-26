@@ -1,6 +1,4 @@
-send_signal_tracepoint
-send_signal_tracepoint_thread
+attach_probe
+perf_buffer
+send_signal
 sockmap_listen
-sockopt_inherit
-spinlock
-tcp_rtt

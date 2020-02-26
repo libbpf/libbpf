@@ -1,13 +1,12 @@
+attach_multi
+attach_probe
 bpf_tcp_ca
-cgroup_attach_multi
 fexit_bpf2bpf
 link_pinning
 perf_branches
+perf_buffer
 select_reuseport
 send_signal
 skb_ctx
 sockmap_listen
-sockopt_inherit
-spinlock
-tcp_rtt
 test_global_funcs
