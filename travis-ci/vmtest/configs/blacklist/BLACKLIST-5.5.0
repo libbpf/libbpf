@@ -1,6 +1,7 @@
 bpf_tcp_ca
 cgroup_attach_multi
 fexit_bpf2bpf
+link_pinning
 perf_branches
 select_reuseport
 send_signal
