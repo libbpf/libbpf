@@ -97,10 +97,7 @@ rm -rf "$root/var/lib/pacman/sync/"
 	"$root/usr/lib/libgfortran."* \
 	"$root/usr/lib/libgo."*
 # We don't need any documentation.
-rm -rf "$root/usr/share/doc" \
-	"$root/usr/share/help" \
-	"$root/usr/share/man" \
-	"$root/usr/share/texinfo"
+rm -rf "$root/usr/share/{doc,help,man,texinfo}"
 
 chroot "${root}" /bin/busybox --install
 
@@ -123,17 +120,22 @@ EOF
 chmod 644 "$root/etc/inittab"
 
 mkdir -m 755 "$root/etc/init.d" "$root/etc/rcS.d"
-cat > "$root/etc/rcS.d/S40network" << "EOF"
+cat > "$root/etc/rcS.d/S10-mount" << "EOF"
+#!/bin/sh
+
+/bin/mount -a
+EOF
+chmod 755 "$root/etc/rcS.d/S10-mount"
+
+cat > "$root/etc/rcS.d/S40-network" << "EOF"
 #!/bin/sh
 
 ip link set lo up
 EOF
-chmod 755 "$root/etc/rcS.d/S40network"
+chmod 755 "$root/etc/rcS.d/S40-network"
 
 cat > "$root/etc/init.d/rcS" << "EOF"
 #!/bin/sh
-
-/bin/mount -a
 
 for path in /etc/rcS.d/S*; do
 	[ -x "$path" ] && "$path"
