@@ -10,7 +10,7 @@ test_progs() {
 test_maps() {
 	echo TEST_MAPS
 	# Allow failing on older kernels.
-	./test_maps || [ ${KERNEL} != 'LATEST' ]
+	./test_maps
 }
 
 test_verifier() {
@@ -31,13 +31,9 @@ fi
 
 cd libbpf/selftests/bpf
 
-set +e
-exitcode=0
-for test_func in test_progs test_maps test_verifier; do
-	${test_func}; c=$?
-	if [[ $c -ne 0 ]]; then
-		exitcode=$c
-	fi
-done
+test_progs
 
-exit $exitcode
+if [[ "${KERNEL}" == 'latest' ]]; then
+	test_maps
+	test_verifier
+fi
