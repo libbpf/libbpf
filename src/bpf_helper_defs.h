@@ -2817,4 +2817,48 @@ static __u64 (*bpf_jiffies64)(void) = (void *) 118;
  */
 static int (*bpf_read_branch_records)(struct bpf_perf_event_data *ctx, void *buf, __u32 size, __u64 flags) = (void *) 119;
 
+/*
+ * bpf_get_ns_current_pid_tgid
+ *
+ * 	Returns 0 on success, values for *pid* and *tgid* as seen from the current
+ * 	*namespace* will be returned in *nsdata*.
+ *
+ * 	On failure, the returned value is one of the following:
+ *
+ * 	**-EINVAL** if dev and inum supplied don't match dev_t and inode number
+ * 	with nsfs of current task, or if dev conversion to dev_t lost high bits.
+ *
+ * 	**-ENOENT** if pidns does not exists for the current task.
+ *
+ */
+static int (*bpf_get_ns_current_pid_tgid)(__u64 dev, __u64 ino, struct bpf_pidns_info *nsdata, __u32 size) = (void *) 120;
+
+/*
+ * bpf_xdp_output
+ *
+ * 	Write raw *data* blob into a special BPF perf event held by
+ * 	*map* of type **BPF_MAP_TYPE_PERF_EVENT_ARRAY**. This perf
+ * 	event must have the following attributes: **PERF_SAMPLE_RAW**
+ * 	as **sample_type**, **PERF_TYPE_SOFTWARE** as **type**, and
+ * 	**PERF_COUNT_SW_BPF_OUTPUT** as **config**.
+ *
+ * 	The *flags* are used to indicate the index in *map* for which
+ * 	the value must be put, masked with **BPF_F_INDEX_MASK**.
+ * 	Alternatively, *flags* can be set to **BPF_F_CURRENT_CPU**
+ * 	to indicate that the index of the current CPU core should be
+ * 	used.
+ *
+ * 	The value to write, of *size*, is passed through eBPF stack and
+ * 	pointed by *data*.
+ *
+ * 	*ctx* is a pointer to in-kernel struct xdp_buff.
+ *
+ * 	This helper is similar to **bpf_perf_eventoutput**\ () but
+ * 	restricted to raw_tracepoint bpf programs.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static int (*bpf_xdp_output)(void *ctx, void *map, __u64 flags, void *data, __u64 size) = (void *) 121;
+
 
