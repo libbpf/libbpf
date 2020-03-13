@@ -21,12 +21,12 @@ test_verifier() {
 configs_path='libbpf/travis-ci/vmtest/configs'
 blacklist_path="$configs_path/blacklist/BLACKLIST-${KERNEL}"
 if [[ -s "${blacklist_path}" ]]; then
-	BLACKLIST=$(cat "${blacklist_path}" | tr '\n' ',')
+	BLACKLIST=$(cat "${blacklist_path}" | cut -d'#' -f1 | tr -s '[:space:]' ',')
 fi
 
 whitelist_path="$configs_path/whitelist/WHITELIST-${KERNEL}"
 if [[ -s "${whitelist_path}" ]]; then
-	WHITELIST=$(cat "${whitelist_path}" | tr '\n' ',')
+	WHITELIST=$(cat "${whitelist_path}" | cut -d'#' -f1 | tr -s '[:space:]' ',')
 fi
 
 cd libbpf/selftests/bpf

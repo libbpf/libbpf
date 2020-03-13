@@ -1,4 +1,2 @@
-attach_probe
-perf_buffer
-send_signal
-sockmap_listen
+send_signal		# flaky
+sockmap_listen		# flaky
