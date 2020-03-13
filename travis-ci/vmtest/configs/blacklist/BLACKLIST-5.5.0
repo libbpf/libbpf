@@ -1,12 +1,16 @@
-attach_multi
-attach_probe
-bpf_tcp_ca
-fexit_bpf2bpf
-link_pinning
-perf_branches
-perf_buffer
+bpf_tcp_ca		# STRUCT_OPS is missing
+cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
+fentry_fexit		# bpf_prog_test_tracing missing
+fentry_test		# bpf_prog_test_tracing missing
+fexit_bpf2bpf		# freplace is missing
+fexit_test		# bpf_prog_test_tracing missing
+link_pinning		# bpf_link is missing
+modify_return		# fmod_ret is missing
+ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
+perf_branches		# bpf_read_branch_records() helper is missing
 select_reuseport
-send_signal
+send_signal		# flaky
 skb_ctx
-sockmap_listen
-test_global_funcs
+sockmap_listen		# flaky
+test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
+xdp_bpf2bpf		# freplace is missing
