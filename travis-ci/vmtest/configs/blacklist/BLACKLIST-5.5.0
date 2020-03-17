@@ -1,3 +1,4 @@
+# PERMANENTLY DISABLED
 bpf_tcp_ca		# STRUCT_OPS is missing
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
 fentry_fexit		# bpf_prog_test_tracing missing
@@ -8,9 +9,12 @@ link_pinning		# bpf_link is missing
 modify_return		# fmod_ret is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 perf_branches		# bpf_read_branch_records() helper is missing
-select_reuseport
-send_signal		# flaky
-skb_ctx
-sockmap_listen		# flaky
+select_reuseport	# UDP support is missing
+sockmap_listen		# no listen socket supportin SOCKMAP
+skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
+vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_bpf2bpf		# freplace is missing
+
+# TEMPORARILY DISABLED
+send_signal		# flaky

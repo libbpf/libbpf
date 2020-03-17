@@ -1,2 +1,2 @@
+# TEMPORARILY DISABLED
 send_signal		# flaky
-sockmap_listen		# flaky
