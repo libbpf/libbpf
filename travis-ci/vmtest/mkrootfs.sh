@@ -81,6 +81,7 @@ packages=(
 	binutils
 	elfutils
 	glibc
+	iproute2
 	# selftests test_verifier dependencies.
 	libcap
 )
