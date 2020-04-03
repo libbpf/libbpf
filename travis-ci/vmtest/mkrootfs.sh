@@ -87,6 +87,45 @@ packages=(
 
 pacstrap -C "$pacman_conf" -cGM "$root" "${packages[@]}"
 
+makedeps=(
+	# iproute2
+	asp
+	bison
+	fakeroot
+	flex
+	gcc
+	gettext
+	make
+	patch
+	pkgconf
+)
+
+# Subshell to avoid polluting env
+(
+	PACMAN_ARGS=(
+		"--noconfirm"
+		"--config=$pacman_conf"
+		"-r $root"
+	)
+	pacman "${PACMAN_ARGS[@]}" -Sy "${makedeps[@]}"
+
+	cd $root
+	chmod 755 $PWD
+	asp export iproute2
+	chmod 777 iproute2
+	cd iproute2
+	chmod 666 *
+	sed -i 's/'"'"'iptables'"'"' //g' PKGBUILD
+	sed -i '/makedepends/d' PKGBUILD
+	su -p nobody -s /bin/bash -c "makepkg -c --skippgpcheck"
+
+	IPROUTE_PKG="$(su nobody -s /bin/bash -c 'makepkg --packagelist')"
+	pacman --noconfirm -r "$root" -U $IPROUTE_PKG
+	pacman "${PACMAN_ARGS[@]}" -Rs --noconfirm "${makedeps[@]}"
+	cd -
+	rm -rf iproute2
+)
+
 # Remove unnecessary files from the chroot.
 
 # We don't need the pacman databases anymore.
