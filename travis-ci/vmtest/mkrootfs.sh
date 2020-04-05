@@ -81,6 +81,7 @@ packages=(
 	binutils
 	elfutils
 	glibc
+	iproute2
 	# selftests test_verifier dependencies.
 	libcap
 )
@@ -101,15 +102,6 @@ rm -rf "$root/usr/share/{doc,help,man,texinfo}"
 
 chroot "${root}" /bin/busybox --install
 
-cat > "$root/etc/fstab" << "EOF"
-dev /dev devtmpfs rw,nosuid 0 0
-proc /proc proc rw,nosuid,nodev,noexec 0 0
-sys /sys sysfs rw,nosuid,nodev,noexec 0 0
-debugfs /sys/kernel/debug debugfs mode=755,realtime 0 0
-bpffs /sys/fs/bpf bpf realtime 0 0
-EOF
-chmod 644 "$root/etc/fstab"
-
 cat > "$root/etc/inittab" << "EOF"
 ::sysinit:/etc/init.d/rcS
 ::ctrlaltdel:/sbin/reboot
@@ -123,12 +115,28 @@ mkdir -m 755 "$root/etc/init.d" "$root/etc/rcS.d"
 cat > "$root/etc/rcS.d/S10-mount" << "EOF"
 #!/bin/sh
 
-/bin/mount -a
+set -eux
+
+/bin/mount proc /proc -t proc
+
+# Mount devtmpfs if not mounted
+if [[ -z $(/bin/mount -l -t devtmpfs) ]]; then
+	/bin/mount devtmpfs /dev -t devtmpfs
+fi
+
+/bin/mount sysfs /sys -t sysfs
+/bin/mount bpffs /sys/fs/bpf -t bpf
+/bin/mount debugfs /sys/kernel/debug -t debugfs
+
+echo 'Listing currently mounted file systems'
+/bin/mount
 EOF
 chmod 755 "$root/etc/rcS.d/S10-mount"
 
 cat > "$root/etc/rcS.d/S40-network" << "EOF"
 #!/bin/sh
+
+set -eux
 
 ip link set lo up
 EOF
@@ -136,6 +144,8 @@ chmod 755 "$root/etc/rcS.d/S40-network"
 
 cat > "$root/etc/init.d/rcS" << "EOF"
 #!/bin/sh
+
+set -eux
 
 for path in /etc/rcS.d/S*; do
 	[ -x "$path" ] && "$path"

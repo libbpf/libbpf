@@ -411,7 +411,7 @@ if [[ ! -z SETUPCMD ]]; then
 	if [[ -v BUILDDIR ]]; then kernel='latest'; fi
 	setup_envvars="export KERNEL=${kernel}"
 	setup_script=$(printf "#!/bin/sh
-set -e
+set -eux
 
 echo 'Running setup commands'
 %s
