@@ -1,7 +1,5 @@
 # TEMPORARILY DISABLED
 send_signal		# flaky
 test_lsm		# semi-working
-sk_assign		# needs better setup in Travis CI
-sk_lookup
 core_reloc		# temporary test breakage
 bpf_verif_scale		# clang regression
