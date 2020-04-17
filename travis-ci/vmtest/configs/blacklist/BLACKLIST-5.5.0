@@ -8,6 +8,7 @@ fexit_bpf2bpf		# freplace is missing
 fexit_test		# bpf_prog_test_tracing missing
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
 link_pinning		# bpf_link is missing
+mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 perf_branches		# bpf_read_branch_records() helper is missing
