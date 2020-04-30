@@ -252,9 +252,9 @@ cherry_pick_commits ${BASELINE_TAG} ${TIP_TAG}
 cherry_pick_commits ${BPF_BASELINE_TAG} ${BPF_TIP_TAG}
 
 # Move all libbpf files into __libbpf directory.
-git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --prune-empty -f --tree-filter "${LIBBPF_TREE_FILTER}" ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
 # Make __libbpf a new root directory
-git filter-branch --prune-empty -f --subdirectory-filter __libbpf ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --prune-empty -f --subdirectory-filter __libbpf ${SQUASH_TIP_TAG} ${SQUASH_BASE_TAG}
 
 # If there are no new commits with  libbpf-related changes, bail out
 COMMIT_CNT=$(git rev-list --count ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG})
@@ -318,8 +318,8 @@ echo "Verifying Linux's and Github's libbpf state"
 
 cd_to ${LINUX_REPO}
 git checkout -b ${VIEW_TAG} ${TIP_COMMIT}
-git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
-git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
+FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} > ${TMP_DIR}/linux-view.ls
 
 cd_to ${LIBBPF_REPO}
