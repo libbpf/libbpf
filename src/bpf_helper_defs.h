@@ -83,6 +83,8 @@ static int (*bpf_probe_read)(void *dst, __u32 size, const void *unsafe_ptr) = (v
  * bpf_ktime_get_ns
  *
  * 	Return the time elapsed since system boot, in nanoseconds.
+ * 	Does not include time the system was suspended.
+ * 	See: clock_gettime(CLOCK_MONOTONIC)
  *
  * Returns
  * 	Current *ktime*.
@@ -1248,7 +1250,7 @@ static int (*bpf_skb_adjust_room)(struct __sk_buff *skb, __s32 len_diff, __u32 m
  *
  * Returns
  * 	**XDP_REDIRECT** on success, or the value of the two lower bits
- * 	of the **flags* argument on error.
+ * 	of the *flags* argument on error.
  */
 static int (*bpf_redirect_map)(void *map, __u32 key, __u64 flags) = (void *) 51;
 
@@ -2926,5 +2928,17 @@ static __u64 (*bpf_get_current_ancestor_cgroup_id)(int ancestor_level) = (void *
  * 	* **-ESOCKTNOSUPPORT**	Socket type not supported (reuseport).
  */
 static int (*bpf_sk_assign)(struct __sk_buff *skb, struct bpf_sock *sk, __u64 flags) = (void *) 124;
+
+/*
+ * bpf_ktime_get_boot_ns
+ *
+ * 	Return the time elapsed since system boot, in nanoseconds.
+ * 	Does include the time the system was suspended.
+ * 	See: clock_gettime(CLOCK_BOOTTIME)
+ *
+ * Returns
+ * 	Current *ktime*.
+ */
+static __u64 (*bpf_ktime_get_boot_ns)(void) = (void *) 125;
 
 
