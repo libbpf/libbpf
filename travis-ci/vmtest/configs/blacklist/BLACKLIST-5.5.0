@@ -1,4 +1,5 @@
 # PERMANENTLY DISABLED
+bpf_obj_id		# bpf_link support missing for GET_OBJ_INFO, GET_FD_BY_ID, etc
 bpf_tcp_ca		# STRUCT_OPS is missing
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
 cgroup_link		# LINK_CREATE is missing
