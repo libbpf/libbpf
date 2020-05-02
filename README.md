@@ -57,6 +57,7 @@ Distributions
 Distributions packaging libbpf from this mirror:
   - [Fedora](https://src.fedoraproject.org/rpms/libbpf)
   - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
+  - [Debian](https://packages.debian.org/sid/libbpf-dev)
 
 Benefits of packaging from the mirror over packaging from kernel sources:
   - Consistent versioning across distributions.
