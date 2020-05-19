@@ -35,7 +35,7 @@ stages:
 
 jobs:
     include:
-        - stage: Build
+        - stage: Build & Test
           name: Debian Build
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
@@ -91,8 +91,7 @@ jobs:
           language: bash
           script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate
 
-        - stage: Build & Test
-          name: Kernel 5.5.0 + selftests
+        - name: Kernel 5.5.0 + selftests
           language: bash
           env: KERNEL=5.5.0
           script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate

@@ -1,8 +1,13 @@
 # PERMANENTLY DISABLED
+align			# verifier output format changed
+bpf_iter		# bpf_iter support is missing
 bpf_obj_id		# bpf_link support missing for GET_OBJ_INFO, GET_FD_BY_ID, etc
 bpf_tcp_ca		# STRUCT_OPS is missing
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
 cgroup_link		# LINK_CREATE is missing
+cgroup_skb_sk_lookup	# bpf_sk_lookup_tcp() helper is missing
+connect_force_port	# cgroup/get{peer,sock}name{4,6} support is missing
+enable_stats		# BPF_ENABLE_STATS support is missing
 fentry_fexit		# bpf_prog_test_tracing missing
 fentry_test		# bpf_prog_test_tracing missing
 fexit_bpf2bpf		# freplace is missing
@@ -10,7 +15,7 @@ fexit_test		# bpf_prog_test_tracing missing
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
 link_pinning		# bpf_link is missing
 mmap			# 5.5 kernel is too permissive with re-mmaping
-modify_return		# fmod_ret is missing
+modify_return		# fmod_ret support is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 perf_branches		# bpf_read_branch_records() helper is missing
 select_reuseport	# UDP support is missing
@@ -19,7 +24,9 @@ sockmap_listen		# no listen socket supportin SOCKMAP
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_lsm		# no BPF_LSM support
+test_overhead		# no fmod_ret support
 vmlinux			# hrtimer_nanosleep() signature changed incompatibly
+xdp_adjust_tail		# new XDP functionality added in 5.8
 xdp_attach		# IFLA_XDP_EXPECTED_FD support is missing
 xdp_bpf2bpf		# freplace is missing
 
