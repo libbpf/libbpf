@@ -3045,4 +3045,77 @@ static __u64 (*bpf_sk_cgroup_id)(struct bpf_sock *sk) = (void *) 128;
  */
 static __u64 (*bpf_sk_ancestor_cgroup_id)(struct bpf_sock *sk, int ancestor_level) = (void *) 129;
 
+/*
+ * bpf_ringbuf_output
+ *
+ * 	Copy *size* bytes from *data* into a ring buffer *ringbuf*.
+ * 	If BPF_RB_NO_WAKEUP is specified in *flags*, no notification of
+ * 	new data availability is sent.
+ * 	IF BPF_RB_FORCE_WAKEUP is specified in *flags*, notification of
+ * 	new data availability is sent unconditionally.
+ *
+ * Returns
+ * 	0, on success;
+ * 	< 0, on error.
+ */
+static void *(*bpf_ringbuf_output)(void *ringbuf, void *data, __u64 size, __u64 flags) = (void *) 130;
+
+/*
+ * bpf_ringbuf_reserve
+ *
+ * 	Reserve *size* bytes of payload in a ring buffer *ringbuf*.
+ *
+ * Returns
+ * 	Valid pointer with *size* bytes of memory available; NULL,
+ * 	otherwise.
+ */
+static void *(*bpf_ringbuf_reserve)(void *ringbuf, __u64 size, __u64 flags) = (void *) 131;
+
+/*
+ * bpf_ringbuf_submit
+ *
+ * 	Submit reserved ring buffer sample, pointed to by *data*.
+ * 	If BPF_RB_NO_WAKEUP is specified in *flags*, no notification of
+ * 	new data availability is sent.
+ * 	IF BPF_RB_FORCE_WAKEUP is specified in *flags*, notification of
+ * 	new data availability is sent unconditionally.
+ *
+ * Returns
+ * 	Nothing. Always succeeds.
+ */
+static void (*bpf_ringbuf_submit)(void *data, __u64 flags) = (void *) 132;
+
+/*
+ * bpf_ringbuf_discard
+ *
+ * 	Discard reserved ring buffer sample, pointed to by *data*.
+ * 	If BPF_RB_NO_WAKEUP is specified in *flags*, no notification of
+ * 	new data availability is sent.
+ * 	IF BPF_RB_FORCE_WAKEUP is specified in *flags*, notification of
+ * 	new data availability is sent unconditionally.
+ *
+ * Returns
+ * 	Nothing. Always succeeds.
+ */
+static void (*bpf_ringbuf_discard)(void *data, __u64 flags) = (void *) 133;
+
+/*
+ * bpf_ringbuf_query
+ *
+ * 	Query various characteristics of provided ring buffer. What
+ * 	exactly is queries is determined by *flags*:
+ * 	  - BPF_RB_AVAIL_DATA - amount of data not yet consumed;
+ * 	  - BPF_RB_RING_SIZE - the size of ring buffer;
+ * 	  - BPF_RB_CONS_POS - consumer position (can wrap around);
+ * 	  - BPF_RB_PROD_POS - producer(s) position (can wrap around);
+ * 	Data returned is just a momentary snapshots of actual values
+ * 	and could be inaccurate, so this facility should be used to
+ * 	power heuristics and for reporting, not to make 100% correct
+ * 	calculation.
+ *
+ * Returns
+ * 	Requested value, or 0, if flags are not recognized.
+ */
+static __u64 (*bpf_ringbuf_query)(void *ringbuf, __u64 flags) = (void *) 134;
+
 
