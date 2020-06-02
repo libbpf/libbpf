@@ -1199,6 +1199,13 @@ static int (*bpf_setsockopt)(void *bpf_socket, int level, int optname, void *opt
  * 	Grow or shrink the room for data in the packet associated to
  * 	*skb* by *len_diff*, and according to the selected *mode*.
  *
+ * 	By default, the helper will reset any offloaded checksum
+ * 	indicator of the skb to CHECKSUM_NONE. This can be avoided
+ * 	by the following flag:
+ *
+ * 	* **BPF_F_ADJ_ROOM_NO_CSUM_RESET**: Do not reset offloaded
+ * 	  checksum data of the skb to CHECKSUM_NONE.
+ *
  * 	There are two supported modes at this time:
  *
  * 	* **BPF_ADJ_ROOM_MAC**: Adjust room at the mac layer
@@ -3117,5 +3124,41 @@ static void (*bpf_ringbuf_discard)(void *data, __u64 flags) = (void *) 133;
  * 	Requested value, or 0, if flags are not recognized.
  */
 static __u64 (*bpf_ringbuf_query)(void *ringbuf, __u64 flags) = (void *) 134;
+
+/*
+ * bpf_csum_level
+ *
+ * 	Change the skbs checksum level by one layer up or down, or
+ * 	reset it entirely to none in order to have the stack perform
+ * 	checksum validation. The level is applicable to the following
+ * 	protocols: TCP, UDP, GRE, SCTP, FCOE. For example, a decap of
+ * 	| ETH | IP | UDP | GUE | IP | TCP | into | ETH | IP | TCP |
+ * 	through **bpf_skb_adjust_room**\ () helper with passing in
+ * 	**BPF_F_ADJ_ROOM_NO_CSUM_RESET** flag would require one	call
+ * 	to **bpf_csum_level**\ () with **BPF_CSUM_LEVEL_DEC** since
+ * 	the UDP header is removed. Similarly, an encap of the latter
+ * 	into the former could be accompanied by a helper call to
+ * 	**bpf_csum_level**\ () with **BPF_CSUM_LEVEL_INC** if the
+ * 	skb is still intended to be processed in higher layers of the
+ * 	stack instead of just egressing at tc.
+ *
+ * 	There are three supported level settings at this time:
+ *
+ * 	* **BPF_CSUM_LEVEL_INC**: Increases skb->csum_level for skbs
+ * 	  with CHECKSUM_UNNECESSARY.
+ * 	* **BPF_CSUM_LEVEL_DEC**: Decreases skb->csum_level for skbs
+ * 	  with CHECKSUM_UNNECESSARY.
+ * 	* **BPF_CSUM_LEVEL_RESET**: Resets skb->csum_level to 0 and
+ * 	  sets CHECKSUM_NONE to force checksum validation by the stack.
+ * 	* **BPF_CSUM_LEVEL_QUERY**: No-op, returns the current
+ * 	  skb->csum_level.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure. In the
+ * 	case of **BPF_CSUM_LEVEL_QUERY**, the current skb->csum_level
+ * 	is returned or the error code -EACCES in case the skb is not
+ * 	subject to CHECKSUM_UNNECESSARY.
+ */
+static int (*bpf_csum_level)(struct __sk_buff *skb, __u64 level) = (void *) 135;
 
 
