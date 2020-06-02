@@ -1,11 +1,15 @@
 #!/bin/bash
 
+set -euxo pipefail
+
 LLVM_VER=11
 LIBBPF_PATH="${REPO_ROOT}"
 REPO_PATH="travis-ci/vmtest/bpf-next"
 
-# temporary work-around for failing tests
-rm "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/prog_tests/sockmap_basic.c"
+PREPARE_SELFTESTS_SCRIPT=${VMTEST_ROOT}/prepare_selftests-${KERNEL}.sh
+if [ -f "${PREPARE_SELFTESTS_SCRIPT}" ]; then
+	(cd "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" && ${PREPARE_SELFTESTS_SCRIPT})
+fi
 
 make \
 	CLANG=clang-${LLVM_VER} \
@@ -21,5 +25,4 @@ cd ${LIBBPF_PATH}
 rm selftests/bpf/.gitignore
 git add selftests
 
-blacklist_path="${VMTEST_ROOT}/configs/blacklist"
-git add "${blacklist_path}"
+git add "${VMTEST_ROOT}/configs/blacklist"
