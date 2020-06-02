@@ -12,16 +12,25 @@ fentry_fexit		# bpf_prog_test_tracing missing
 fentry_test		# bpf_prog_test_tracing missing
 fexit_bpf2bpf		# freplace is missing
 fexit_test		# bpf_prog_test_tracing missing
+flow_dissector		# bpf_link-based flow dissector is in 5.8+
+flow_dissector_reattach
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
 link_pinning		# bpf_link is missing
 mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret support is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 perf_branches		# bpf_read_branch_records() helper is missing
+ringbuf			# BPF_MAP_TYPE_RINGBUF is supported in 5.8+
+reference_tracking/classifier/sk_lookup_success		# bug in verifier w/ tracking references
 select_reuseport	# UDP support is missing
 sk_assign		# bpf_sk_assign helper missing
+skb_helpers		# helpers added in 5.8+
 sockmap_listen		# no listen socket supportin SOCKMAP
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
+# latest Clang generates code that fails to verify
+test_bpf_verif_scale/strobemeta.o
+test_bpf_verif_scale/strobemeta_nounroll1.o
+test_bpf_verif_scale/strobemeta_nounroll2.o
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_lsm		# no BPF_LSM support
 test_overhead		# no fmod_ret support
@@ -33,3 +42,4 @@ xdp_bpf2bpf		# freplace is missing
 
 # TEMPORARILY DISABLED
 send_signal		# flaky
+cls_redirect		# latest Clang breaks BPF verification
