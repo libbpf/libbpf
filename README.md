@@ -87,6 +87,7 @@ information](https://www.kernel.org/doc/html/latest/bpf/btf.html), though.
 Some major Linux distributions come with kernel BTF already built in:
   - Fedora 31+
   - RHEL 8.2+
+  - OpenSUSE Tumbleweed (in the next release, as of 2020-06-04)
   
 If your kernel doesn't come with BTF built-in, you'll need to build custom
 kernel. You'll need:
