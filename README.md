@@ -88,7 +88,8 @@ Some major Linux distributions come with kernel BTF already built in:
   - Fedora 31+
   - RHEL 8.2+
   - OpenSUSE Tumbleweed (in the next release, as of 2020-06-04)
-  
+  - Arch Linux (from kernel 5.7.1.arch1-1)
+
 If your kernel doesn't come with BTF built-in, you'll need to build custom
 kernel. You'll need:
   - `pahole` 1.16+ tool (part of `dwarves` package), which performs DWARF to
@@ -103,10 +104,11 @@ $ ls -la /sys/kernel/btf/vmlinux
 ```
   
 To develop and build BPF programs, you'll need Clang/LLVM 10+. The following
-distributions have Clang/LLVM 10+ installed by default:
+distributions have Clang/LLVM 10+ packaged by default:
   - Fedora 32+
   - Ubuntu 20.04+
-  
+  - Arch Linux
+
 Otherwise, please make sure to update it on your system.
 
 The following resources are useful to understand what BPF CO-RE is and how to
