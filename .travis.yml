@@ -39,67 +39,67 @@ jobs:
           name: Debian Build
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Debian Build (ASan+UBSan)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_ASAN || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN_ASAN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Debian Build (clang)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_CLANG || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN_CLANG || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Debian Build (clang ASan+UBSan)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_CLANG_ASAN || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN_CLANG_ASAN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Debian Build (gcc-8)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_GCC8 || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN_GCC8 || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Debian Build (gcc-8 ASan+UBSan)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_GCC8_ASAN || travis_terminate
+          script:         $CI_ROOT/managers/debian.sh RUN_GCC8_ASAN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Ubuntu Bionic Build
           language: bash
-          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate
+          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Ubuntu Bionic Build (arm)
           arch: arm64
           language: bash
-          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate
+          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Ubuntu Bionic Build (s390x)
           arch: s390x
           language: bash
-          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate
+          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Ubuntu Bionic Build (ppc64le)
           arch: ppc64le
           language: bash
-          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate
+          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Kernel 5.5.0 + selftests
           language: bash
           env: KERNEL=5.5.0
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
 
         - name: Kernel LATEST + selftests
           language: bash
           env: KERNEL=LATEST
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
 
         - stage: Coverity
           language: bash
@@ -120,4 +120,4 @@ jobs:
               - sudo apt-get -y build-dep libelf-dev
               - sudo apt-get install -y libelf-dev pkg-config
           script:
-              - scripts/coverity.sh || travis_terminate
+              - scripts/coverity.sh || travis_terminate 1
