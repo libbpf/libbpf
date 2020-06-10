@@ -2,5 +2,3 @@
 send_signal		# flaky
 test_lsm		# semi-working
 sk_assign		# needs better setup in Travis CI
-cls_redirect		# latest Clang breaks BPF verification
-ringbuf			# ringbuf test is racy right now
