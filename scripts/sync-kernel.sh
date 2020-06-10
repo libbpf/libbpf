@@ -85,36 +85,6 @@ commit_signature()
 	git show --pretty='("%s")|%aI|%b' --shortstat $1 -- ${2-.} | tr '\n' '|'
 }
 
-# Validate there are no non-empty merges (we can't handle them)
-# $1 - baseline tag
-# $2 - tip tag
-validate_merges()
-{
-	local baseline_tag=$1
-	local tip_tag=$2
-	local new_merges
-	local merge_change_cnt
-	local ignore_merge_resolutions
-	local desc
-
-	new_merges=$(git rev-list --merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
-	for new_merge in ${new_merges}; do
-		desc=$(commit_desc ${new_merge})
-		echo "MERGE: ${desc}"
-		merge_change_cnt=$(git show --format='' ${new_merge} | wc -l)
-		if ((${merge_change_cnt} > 0)); then
-			read -p "Merge '${desc}' is non-empty, which will cause conflicts! Do you want to proceed? [y/N]: " ignore_merge_resolutions
-			case "${ignore_merge_resolutions}" in
-				"y" | "Y")
-					echo "Skipping '${desc}'..."
-					continue
-					;;
-			esac
-			exit 3
-		fi
-	done
-}
-
 # Cherry-pick commits touching libbpf-related files
 # $1 - baseline_tag
 # $2 - tip_tag
@@ -242,10 +212,6 @@ git branch ${BPF_BASELINE_TAG} ${BPF_BASELINE_COMMIT}
 git branch ${BPF_TIP_TAG} ${BPF_TIP_COMMIT}
 git branch ${SQUASH_BASE_TAG} ${SQUASH_COMMIT}
 git checkout -b ${SQUASH_TIP_TAG} ${SQUASH_COMMIT}
-
-# Validate there are no non-empty merges in bpf-next and bpf trees
-validate_merges ${BASELINE_TAG} ${TIP_TAG}
-validate_merges ${BPF_BASELINE_TAG} ${BPF_TIP_TAG}
 
 # Cherry-pick new commits onto squashed baseline commit
 cherry_pick_commits ${BASELINE_TAG} ${TIP_TAG}
