@@ -3065,7 +3065,7 @@ static __u64 (*bpf_sk_ancestor_cgroup_id)(struct bpf_sock *sk, int ancestor_leve
  * 	0, on success;
  * 	< 0, on error.
  */
-static void *(*bpf_ringbuf_output)(void *ringbuf, void *data, __u64 size, __u64 flags) = (void *) 130;
+static int (*bpf_ringbuf_output)(void *ringbuf, void *data, __u64 size, __u64 flags) = (void *) 130;
 
 /*
  * bpf_ringbuf_reserve
