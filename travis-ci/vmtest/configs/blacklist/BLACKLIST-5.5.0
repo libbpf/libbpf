@@ -23,6 +23,7 @@ flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
 link_pinning		# bpf_link is missing
+load_bytes_relative	# new functionality in 5.8
 mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret support is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
