@@ -1,20 +1,29 @@
-
-This is a mirror of [bpf-next linux tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)'s
+This is a mirror of [bpf-next Linux source
+tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)'s
 `tools/lib/bpf` directory plus its supporting header files.
 
-The following files will by sync'ed with bpf-next repo:
-  - `src/` <-> `bpf-next/tools/lib/bpf/`
-  - `include/uapi/linux/bpf_common.h` <-> `bpf-next/tools/include/uapi/linux/bpf_common.h`
-  - `include/uapi/linux/bpf.h` <-> `bpf-next/tools/include/uapi/linux/bpf.h`
-  - `include/uapi/linux/btf.h` <-> `bpf-next/tools/include/uapi/linux/btf.h`
-  - `include/uapi/linux/if_link.h` <-> `bpf-next/tools/include/uapi/linux/if_link.h`
-  - `include/uapi/linux/if_xdp.h` <-> `bpf-next/tools/include/uapi/linux/if_xdp.h`
-  - `include/uapi/linux/netlink.h` <-> `bpf-next/tools/include/uapi/linux/netlink.h`
-  - `include/tools/libc_compat.h` <-> `bpf-next/tools/include/tools/libc_compat.h`
+All the gory details of syncing can be found in `scripts/sync-kernel.sh`
+script.
 
-Other header files at this repo (`include/linux/*.h`) are reduced versions of
-their counterpart files at bpf-next's `tools/include/linux/*.h` to make compilation
-successful.
+Some header files in this repo (`include/linux/*.h`) are reduced versions of
+their counterpart files at
+[bpf-next](https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/)'s
+`tools/include/linux/*.h` to make compilation successful.
+
+BPF questions
+=============
+
+All general BPF questions, including kernel functionality, libbpf APIs and
+their application, should be sent to bpf@vger.kernel.org mailing list. You can
+subscribe to it [here](http://vger.kernel.org/vger-lists.html#bpf) and search
+its archive [here](https://lore.kernel.org/bpf/). Please search the archive
+before asking new questions. It very well might be that this was already
+addressed or answered before.
+
+bpf@vger.kernel.org is monitored by many more people and they will happily try
+to help you with whatever issue you have. This repository's PRs and issues
+should be opened only for dealing with issues pertaining to specific way this
+libbpf mirror repo is set up and organized.
 
 Build
 [![Build Status](https://travis-ci.org/libbpf/libbpf.svg?branch=master)](https://travis-ci.org/libbpf/libbpf)
@@ -25,8 +34,9 @@ libelf is an internal dependency of libbpf and thus it is required to link
 against and must be installed on the system for applications to work.
 pkg-config is used by default to find libelf, and the program called can be
 overridden with `PKG_CONFIG`.
-If using `pkg-config` at build time is not desired, it can be disabled by setting
-`NO_PKG_CONFIG=1` when calling make.
+
+If using `pkg-config` at build time is not desired, it can be disabled by
+setting `NO_PKG_CONFIG=1` when calling make.
 
 To build both static libbpf.a and shared libbpf.so:
 ```bash
@@ -62,13 +72,15 @@ Distributions packaging libbpf from this mirror:
 Benefits of packaging from the mirror over packaging from kernel sources:
   - Consistent versioning across distributions.
   - No ties to any specific kernel, transparent handling of older kernels.
-    Libbpf is designed to be kernel-agnostic and work across multitude of kernel
-    versions. It has built-in mechanisms to gracefully handle older kernels,
-    that are missing some of the features, by working around or gracefully
-    degrading functionality. Thus libbpf is not tied to a specific kernel
-    version and can/should be packaged and versioned independently.
-  - Continuous integration testing via [TravisCI](https://travis-ci.org/libbpf/libbpf).
-  - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf) and [Coverity](https://scan.coverity.com/projects/libbpf).
+    Libbpf is designed to be kernel-agnostic and work across multitude of
+    kernel versions. It has built-in mechanisms to gracefully handle older
+    kernels, that are missing some of the features, by working around or
+    gracefully degrading functionality. Thus libbpf is not tied to a specific
+    kernel version and can/should be packaged and versioned independently.
+  - Continuous integration testing via
+    [TravisCI](https://travis-ci.org/libbpf/libbpf).
+  - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf)
+    and [Coverity](https://scan.coverity.com/projects/libbpf).
 
 Package dependencies of libbpf, package names may vary across distros:
   - zlib
