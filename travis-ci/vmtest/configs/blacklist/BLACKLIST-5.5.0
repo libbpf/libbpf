@@ -22,6 +22,7 @@ fexit_test		# bpf_prog_test_tracing missing
 flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
+ksyms			# __start_BTF has different name
 link_pinning		# bpf_link is missing
 load_bytes_relative	# new functionality in 5.8
 map_ptr			# test uses BPF_MAP_TYPE_RINGBUF, added in 5.8
@@ -43,6 +44,7 @@ skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_lsm		# no BPF_LSM support
 test_overhead		# no fmod_ret support
+varlen			# verifier bug fixed in later kernels
 vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_adjust_tail		# new XDP functionality added in 5.8
 xdp_attach		# IFLA_XDP_EXPECTED_FD support is missing
