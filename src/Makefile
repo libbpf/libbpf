@@ -11,7 +11,7 @@ INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
 ALL_CFLAGS := $(INCLUDES)
 
 FEATURE_REALLOCARRAY := $(shell $(TOPDIR)/scripts/check-reallocarray.sh)
-ifneq ($(FEATURE_REALLOCARRAY),)
+ifneq ($(FEATURE_REALLOCARRAY), FAIL)
 	ALL_CFLAGS += -DCOMPAT_NEED_REALLOCARRAY
 endif
 
