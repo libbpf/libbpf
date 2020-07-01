@@ -24,6 +24,7 @@ struct tcp_sock;
 struct tcp_timewait_sock;
 struct tcp_request_sock;
 struct udp6_sock;
+struct task_struct;
 struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
@@ -3219,5 +3220,41 @@ static struct tcp_request_sock *(*bpf_skc_to_tcp_request_sock)(void *sk) = (void
  * 	*sk* if casting is valid, or NULL otherwise.
  */
 static struct udp6_sock *(*bpf_skc_to_udp6_sock)(void *sk) = (void *) 140;
+
+/*
+ * bpf_get_task_stack
+ *
+ * 	Return a user or a kernel stack in bpf program provided buffer.
+ * 	To achieve this, the helper needs *task*, which is a valid
+ * 	pointer to struct task_struct. To store the stacktrace, the
+ * 	bpf program provides *buf* with	a nonnegative *size*.
+ *
+ * 	The last argument, *flags*, holds the number of stack frames to
+ * 	skip (from 0 to 255), masked with
+ * 	**BPF_F_SKIP_FIELD_MASK**. The next bits can be used to set
+ * 	the following flags:
+ *
+ * 	**BPF_F_USER_STACK**
+ * 		Collect a user space stack instead of a kernel stack.
+ * 	**BPF_F_USER_BUILD_ID**
+ * 		Collect buildid+offset instead of ips for user stack,
+ * 		only valid if **BPF_F_USER_STACK** is also specified.
+ *
+ * 	**bpf_get_task_stack**\ () can collect up to
+ * 	**PERF_MAX_STACK_DEPTH** both kernel and user frames, subject
+ * 	to sufficient large buffer size. Note that
+ * 	this limit can be controlled with the **sysctl** program, and
+ * 	that it should be manually increased in order to profile long
+ * 	user stacks (such as stacks for Java programs). To do so, use:
+ *
+ * 	::
+ *
+ * 		# sysctl kernel.perf_event_max_stack=<new value>
+ *
+ * Returns
+ * 	A non-negative value equal to or less than *size* on success,
+ * 	or a negative error in case of failure.
+ */
+static long (*bpf_get_task_stack)(struct task_struct *task, void *buf, __u32 size, __u64 flags) = (void *) 141;
 
 
