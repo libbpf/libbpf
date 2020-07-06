@@ -1,0 +1,5 @@
+btf_dump
+cpu_mask
+hashmap
+perf_buffer
+section_names
