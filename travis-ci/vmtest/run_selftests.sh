@@ -5,11 +5,13 @@ set -euxo pipefail
 test_progs() {
 	echo TEST_PROGS
 	./test_progs ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
+
+	echo TEST_PROGS-NO_ALU32
+	./test_progs-no_alu32 ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
 }
 
 test_maps() {
 	echo TEST_MAPS
-	# Allow failing on older kernels.
 	./test_maps
 }
 
