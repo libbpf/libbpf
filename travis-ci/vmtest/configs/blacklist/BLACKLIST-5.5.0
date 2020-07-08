@@ -41,10 +41,12 @@ sk_assign		# bpf_sk_assign helper missing
 skb_helpers		# helpers added in 5.8+
 sockmap_basic		# uses new socket fields, 5.8+
 sockmap_listen		# no listen socket supportin SOCKMAP
+sockopt_sk
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_lsm		# no BPF_LSM support
 test_overhead		# no fmod_ret support
+udp_limit		# no cgroup/sock_release BPF program type (5.9+)
 varlen			# verifier bug fixed in later kernels
 vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_adjust_tail		# new XDP functionality added in 5.8
