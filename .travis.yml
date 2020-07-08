@@ -35,7 +35,23 @@ stages:
 
 jobs:
     include:
-        - stage: Build & Test
+        - stage: Kernel Selftests
+          name: Kernel LATEST + selftests
+          language: bash
+          env: KERNEL=LATEST
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
+
+        - name: Kernel 4.9.0 + selftests
+          language: bash
+          env: KERNEL=4.9.0
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
+
+        - name: Kernel 5.5.0 + selftests
+          language: bash
+          env: KERNEL=5.5.0
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
+
+        - stage: Builds
           name: Debian Build
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
@@ -91,21 +107,6 @@ jobs:
           language: bash
           script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
-        - name: Kernel 4.9.0 + selftests
-          language: bash
-          env: KERNEL=4.9.0
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
-
-        - name: Kernel 5.5.0 + selftests
-          language: bash
-          env: KERNEL=5.5.0
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
-
-        - name: Kernel LATEST + selftests
-          language: bash
-          env: KERNEL=LATEST
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
-
         - stage: Coverity
           language: bash
           env:
@@ -127,4 +128,4 @@ jobs:
           script:
               - scripts/coverity.sh || travis_terminate 1
     allow_failures:
-        - env: KERNEL=4.9.0
+        - env: KERNEL=x.x.x
