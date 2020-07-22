@@ -15,6 +15,8 @@ ifneq ($(FEATURE_REALLOCARRAY),)
 	ALL_CFLAGS += -DCOMPAT_NEED_REALLOCARRAY
 endif
 
+FOOBLA
+
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall
@@ -27,6 +29,8 @@ else
 	ALL_CFLAGS += $(shell $(PKG_CONFIG) --cflags libelf)
 	ALL_LDFLAGS += $(shell $(PKG_CONFIG) --libs libelf)
 endif
+
+WOWWOW
 
 OBJDIR ?= .
 SHARED_OBJDIR := $(OBJDIR)/sharedobjs
