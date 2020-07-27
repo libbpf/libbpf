@@ -2,6 +2,7 @@
 
 /* Forward declarations of BPF structs */
 struct bpf_fib_lookup;
+struct bpf_sk_lookup;
 struct bpf_perf_event_data;
 struct bpf_perf_event_value;
 struct bpf_pidns_info;
@@ -2125,7 +2126,7 @@ static __u64 (*bpf_skb_ancestor_cgroup_id)(struct __sk_buff *skb, int ancestor_l
  * 		Look for an IPv6 socket.
  *
  * 	If the *netns* is a negative signed 32-bit integer, then the
- * 	socket lookup table in the netns associated with the *ctx* will
+ * 	socket lookup table in the netns associated with the *ctx*
  * 	will be used. For the TC hooks, this is the netns of the device
  * 	in the skb. For socket hooks, this is the netns of the socket.
  * 	If *netns* is any other signed 32-bit value greater than or
@@ -2166,7 +2167,7 @@ static struct bpf_sock *(*bpf_sk_lookup_tcp)(void *ctx, struct bpf_sock_tuple *t
  * 		Look for an IPv6 socket.
  *
  * 	If the *netns* is a negative signed 32-bit integer, then the
- * 	socket lookup table in the netns associated with the *ctx* will
+ * 	socket lookup table in the netns associated with the *ctx*
  * 	will be used. For the TC hooks, this is the netns of the device
  * 	in the skb. For socket hooks, this is the netns of the socket.
  * 	If *netns* is any other signed 32-bit value greater than or
@@ -2934,6 +2935,10 @@ static __u64 (*bpf_get_current_ancestor_cgroup_id)(int ancestor_level) = (void *
 /*
  * bpf_sk_assign
  *
+ * 	Helper is overloaded depending on BPF program type. This
+ * 	description applies to **BPF_PROG_TYPE_SCHED_CLS** and
+ * 	**BPF_PROG_TYPE_SCHED_ACT** programs.
+ *
  * 	Assign the *sk* to the *skb*. When combined with appropriate
  * 	routing configuration to receive the packet towards the socket,
  * 	will cause *skb* to be delivered to the specified socket.
@@ -2960,7 +2965,7 @@ static __u64 (*bpf_get_current_ancestor_cgroup_id)(int ancestor_level) = (void *
  * 	**-ESOCKTNOSUPPORT** if the socket type is not supported
  * 	(reuseport).
  */
-static long (*bpf_sk_assign)(struct __sk_buff *skb, struct bpf_sock *sk, __u64 flags) = (void *) 124;
+static long (*bpf_sk_assign)(void *ctx, struct bpf_sock *sk, __u64 flags) = (void *) 124;
 
 /*
  * bpf_ktime_get_boot_ns
