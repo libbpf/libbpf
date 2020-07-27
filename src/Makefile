@@ -10,7 +10,7 @@ TOPDIR = ..
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
 ALL_CFLAGS := $(INCLUDES)
 
-FEATURE_REALLOCARRAY := $(shell $(TOPDIR)/scripts/check-reallocarray.sh)
+FEATURE_REALLOCARRAY := $(shell $(TOPDIR)/scripts/check-reallocarray.sh $(CC))
 ifneq ($(FEATURE_REALLOCARRAY),)
 	ALL_CFLAGS += -DCOMPAT_NEED_REALLOCARRAY
 endif
