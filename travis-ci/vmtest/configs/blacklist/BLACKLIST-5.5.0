@@ -10,6 +10,7 @@ bpf_verif_scale
 #bpf_verif_scale/strobemeta_nounroll1.o
 #bpf_verif_scale/strobemeta_nounroll2.o
 
+cg_storage_multi	# v5.9+ functionality
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
 cgroup_link		# LINK_CREATE is missing
 cgroup_skb_sk_lookup	# bpf_sk_lookup_tcp() helper is missing
@@ -42,6 +43,7 @@ skb_helpers		# helpers added in 5.8+
 sockmap_basic		# uses new socket fields, 5.8+
 sockmap_listen		# no listen socket supportin SOCKMAP
 sockopt_sk
+sk_lookup		# v5.9+
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_lsm		# no BPF_LSM support
@@ -52,7 +54,9 @@ vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_adjust_tail		# new XDP functionality added in 5.8
 xdp_attach		# IFLA_XDP_EXPECTED_FD support is missing
 xdp_bpf2bpf		# freplace is missing
+xdp_cpumap_attach	# v5.9+
 xdp_devmap_attach	# new feature in 5.8
+xdp_link		# v5.9+
 
 
 # TEMPORARILY DISABLED
