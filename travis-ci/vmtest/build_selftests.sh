@@ -2,7 +2,7 @@
 
 set -euxo pipefail
 
-LLVM_VER=11
+LLVM_VER=12
 LIBBPF_PATH="${REPO_ROOT}"
 REPO_PATH="travis-ci/vmtest/bpf-next"
 
