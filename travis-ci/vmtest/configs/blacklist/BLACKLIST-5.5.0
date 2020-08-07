@@ -9,6 +9,7 @@ bpf_verif_scale
 #bpf_verif_scale/strobemeta.o
 #bpf_verif_scale/strobemeta_nounroll1.o
 #bpf_verif_scale/strobemeta_nounroll2.o
+btf_map_in_map		# inner map leak fixed in 5.8
 
 cg_storage_multi	# v5.9+ functionality
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
