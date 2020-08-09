@@ -97,10 +97,10 @@ jobs:
           language: bash
           script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
-        - name: Ubuntu Bionic Build (s390x)
-          arch: s390x
-          language: bash
-          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
+#        - name: Ubuntu Bionic Build (s390x)
+#          arch: s390x
+#          language: bash
+#          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Ubuntu Bionic Build (ppc64le)
           arch: ppc64le
