@@ -35,7 +35,7 @@ stages:
 
 jobs:
     include:
-        - stage: Kernel Selftests
+        - stage: Builds & Tests
           name: Kernel LATEST + selftests
           language: bash
           env: KERNEL=LATEST
@@ -51,8 +51,7 @@ jobs:
           env: KERNEL=5.5.0
           script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
 
-        - stage: Builds
-          name: Debian Build
+        - name: Debian Build
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
           script:         $CI_ROOT/managers/debian.sh RUN || travis_terminate 1
@@ -97,10 +96,10 @@ jobs:
           language: bash
           script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
-#        - name: Ubuntu Bionic Build (s390x)
-#          arch: s390x
-#          language: bash
-#          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
+        - name: Ubuntu Bionic Build (s390x)
+          arch: s390x
+          language: bash
+          script: sudo $CI_ROOT/managers/ubuntu.sh || travis_terminate 1
 
         - name: Ubuntu Bionic Build (ppc64le)
           arch: ppc64le
