@@ -22,8 +22,8 @@ if [ ! -d "${REPO_PATH}" ]; then
 		mv bpf-next-${LINUX_SHA} $(basename ${REPO_PATH})
 	else
 		# but fallback to git fetch approach if that fails
-		mkdir -p ${REPO_PATH}
-		cd ${REPO_PATH}
+		mkdir -p $(basename ${REPO_PATH})
+		cd $(basename ${REPO_PATH})
 		git init
 		git remote add bpf-next ${BPF_NEXT_ORIGIN}
 		# try shallow clone first
