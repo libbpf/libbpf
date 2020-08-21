@@ -5,6 +5,14 @@
 
 #include <linux/bpf.h>
 
+#define BPF_RAW_INSN(CODE, DST, SRC, OFF, IMM)			\
+	((struct bpf_insn) {					\
+		.code = CODE,					\
+		.dst_reg = DST,					\
+		.src_reg = SRC,					\
+		.off = OFF,					\
+		.imm = IMM })
+
 #define BPF_ALU64_IMM(OP, DST, IMM)				\
 	((struct bpf_insn) {					\
 		.code  = BPF_ALU64 | BPF_OP(OP) | BPF_K,	\
