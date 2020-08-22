@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -eux
+set -eu
+
+source $(cd $(dirname $0) && pwd)/helpers.sh
+
+travis_fold start build_pahole "Building pahole"
 
 CWD=$(pwd)
 REPO_PATH=$1
@@ -23,3 +27,4 @@ export LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-}:/usr/local/lib
 ldd $(which pahole)
 pahole --version
 
+travis_fold end build_pahole

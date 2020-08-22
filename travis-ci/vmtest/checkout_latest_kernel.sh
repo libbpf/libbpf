@@ -1,6 +1,8 @@
 #!/bin/bash
 
-set -eux
+set -eu
+
+source $(cd $(dirname $0) && pwd)/helpers.sh
 
 CWD=$(pwd)
 LIBBPF_PATH=$(pwd)
@@ -14,6 +16,9 @@ echo REPO_PATH = ${REPO_PATH}
 echo LINUX_SHA = ${LINUX_SHA}
 
 if [ ! -d "${REPO_PATH}" ]; then
+	echo
+	travis_fold start pull_kernel_srcs "Fetching kernel sources"
+
 	mkdir -p $(dirname "${REPO_PATH}")
 	cd $(dirname "${REPO_PATH}")
 	# attempt to fetch desired bpf-next repo snapshot
@@ -34,4 +39,6 @@ if [ ! -d "${REPO_PATH}" ]; then
 		fi
 		git reset --hard ${LINUX_SHA}
 	fi
+
+	travis_fold end pull_kernel_srcs
 fi

@@ -1,6 +1,10 @@
 #!/bin/bash
 
-set -euxo pipefail
+set -euo pipefail
+
+source $(cd $(dirname $0) && pwd)/helpers.sh
+
+travis_fold start prepare_selftests "Building selftests"
 
 LLVM_VER=12
 LIBBPF_PATH="${REPO_ROOT}"
@@ -33,3 +37,5 @@ rm selftests/bpf/.gitignore
 git add selftests
 
 git add "${VMTEST_ROOT}/configs/blacklist"
+
+travis_fold end prepare_selftests
