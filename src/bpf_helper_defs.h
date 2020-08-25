@@ -3262,4 +3262,131 @@ static struct udp6_sock *(*bpf_skc_to_udp6_sock)(void *sk) = (void *) 140;
  */
 static long (*bpf_get_task_stack)(struct task_struct *task, void *buf, __u32 size, __u64 flags) = (void *) 141;
 
+/*
+ * bpf_load_hdr_opt
+ *
+ * 	Load header option.  Support reading a particular TCP header
+ * 	option for bpf program (BPF_PROG_TYPE_SOCK_OPS).
+ *
+ * 	If *flags* is 0, it will search the option from the
+ * 	sock_ops->skb_data.  The comment in "struct bpf_sock_ops"
+ * 	has details on what skb_data contains under different
+ * 	sock_ops->op.
+ *
+ * 	The first byte of the *searchby_res* specifies the
+ * 	kind that it wants to search.
+ *
+ * 	If the searching kind is an experimental kind
+ * 	(i.e. 253 or 254 according to RFC6994).  It also
+ * 	needs to specify the "magic" which is either
+ * 	2 bytes or 4 bytes.  It then also needs to
+ * 	specify the size of the magic by using
+ * 	the 2nd byte which is "kind-length" of a TCP
+ * 	header option and the "kind-length" also
+ * 	includes the first 2 bytes "kind" and "kind-length"
+ * 	itself as a normal TCP header option also does.
+ *
+ * 	For example, to search experimental kind 254 with
+ * 	2 byte magic 0xeB9F, the searchby_res should be
+ * 	[ 254, 4, 0xeB, 0x9F, 0, 0, .... 0 ].
+ *
+ * 	To search for the standard window scale option (3),
+ * 	the searchby_res should be [ 3, 0, 0, .... 0 ].
+ * 	Note, kind-length must be 0 for regular option.
+ *
+ * 	Searching for No-Op (0) and End-of-Option-List (1) are
+ * 	not supported.
+ *
+ * 	*len* must be at least 2 bytes which is the minimal size
+ * 	of a header option.
+ *
+ * 	Supported flags:
+ * 	* **BPF_LOAD_HDR_OPT_TCP_SYN** to search from the
+ * 	  saved_syn packet or the just-received syn packet.
+ *
+ *
+ * Returns
+ * 	>0 when found, the header option is copied to *searchby_res*.
+ * 	The return value is the total length copied.
+ *
+ * 	**-EINVAL** If param is invalid
+ *
+ * 	**-ENOMSG** The option is not found
+ *
+ * 	**-ENOENT** No syn packet available when
+ * 		    **BPF_LOAD_HDR_OPT_TCP_SYN** is used
+ *
+ * 	**-ENOSPC** Not enough space.  Only *len* number of
+ * 		    bytes are copied.
+ *
+ * 	**-EFAULT** Cannot parse the header options in the packet
+ *
+ * 	**-EPERM** This helper cannot be used under the
+ * 		   current sock_ops->op.
+ */
+static long (*bpf_load_hdr_opt)(struct bpf_sock_ops *skops, void *searchby_res, __u32 len, __u64 flags) = (void *) 142;
+
+/*
+ * bpf_store_hdr_opt
+ *
+ * 	Store header option.  The data will be copied
+ * 	from buffer *from* with length *len* to the TCP header.
+ *
+ * 	The buffer *from* should have the whole option that
+ * 	includes the kind, kind-length, and the actual
+ * 	option data.  The *len* must be at least kind-length
+ * 	long.  The kind-length does not have to be 4 byte
+ * 	aligned.  The kernel will take care of the padding
+ * 	and setting the 4 bytes aligned value to th->doff.
+ *
+ * 	This helper will check for duplicated option
+ * 	by searching the same option in the outgoing skb.
+ *
+ * 	This helper can only be called during
+ * 	BPF_SOCK_OPS_WRITE_HDR_OPT_CB.
+ *
+ *
+ * Returns
+ * 	0 on success, or negative error in case of failure:
+ *
+ * 	**-EINVAL** If param is invalid
+ *
+ * 	**-ENOSPC** Not enough space in the header.
+ * 		    Nothing has been written
+ *
+ * 	**-EEXIST** The option has already existed
+ *
+ * 	**-EFAULT** Cannot parse the existing header options
+ *
+ * 	**-EPERM** This helper cannot be used under the
+ * 		   current sock_ops->op.
+ */
+static long (*bpf_store_hdr_opt)(struct bpf_sock_ops *skops, const void *from, __u32 len, __u64 flags) = (void *) 143;
+
+/*
+ * bpf_reserve_hdr_opt
+ *
+ * 	Reserve *len* bytes for the bpf header option.  The
+ * 	space will be used by bpf_store_hdr_opt() later in
+ * 	BPF_SOCK_OPS_WRITE_HDR_OPT_CB.
+ *
+ * 	If bpf_reserve_hdr_opt() is called multiple times,
+ * 	the total number of bytes will be reserved.
+ *
+ * 	This helper can only be called during
+ * 	BPF_SOCK_OPS_HDR_OPT_LEN_CB.
+ *
+ *
+ * Returns
+ * 	0 on success, or negative error in case of failure:
+ *
+ * 	**-EINVAL** if param is invalid
+ *
+ * 	**-ENOSPC** Not enough space in the header.
+ *
+ * 	**-EPERM** This helper cannot be used under the
+ * 		   current sock_ops->op.
+ */
+static long (*bpf_reserve_hdr_opt)(struct bpf_sock_ops *skops, __u32 len, __u64 flags) = (void *) 144;
+
 
