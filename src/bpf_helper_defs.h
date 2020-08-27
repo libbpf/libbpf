@@ -29,6 +29,7 @@ struct task_struct;
 struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
+struct path;
 
 /*
  * bpf_map_lookup_elem
@@ -2601,6 +2602,9 @@ static long (*bpf_strtoul)(const char *buf, unsigned long buf_len, __u64 flags, 
  * 	"type". The bpf-local-storage "type" (i.e. the *map*) is
  * 	searched against all bpf-local-storages residing at *sk*.
  *
+ * 	*sk* is a kernel **struct sock** pointer for LSM program.
+ * 	*sk* is a **struct bpf_sock** pointer for other program types.
+ *
  * 	An optional *flags* (**BPF_SK_STORAGE_GET_F_CREATE**) can be
  * 	used such that a new bpf-local-storage will be
  * 	created if one does not exist.  *value* can be used
@@ -2614,7 +2618,7 @@ static long (*bpf_strtoul)(const char *buf, unsigned long buf_len, __u64 flags, 
  * 	**NULL** if not found or there was an error in adding
  * 	a new bpf-local-storage.
  */
-static void *(*bpf_sk_storage_get)(void *map, struct bpf_sock *sk, void *value, __u64 flags) = (void *) 107;
+static void *(*bpf_sk_storage_get)(void *map, void *sk, void *value, __u64 flags) = (void *) 107;
 
 /*
  * bpf_sk_storage_delete
@@ -2626,7 +2630,7 @@ static void *(*bpf_sk_storage_get)(void *map, struct bpf_sock *sk, void *value, 
  *
  * 	**-ENOENT** if the bpf-local-storage cannot be found.
  */
-static long (*bpf_sk_storage_delete)(void *map, struct bpf_sock *sk) = (void *) 108;
+static long (*bpf_sk_storage_delete)(void *map, void *sk) = (void *) 108;
 
 /*
  * bpf_send_signal
@@ -3388,5 +3392,65 @@ static long (*bpf_store_hdr_opt)(struct bpf_sock_ops *skops, const void *from, _
  * 		   current sock_ops->op.
  */
 static long (*bpf_reserve_hdr_opt)(struct bpf_sock_ops *skops, __u32 len, __u64 flags) = (void *) 144;
+
+/*
+ * bpf_inode_storage_get
+ *
+ * 	Get a bpf_local_storage from an *inode*.
+ *
+ * 	Logically, it could be thought of as getting the value from
+ * 	a *map* with *inode* as the **key**.  From this
+ * 	perspective,  the usage is not much different from
+ * 	**bpf_map_lookup_elem**\ (*map*, **&**\ *inode*) except this
+ * 	helper enforces the key must be an inode and the map must also
+ * 	be a **BPF_MAP_TYPE_INODE_STORAGE**.
+ *
+ * 	Underneath, the value is stored locally at *inode* instead of
+ * 	the *map*.  The *map* is used as the bpf-local-storage
+ * 	"type". The bpf-local-storage "type" (i.e. the *map*) is
+ * 	searched against all bpf_local_storage residing at *inode*.
+ *
+ * 	An optional *flags* (**BPF_LOCAL_STORAGE_GET_F_CREATE**) can be
+ * 	used such that a new bpf_local_storage will be
+ * 	created if one does not exist.  *value* can be used
+ * 	together with **BPF_LOCAL_STORAGE_GET_F_CREATE** to specify
+ * 	the initial value of a bpf_local_storage.  If *value* is
+ * 	**NULL**, the new bpf_local_storage will be zero initialized.
+ *
+ * Returns
+ * 	A bpf_local_storage pointer is returned on success.
+ *
+ * 	**NULL** if not found or there was an error in adding
+ * 	a new bpf_local_storage.
+ */
+static void *(*bpf_inode_storage_get)(void *map, void *inode, void *value, __u64 flags) = (void *) 145;
+
+/*
+ * bpf_inode_storage_delete
+ *
+ * 	Delete a bpf_local_storage from an *inode*.
+ *
+ * Returns
+ * 	0 on success.
+ *
+ * 	**-ENOENT** if the bpf_local_storage cannot be found.
+ */
+static int (*bpf_inode_storage_delete)(void *map, void *inode) = (void *) 146;
+
+/*
+ * bpf_d_path
+ *
+ * 	Return full path for given 'struct path' object, which
+ * 	needs to be the kernel BTF 'path' object. The path is
+ * 	returned in the provided buffer 'buf' of size 'sz' and
+ * 	is zero terminated.
+ *
+ *
+ * Returns
+ * 	On success, the strictly positive length of the string,
+ * 	including the trailing NUL character. On error, a negative
+ * 	value.
+ */
+static long (*bpf_d_path)(struct path *path, char *buf, __u32 sz) = (void *) 147;
 
 
