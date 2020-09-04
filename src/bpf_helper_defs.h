@@ -3453,4 +3453,15 @@ static int (*bpf_inode_storage_delete)(void *map, void *inode) = (void *) 146;
  */
 static long (*bpf_d_path)(struct path *path, char *buf, __u32 sz) = (void *) 147;
 
+/*
+ * bpf_copy_from_user
+ *
+ * 	Read *size* bytes from user space address *user_ptr* and store
+ * 	the data in *dst*. This is a wrapper of copy_from_user().
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static long (*bpf_copy_from_user)(void *dst, __u32 size, const void *user_ptr) = (void *) 148;
+
 
