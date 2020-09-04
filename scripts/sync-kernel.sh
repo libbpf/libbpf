@@ -6,7 +6,6 @@ usage () {
 	echo "Set BPF_NEXT_BASELINE to override bpf-next tree commit, otherwise read from <libbpf-repo>/CHECKPOINT-COMMIT."
 	echo "Set BPF_BASELINE to override bpf tree commit, otherwise read from <libbpf-repo>/BPF-CHECKPOINT-COMMIT."
 	echo "Set MANUAL_MODE to 1 to manually control every cherry-picked commits."
-	echo "Set IGNORE_CONSISTENCY to 1 to ignore failed contents consistency check."
 	exit 1
 }
 
@@ -137,6 +136,7 @@ cherry_pick_commits()
 			echo "Warning! Cherry-picking '${desc} failed, checking if it's non-libbpf files causing problems..."
 			libbpf_conflict_cnt=$(git diff --name-only --diff-filter=U -- ${LIBBPF_PATHS[@]} | wc -l)
 			conflict_cnt=$(git diff --name-only | wc -l)
+			prompt_resolution=1
 
 			if ((${libbpf_conflict_cnt} == 0)); then
 				echo "Looks like only non-libbpf files have conflicts, ignoring..."
@@ -152,14 +152,36 @@ cherry_pick_commits()
 					echo "Error! That still failed! Please resolve manually."
 				else
 					echo "Success! All cherry-pick conflicts were resolved for '${desc}'!"
-					continue
+					prompt_resolution=0
 				fi
 			fi
 
-			read -p "Error! Cherry-picking '${desc}' failed, please fix manually and press <return> to proceed..."
+			if ((${prompt_resolution} == 1)); then
+				read -p "Error! Cherry-picking '${desc}' failed, please fix manually and press <return> to proceed..."
+			fi
 		fi
+		# Append signature of just cherry-picked commit to avoid
+		# potentially cherry-picking the same commit twice later when
+		# processing bpf tree commits. At this point we don't know yet
+		# the final commit sha in libbpf repo, so we record Linux SHA
+		# instead as LINUX_<sha>.
+		echo LINUX_$(git log --pretty='%h' -n1) "${signature}" >> ${TMP_DIR}/libbpf_commits.txt
 	done
 }
+
+cleanup()
+{
+	echo "Cleaning up..."
+	rm -r ${TMP_DIR}
+	cd_to ${LINUX_REPO}
+	git checkout ${TIP_SYM_REF}
+	git branch -D ${BASELINE_TAG} ${TIP_TAG} ${BPF_BASELINE_TAG} ${BPF_TIP_TAG} \
+		      ${SQUASH_BASE_TAG} ${SQUASH_TIP_TAG} ${VIEW_TAG} || true
+
+	cd_to .
+	echo "DONE."
+}
+
 
 cd_to ${LIBBPF_REPO}
 GITHUB_ABS_DIR=$(pwd)
@@ -226,6 +248,7 @@ FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch --prune-empty -f --subdirector
 COMMIT_CNT=$(git rev-list --count ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG})
 if ((${COMMIT_CNT} <= 0)); then
     echo "No new changes to apply, we are done!"
+    cleanup
     exit 2
 fi
 
@@ -304,19 +327,17 @@ done
 if ((${CONSISTENT} == 1)); then
 	echo "Great! Content is identical!"
 else
-	echo "Unfortunately, there are consistency problems!"
-	if ((${IGNORE_CONSISTENCY-0} != 1)); then
-		exit 4
-	fi
+	ignore_inconsistency=n
+	echo "Unfortunately, there are some inconsistencies, please double check."
+	read -p "Does everything look good? [y/N]: " ignore_inconsistency
+	case "${ignore_inconsistency}" in
+		"y" | "Y")
+			echo "Ok, proceeding..."
+			;;
+		*)
+			echo "Oops, exiting with error..."
+			exit 4
+	esac
 fi
 
-echo "Cleaning up..."
-rm -r ${TMP_DIR}
-cd_to ${LINUX_REPO}
-git checkout ${TIP_SYM_REF}
-git branch -D ${BASELINE_TAG} ${TIP_TAG} ${BPF_BASELINE_TAG} ${BPF_TIP_TAG} \
-	      ${SQUASH_BASE_TAG} ${SQUASH_TIP_TAG} ${VIEW_TAG}
-
-cd_to .
-echo "DONE."
-
+cleanup
