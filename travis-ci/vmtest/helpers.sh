@@ -22,3 +22,5 @@ travis_fold() {
     echo -e "$line"
   fi
 }
+
+ARCH=$(uname -m)
