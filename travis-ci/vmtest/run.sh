@@ -295,7 +295,7 @@ fi
 echo "Disk image: $IMG" >&2
 
 tmp=
-ARCH_DIR="$DIR/x86_64"
+ARCH_DIR="$DIR/$ARCH"
 mkdir -p "$ARCH_DIR"
 mnt="$(mktemp -d -p "$DIR" mnt.XXXXXXXXXX)"
 
@@ -459,10 +459,27 @@ if kvm-ok ; then
 else
   accel="-cpu qemu64 -machine accel=tcg"
 fi
-qemu-system-x86_64 -nodefaults -display none -serial mon:stdio -no-reboot \
-  ${accel} -smp "$(nproc)" -m 4G \
+case "$ARCH" in
+s390x)
+	qemu="qemu-system-s390x"
+	console="ttyS1"
+	smp=2
+	;;
+x86_64)
+	qemu="qemu-system-x86_64"
+	console="ttyS0,115200"
+	smp=$(nproc)
+	;;
+*)
+	echo "Unsupported architecture"
+	exit 1
+	;;
+esac
+"$qemu" -nodefaults -display none -serial mon:stdio \
+  ${accel} -smp "$smp" -m 4G \
   -drive file="$IMG",format=raw,index=1,media=disk,if=virtio,cache=none \
-  -kernel "$vmlinuz" -append "root=/dev/vda rw console=ttyS0,115200 kernel.panic=-1 $APPEND"
+  -kernel "$vmlinuz" -append "root=/dev/vda rw console=$console kernel.panic=-1 $APPEND"
+
 sudo mount -o loop "$IMG" "$mnt"
 if exitstatus="$(cat "$mnt/exitstatus" 2>/dev/null)"; then
 	printf '\nTests exit status: %s\n' "$exitstatus" >&2
