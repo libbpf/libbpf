@@ -194,7 +194,7 @@ matching_kernel_releases() {
 	local pattern="$1"
 	{
 	for file in "${!URLS[@]}"; do
-		if [[ $file =~ ^vmlinux-(.*).zst$ ]]; then
+		if [[ $file =~ ^${ARCH}/vmlinux-(.*).zst$ ]]; then
 			release="${BASH_REMATCH[1]}"
 			case "$release" in
 				$pattern)
@@ -211,7 +211,7 @@ matching_kernel_releases() {
 newest_rootfs_version() {
 	{
 	for file in "${!URLS[@]}"; do
-		if [[ $file =~ ^${PROJECT_NAME}-vmtest-rootfs-(.*)\.tar\.zst$ ]]; then
+		if [[ $file =~ ^${ARCH}/${PROJECT_NAME}-vmtest-rootfs-(.*)\.tar\.zst$ ]]; then
 			echo "${BASH_REMATCH[1]}"
 		fi
 	done
@@ -249,7 +249,7 @@ create_rootfs_img() {
 download_rootfs() {
 	local rootfsversion="$1"
 	local dir="$2"
-	download "${PROJECT_NAME}-vmtest-rootfs-$rootfsversion.tar.zst" |
+	download "${ARCH}/${PROJECT_NAME}-vmtest-rootfs-$rootfsversion.tar.zst" |
 		zstd -d | sudo tar -C "$dir" -x
 }
 
@@ -318,7 +318,7 @@ else
 	vmlinuz="${ARCH_DIR}/vmlinuz-${KERNELRELEASE}"
 	if [[ ! -e $vmlinuz ]]; then
 		tmp="$(mktemp "$vmlinuz.XXX.part")"
-		download "vmlinuz-${KERNELRELEASE}" -o "$tmp"
+		download "${ARCH}/vmlinuz-${KERNELRELEASE}" -o "$tmp"
 		mv "$tmp" "$vmlinuz"
 		tmp=
 	fi
@@ -363,7 +363,7 @@ if [[ -v BUILDDIR || $ONESHOT -eq 0 ]]; then
 		source_vmlinux="${ARCH_DIR}/vmlinux-${KERNELRELEASE}"
 		if [[ ! -e $source_vmlinux ]]; then
 			tmp="$(mktemp "$source_vmlinux.XXX.part")"
-			download "vmlinux-${KERNELRELEASE}.zst" | zstd -dfo "$tmp"
+			download "${ARCH}/vmlinux-${KERNELRELEASE}.zst" | zstd -dfo "$tmp"
 			mv "$tmp" "$source_vmlinux"
 			tmp=
 		fi
@@ -373,7 +373,7 @@ if [[ -v BUILDDIR || $ONESHOT -eq 0 ]]; then
 else
 	# We could use "sudo zstd -o", but let's not run zstd as root with
 	# input from the internet.
-	download "vmlinux-${KERNELRELEASE}.zst" |
+	download "${ARCH}/vmlinux-${KERNELRELEASE}.zst" |
 		zstd -d | sudo tee "$vmlinux" > /dev/null
 	sudo chmod 644 "$vmlinux"
 fi
