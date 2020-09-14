@@ -494,27 +494,31 @@ guestfish --remote exit
 
 echo "Starting VM with $(nproc) CPUs..."
 
-if kvm-ok ; then
-  accel="-cpu kvm64 -enable-kvm"
-else
-  accel="-cpu qemu64 -machine accel=tcg"
-fi
 case "$ARCH" in
 s390x)
 	qemu="qemu-system-s390x"
 	console="ttyS1"
 	smp=2
+	kvm_accel="-enable-kvm"
+	tcg_accel="-machine accel=tcg"
 	;;
 x86_64)
 	qemu="qemu-system-x86_64"
 	console="ttyS0,115200"
 	smp=$(nproc)
+	kvm_accel="-cpu kvm64 -enable-kvm"
+	tcg_accel="-cpu qemu64 -machine accel=tcg"
 	;;
 *)
 	echo "Unsupported architecture"
 	exit 1
 	;;
 esac
+if kvm-ok ; then
+  accel=$kvm_accel
+else
+  accel=$tcg_accel
+fi
 "$qemu" -nodefaults -display none -serial mon:stdio \
   ${accel} -smp "$smp" -m 4G \
   -drive file="$IMG",format=raw,index=1,media=disk,if=virtio,cache=none \
