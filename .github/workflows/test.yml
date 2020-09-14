@@ -12,15 +12,20 @@ concurrency:
 
 jobs:
   vmtest:
-    runs-on: ubuntu-latest
-    name: Kernel ${{ matrix.kernel }} + selftests
+    runs-on: ${{ matrix.runs_on }}
+    name: Kernel ${{ matrix.kernel }} on ${{ matrix.runs_on }} + selftests
     strategy:
       fail-fast: false
       matrix:
         include:
           - kernel: 'LATEST'
+            runs_on: ubuntu-latest
+          - kernel: 'LATEST'
+            runs_on: z15
           - kernel: '5.5.0'
+            runs_on: ubuntu-latest
           - kernel: '4.9.0'
+            runs_on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         name: Checkout
