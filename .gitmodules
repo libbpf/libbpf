@@ -1,0 +1,4 @@
+[submodule "src/remote_libbpf"]
+	path = src/remote_libbpf
+	url = https://github.com/goldenrye/remote_libbpf.git
+    branch = jpi-remote-libbpf

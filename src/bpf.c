@@ -31,6 +31,7 @@
 #include "bpf.h"
 #include "libbpf.h"
 #include "libbpf_internal.h"
+#include "rbpf.h"
 
 /* make sure libbpf doesn't use kernel-only integer typedefs */
 #pragma GCC poison u8 u16 u32 u64 s8 s16 s32 s64
@@ -81,6 +82,16 @@ static inline int sys_bpf_prog_load(union bpf_attr *attr, unsigned int size)
 
 int bpf_create_map_xattr(const struct bpf_create_map_attr *create_attr)
 {
+#ifdef ENABLE_REMOTE_LIBBPF
+    int err, fd;
+    create_map_para_t para = {
+        .server = "192.168.122.122",
+        .err = &err
+    };
+    fd = bpf_remote_create_map_xattr(&para, create_attr);
+    errno = err;
+    return fd;
+#else
 	union bpf_attr attr;
 
 	memset(&attr, '\0', sizeof(attr));
@@ -105,6 +116,7 @@ int bpf_create_map_xattr(const struct bpf_create_map_attr *create_attr)
 		attr.inner_map_fd = create_attr->inner_map_fd;
 
 	return sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
+#endif
 }
 
 int bpf_create_map_node(enum bpf_map_type map_type, const char *name,
@@ -782,8 +794,18 @@ int bpf_raw_tracepoint_open(const char *name, int prog_fd)
 int bpf_load_btf(void *btf, __u32 btf_size, char *log_buf, __u32 log_buf_size,
 		 bool do_log)
 {
-	union bpf_attr attr = {};
 	int fd;
+
+#ifdef ENABLE_REMOTE_LIBBPF
+    int err;
+    load_btf_para_t para = {
+        .server = "192.168.122.122",
+        .err = &err
+    };
+    fd = bpf_remote_load_btf(&para, btf, btf_size, log_buf, log_buf_size, do_log);
+    errno = err;
+#else
+	union bpf_attr attr = {};
 
 	attr.btf = ptr_to_u64(btf);
 	attr.btf_size = btf_size;
@@ -798,8 +820,9 @@ retry:
 	fd = sys_bpf(BPF_BTF_LOAD, &attr, sizeof(attr));
 	if (fd == -1 && !do_log && log_buf && log_buf_size) {
 		do_log = true;
-		goto retry;
+		goto retry
 	}
+#endif
 
 	return fd;
 }
