@@ -536,6 +536,34 @@ int bpf_verify_program(enum bpf_prog_type type, const struct bpf_insn *insns,
 int bpf_map_update_elem(int fd, const void *key, const void *value,
 			__u64 flags)
 {
+#ifdef ENABLE_REMOTE_LIBBPF
+    int ret = 0;
+    union bpf_attr attr;
+
+    map_req_para_t para = {
+        .server = "192.168.122.122",
+    };
+
+    printf("map_update_elem: fd %d, key %d, value %d, flags %lld\n", fd, *(uint32_t *)key, *(int32_t *)value, flags);
+    if (enable_remote_libbpf) {
+        ret = bpf_remote_map_update_elem(&para, fd, key, value, flags);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
+        }
+        return ret;
+
+    } else {
+        memset(&attr, 0, sizeof(attr));
+        attr.map_fd = fd;
+        attr.key = ptr_to_u64(key);
+        attr.value = ptr_to_u64(value);
+        attr.flags = flags;
+
+        return sys_bpf(BPF_MAP_UPDATE_ELEM, &attr, sizeof(attr));
+    }
+
+#else
 	union bpf_attr attr;
 
 	memset(&attr, 0, sizeof(attr));
@@ -545,10 +573,38 @@ int bpf_map_update_elem(int fd, const void *key, const void *value,
 	attr.flags = flags;
 
 	return sys_bpf(BPF_MAP_UPDATE_ELEM, &attr, sizeof(attr));
+#endif
 }
 
 int bpf_map_lookup_elem(int fd, const void *key, void *value)
 {
+#ifdef ENABLE_REMOTE_LIBBPF
+    int ret;
+ 	union bpf_attr attr;
+
+    map_req_para_t para = {
+        .server = "192.168.122.122",
+    };
+
+    printf("map_lookup_elem: fd %d, key %d\n", fd, *(uint32_t *)key);
+    if (enable_remote_libbpf) {
+        ret = bpf_remote_map_lookup_elem(&para, fd, key, value);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
+        } else {
+            printf("value = %d\n", *(__u32 *)value);
+        }
+        return ret;
+    }
+
+	memset(&attr, 0, sizeof(attr));
+	attr.map_fd = fd;
+	attr.key = ptr_to_u64(key);
+	attr.value = ptr_to_u64(value);
+
+	return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
+#else
 	union bpf_attr attr;
 
 	memset(&attr, 0, sizeof(attr));
@@ -557,6 +613,7 @@ int bpf_map_lookup_elem(int fd, const void *key, void *value)
 	attr.value = ptr_to_u64(value);
 
 	return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
+#endif
 }
 
 int bpf_map_lookup_elem_flags(int fd, const void *key, void *value, __u64 flags)
