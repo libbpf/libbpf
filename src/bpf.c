@@ -643,6 +643,31 @@ int bpf_map_lookup_and_delete_elem(int fd, const void *key, void *value)
 
 int bpf_map_delete_elem(int fd, const void *key)
 {
+#ifdef ENABLE_REMOTE_LIBBPF
+    int ret;
+ 	union bpf_attr attr;
+
+    map_req_para_t para = {
+        .server = "192.168.122.122",
+    };
+
+    printf("map_delete_elem: fd %d, key %d\n", fd, *(uint32_t *)key);
+    if (enable_remote_libbpf) {
+        ret = bpf_remote_map_delete_elem(&para, fd, key);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
+        }
+        return ret;
+    }
+
+	memset(&attr, 0, sizeof(attr));
+	attr.map_fd = fd;
+	attr.key = ptr_to_u64(key);
+
+	return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
+
+#else
 	union bpf_attr attr;
 
 	memset(&attr, 0, sizeof(attr));
@@ -650,6 +675,7 @@ int bpf_map_delete_elem(int fd, const void *key)
 	attr.key = ptr_to_u64(key);
 
 	return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
+#endif
 }
 
 int bpf_map_get_next_key(int fd, const void *key, void *next_key)
