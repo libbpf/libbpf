@@ -15,6 +15,7 @@ cg_storage_multi	# v5.9+ functionality
 cgroup_attach_multi	# BPF_F_REPLACE_PROG missing
 cgroup_link		# LINK_CREATE is missing
 cgroup_skb_sk_lookup	# bpf_sk_lookup_tcp() helper is missing
+cls_redirect		# bpf_csum_level() helper is missing
 connect_force_port	# cgroup/get{peer,sock}name{4,6} support is missing
 d_path			# v5.10+ feature
 enable_stats		# BPF_ENABLE_STATS support is missing
@@ -25,6 +26,7 @@ fexit_test		# bpf_prog_test_tracing missing
 flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
+kfree_skb		# 32-bit pointer arith in test_pkt_access
 ksyms			# __start_BTF has different name
 link_pinning		# bpf_link is missing
 load_bytes_relative	# new functionality in 5.8
@@ -33,6 +35,8 @@ mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret support is missing
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 perf_branches		# bpf_read_branch_records() helper is missing
+pkt_access		# 32-bit pointer arith in test_pkt_access
+prog_run_xattr		# 32-bit pointer arith in test_pkt_access
 ringbuf			# BPF_MAP_TYPE_RINGBUF is supported in 5.8+
 
 # bug in verifier w/ tracking references
@@ -40,6 +44,7 @@ ringbuf			# BPF_MAP_TYPE_RINGBUF is supported in 5.8+
 reference_tracking
 
 select_reuseport	# UDP support is missing
+send_signal		# bpf_send_signal_thread() helper is missing
 sk_assign		# bpf_sk_assign helper missing
 skb_helpers		# helpers added in 5.8+
 sockmap_basic		# uses new socket fields, 5.8+
@@ -62,11 +67,3 @@ xdp_bpf2bpf		# freplace is missing
 xdp_cpumap_attach	# v5.9+
 xdp_devmap_attach	# new feature in 5.8
 xdp_link		# v5.9+
-
-
-# TEMPORARILY DISABLED
-send_signal		# flaky
-cls_redirect		# latest Clang breaks BPF verification
-prog_run_xattr		# 32-bit pointer arith in test_pkt_access
-pkt_access		# 32-bit pointer arith in test_pkt_access
-kfree_skb		# 32-bit pointer arith in test_pkt_access
