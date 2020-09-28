@@ -1,5 +1,0 @@
-# TEMPORARILY DISABLED
-send_signal		# flaky
-test_lsm		# semi-working
-core_reloc		# temporary test breakage
-bpf_verif_scale		# clang regression
