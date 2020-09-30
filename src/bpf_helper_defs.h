@@ -30,6 +30,7 @@ struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
 struct path;
+struct btf_ptr;
 
 /*
  * bpf_map_lookup_elem
@@ -950,8 +951,8 @@ static long (*bpf_probe_write_user)(void *dst, const void *src, __u32 len) = (vo
  * Returns
  * 	The return value depends on the result of the test, and can be:
  *
- * 	* 0, if the *skb* task belongs to the cgroup2.
- * 	* 1, if the *skb* task does not belong to the cgroup2.
+ * 	* 0, if current task belongs to the cgroup2.
+ * 	* 1, if current task does not belong to the cgroup2.
  * 	* A negative error code, if an error occurred.
  */
 static long (*bpf_current_task_under_cgroup)(void *map, __u32 index) = (void *) 37;
@@ -2200,7 +2201,7 @@ static struct bpf_sock *(*bpf_sk_lookup_udp)(void *ctx, struct bpf_sock_tuple *t
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_sk_release)(struct bpf_sock *sock) = (void *) 86;
+static long (*bpf_sk_release)(void *sock) = (void *) 86;
 
 /*
  * bpf_map_push_elem
@@ -2443,7 +2444,7 @@ static struct bpf_sock *(*bpf_skc_lookup_tcp)(void *ctx, struct bpf_sock_tuple *
  * 	0 if *iph* and *th* are a valid SYN cookie ACK, or a negative
  * 	error otherwise.
  */
-static long (*bpf_tcp_check_syncookie)(struct bpf_sock *sk, void *iph, __u32 iph_len, struct tcphdr *th, __u32 th_len) = (void *) 100;
+static long (*bpf_tcp_check_syncookie)(void *sk, void *iph, __u32 iph_len, struct tcphdr *th, __u32 th_len) = (void *) 100;
 
 /*
  * bpf_sysctl_get_name
@@ -2629,6 +2630,7 @@ static void *(*bpf_sk_storage_get)(void *map, void *sk, void *value, __u64 flags
  * 	0 on success.
  *
  * 	**-ENOENT** if the bpf-local-storage cannot be found.
+ * 	**-EINVAL** if sk is not a fullsock (e.g. a request_sock).
  */
 static long (*bpf_sk_storage_delete)(void *map, void *sk) = (void *) 108;
 
@@ -2679,7 +2681,7 @@ static long (*bpf_send_signal)(__u32 sig) = (void *) 109;
  *
  * 	**-EPROTONOSUPPORT** IP packet version is not 4 or 6
  */
-static __s64 (*bpf_tcp_gen_syncookie)(struct bpf_sock *sk, void *iph, __u32 iph_len, struct tcphdr *th, __u32 th_len) = (void *) 110;
+static __s64 (*bpf_tcp_gen_syncookie)(void *sk, void *iph, __u32 iph_len, struct tcphdr *th, __u32 th_len) = (void *) 110;
 
 /*
  * bpf_skb_output
@@ -2969,7 +2971,7 @@ static __u64 (*bpf_get_current_ancestor_cgroup_id)(int ancestor_level) = (void *
  * 	**-ESOCKTNOSUPPORT** if the socket type is not supported
  * 	(reuseport).
  */
-static long (*bpf_sk_assign)(void *ctx, struct bpf_sock *sk, __u64 flags) = (void *) 124;
+static long (*bpf_sk_assign)(void *ctx, void *sk, __u64 flags) = (void *) 124;
 
 /*
  * bpf_ktime_get_boot_ns
@@ -3035,7 +3037,7 @@ static long (*bpf_seq_write)(struct seq_file *m, const void *data, __u32 len) = 
  *
  * 	Return the cgroup v2 id of the socket *sk*.
  *
- * 	*sk* must be a non-**NULL** pointer to a full socket, e.g. one
+ * 	*sk* must be a non-**NULL** pointer to a socket, e.g. one
  * 	returned from **bpf_sk_lookup_xxx**\ (),
  * 	**bpf_sk_fullsock**\ (), etc. The format of returned id is
  * 	same as in **bpf_skb_cgroup_id**\ ().
@@ -3046,7 +3048,7 @@ static long (*bpf_seq_write)(struct seq_file *m, const void *data, __u32 len) = 
  * Returns
  * 	The id is returned or 0 in case the id could not be retrieved.
  */
-static __u64 (*bpf_sk_cgroup_id)(struct bpf_sock *sk) = (void *) 128;
+static __u64 (*bpf_sk_cgroup_id)(void *sk) = (void *) 128;
 
 /*
  * bpf_sk_ancestor_cgroup_id
@@ -3068,7 +3070,7 @@ static __u64 (*bpf_sk_cgroup_id)(struct bpf_sock *sk) = (void *) 128;
  * Returns
  * 	The id is returned or 0 in case the id could not be retrieved.
  */
-static __u64 (*bpf_sk_ancestor_cgroup_id)(struct bpf_sock *sk, int ancestor_level) = (void *) 129;
+static __u64 (*bpf_sk_ancestor_cgroup_id)(void *sk, int ancestor_level) = (void *) 129;
 
 /*
  * bpf_ringbuf_output
@@ -3466,5 +3468,57 @@ static long (*bpf_d_path)(struct path *path, char *buf, __u32 sz) = (void *) 147
  * 	0 on success, or a negative error in case of failure.
  */
 static long (*bpf_copy_from_user)(void *dst, __u32 size, const void *user_ptr) = (void *) 148;
+
+/*
+ * bpf_snprintf_btf
+ *
+ * 	Use BTF to store a string representation of *ptr*->ptr in *str*,
+ * 	using *ptr*->type_id.  This value should specify the type
+ * 	that *ptr*->ptr points to. LLVM __builtin_btf_type_id(type, 1)
+ * 	can be used to look up vmlinux BTF type ids. Traversing the
+ * 	data structure using BTF, the type information and values are
+ * 	stored in the first *str_size* - 1 bytes of *str*.  Safe copy of
+ * 	the pointer data is carried out to avoid kernel crashes during
+ * 	operation.  Smaller types can use string space on the stack;
+ * 	larger programs can use map data to store the string
+ * 	representation.
+ *
+ * 	The string can be subsequently shared with userspace via
+ * 	bpf_perf_event_output() or ring buffer interfaces.
+ * 	bpf_trace_printk() is to be avoided as it places too small
+ * 	a limit on string size to be useful.
+ *
+ * 	*flags* is a combination of
+ *
+ * 	**BTF_F_COMPACT**
+ * 		no formatting around type information
+ * 	**BTF_F_NONAME**
+ * 		no struct/union member names/types
+ * 	**BTF_F_PTR_RAW**
+ * 		show raw (unobfuscated) pointer values;
+ * 		equivalent to printk specifier %px.
+ * 	**BTF_F_ZERO**
+ * 		show zero-valued struct/union members; they
+ * 		are not displayed by default
+ *
+ *
+ * Returns
+ * 	The number of bytes that were written (or would have been
+ * 	written if output had to be truncated due to string size),
+ * 	or a negative error in cases of failure.
+ */
+static long (*bpf_snprintf_btf)(char *str, __u32 str_size, struct btf_ptr *ptr, __u32 btf_ptr_size, __u64 flags) = (void *) 149;
+
+/*
+ * bpf_seq_printf_btf
+ *
+ * 	Use BTF to write to seq_write a string representation of
+ * 	*ptr*->ptr, using *ptr*->type_id as per bpf_snprintf_btf().
+ * 	*flags* are identical to those used for bpf_snprintf_btf.
+ *
+ * Returns
+ * 	0 on success or a negative error in case of failure.
+ */
+static long (*bpf_seq_printf_btf)(struct seq_file *m, struct btf_ptr *ptr, __u32 ptr_size, __u64 flags) = (void *) 150;
 
 
