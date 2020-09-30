@@ -3521,4 +3521,34 @@ static long (*bpf_snprintf_btf)(char *str, __u32 str_size, struct btf_ptr *ptr, 
  */
 static long (*bpf_seq_printf_btf)(struct seq_file *m, struct btf_ptr *ptr, __u32 ptr_size, __u64 flags) = (void *) 150;
 
+/*
+ * bpf_skb_cgroup_classid
+ *
+ * 	See **bpf_get_cgroup_classid**\ () for the main description.
+ * 	This helper differs from **bpf_get_cgroup_classid**\ () in that
+ * 	the cgroup v1 net_cls class is retrieved only from the *skb*'s
+ * 	associated socket instead of the current process.
+ *
+ * Returns
+ * 	The id is returned or 0 in case the id could not be retrieved.
+ */
+static __u64 (*bpf_skb_cgroup_classid)(struct __sk_buff *skb) = (void *) 151;
+
+/*
+ * bpf_redirect_neigh
+ *
+ * 	Redirect the packet to another net device of index *ifindex*
+ * 	and fill in L2 addresses from neighboring subsystem. This helper
+ * 	is somewhat similar to **bpf_redirect**\ (), except that it
+ * 	fills in e.g. MAC addresses based on the L3 information from
+ * 	the packet. This helper is supported for IPv4 and IPv6 protocols.
+ * 	The *flags* argument is reserved and must be 0. The helper is
+ * 	currently only supported for tc BPF program types.
+ *
+ * Returns
+ * 	The helper returns **TC_ACT_REDIRECT** on success or
+ * 	**TC_ACT_SHOT** on error.
+ */
+static long (*bpf_redirect_neigh)(__u32 ifindex, __u64 flags) = (void *) 152;
+
 
