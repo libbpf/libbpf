@@ -1,5 +1,13 @@
 # SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause)
 
+ifeq ($(V),1)
+	Q =
+	msg =
+else
+	Q = @
+	msg = @printf '  %-8s %s%s\n' "$(1)" "$(notdir $(2))" "$(if $(3), $(3))";
+endif
+
 LIBBPF_VERSION := $(shell \
 	grep -oE '^LIBBPF_([0-9.]+)' libbpf.map | \
 	sort -rV | head -n1 | cut -d'_' -f2)
@@ -68,50 +76,54 @@ TAGS_PROG := $(if $(shell which etags 2>/dev/null),etags,ctags)
 all: $(STATIC_LIBS) $(SHARED_LIBS) $(PC_FILE)
 
 $(OBJDIR)/libbpf.a: $(STATIC_OBJS)
-	$(AR) rcs $@ $^
+	$(call msg,AR,$@)
+	$(Q)$(AR) rcs $@ $^
 
 $(OBJDIR)/libbpf.so: $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION)
-	ln -sf $(^F) $@
+	$(Q)ln -sf $(^F) $@
 
 $(OBJDIR)/libbpf.so.$(LIBBPF_MAJOR_VERSION): $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION)
-	ln -sf $(^F) $@
+	$(Q)ln -sf $(^F) $@
 
 $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(SHARED_OBJS)
-	$(CC) -shared -Wl,--version-script=$(VERSION_SCRIPT) \
-		      -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
-		      $^ $(ALL_LDFLAGS) -o $@
+	$(call msg,CC,$@)
+	$(Q)$(CC) -shared -Wl,--version-script=$(VERSION_SCRIPT) \
+		  -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
+		  $^ $(ALL_LDFLAGS) -o $@
 
 $(OBJDIR)/libbpf.pc:
-	sed -e "s|@PREFIX@|$(PREFIX)|" \
+	$(Q)sed -e "s|@PREFIX@|$(PREFIX)|" \
 		-e "s|@LIBDIR@|$(LIBDIR)|" \
 		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
 		< libbpf.pc.template > $@
 
-$(STATIC_OBJDIR):
-	mkdir -p $(STATIC_OBJDIR)
-
-$(SHARED_OBJDIR):
-	mkdir -p $(SHARED_OBJDIR)
+$(STATIC_OBJDIR) $(SHARED_OBJDIR):
+	$(call msg,MKDIR,$@)
+	$(Q)mkdir -p $@
 
 $(STATIC_OBJDIR)/%.o: %.c | $(STATIC_OBJDIR)
-	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(call msg,CC,$@)
+	$(Q)$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(SHARED_OBJDIR)/%.o: %.c | $(SHARED_OBJDIR)
-	$(CC) $(ALL_CFLAGS) $(SHARED_CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(call msg,CC,$@)
+	$(Q)$(CC) $(ALL_CFLAGS) $(SHARED_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 define do_install
-	if [ ! -d '$(DESTDIR)$2' ]; then		\
+	$(call msg,INSTALL,$1)
+	$(Q)if [ ! -d '$(DESTDIR)$2' ]; then		\
 		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
-	fi;						\
-	$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
+	fi;
+	$(Q)$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
 endef
 
 # Preserve symlinks at installation.
 define do_s_install
-	if [ ! -d '$(DESTDIR)$2' ]; then		\
+	$(call msg,INSTALL,$1)
+	$(Q)if [ ! -d '$(DESTDIR)$2' ]; then		\
 		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
-	fi;						\
-	cp -fpR $1 '$(DESTDIR)$2'
+	fi;
+	$(Q)cp -fpR $1 '$(DESTDIR)$2'
 endef
 
 install: all install_headers install_pkgconfig
@@ -129,13 +141,16 @@ install_pkgconfig: $(PC_FILE)
 	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
 
 clean:
-	rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
+	$(call msg,CLEAN)
+	$(Q)rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
 
 .PHONY: cscope tags
 cscope:
-	ls *.c *.h > cscope.files
-	cscope -b -q -f cscope.out
+	$(call msg,CSCOPE)
+	$(Q)ls *.c *.h > cscope.files
+	$(Q)cscope -b -q -f cscope.out
 
 tags:
-	rm -f TAGS tags
-	ls *.c *.h | xargs $(TAGS_PROG) -a
+	$(call msg,CTAGS)
+	$(Q)rm -f TAGS tags
+	$(Q)ls *.c *.h | xargs $(TAGS_PROG) -a
