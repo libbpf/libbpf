@@ -1196,7 +1196,7 @@ static long (*bpf_set_hash)(struct __sk_buff *skb, __u32 hash) = (void *) 48;
  * 	  **TCP_CONGESTION**, **TCP_BPF_IW**,
  * 	  **TCP_BPF_SNDCWND_CLAMP**, **TCP_SAVE_SYN**,
  * 	  **TCP_KEEPIDLE**, **TCP_KEEPINTVL**, **TCP_KEEPCNT**,
- * 	  **TCP_SYNCNT**, **TCP_USER_TIMEOUT**.
+ * 	  **TCP_SYNCNT**, **TCP_USER_TIMEOUT**, **TCP_NOTSENT_LOWAT**.
  * 	* **IPPROTO_IP**, which supports *optname* **IP_TOS**.
  * 	* **IPPROTO_IPV6**, which supports *optname* **IPV6_TCLASS**.
  *
@@ -1843,7 +1843,7 @@ static long (*bpf_msg_redirect_hash)(struct sk_msg_md *msg, void *map, void *key
  *
  * 	This helper is used in programs implementing policies at the
  * 	skb socket level. If the sk_buff *skb* is allowed to pass (i.e.
- * 	if the verdeict eBPF program returns **SK_PASS**), redirect it
+ * 	if the verdict eBPF program returns **SK_PASS**), redirect it
  * 	to the socket referenced by *map* (of type
  * 	**BPF_MAP_TYPE_SOCKHASH**) using hash *key*. Both ingress and
  * 	egress interfaces can be used for redirection. The
@@ -3540,15 +3540,76 @@ static __u64 (*bpf_skb_cgroup_classid)(struct __sk_buff *skb) = (void *) 151;
  * 	Redirect the packet to another net device of index *ifindex*
  * 	and fill in L2 addresses from neighboring subsystem. This helper
  * 	is somewhat similar to **bpf_redirect**\ (), except that it
- * 	fills in e.g. MAC addresses based on the L3 information from
- * 	the packet. This helper is supported for IPv4 and IPv6 protocols.
+ * 	populates L2 addresses as well, meaning, internally, the helper
+ * 	performs a FIB lookup based on the skb's networking header to
+ * 	get the address of the next hop and then relies on the neighbor
+ * 	lookup for the L2 address of the nexthop.
+ *
  * 	The *flags* argument is reserved and must be 0. The helper is
- * 	currently only supported for tc BPF program types.
+ * 	currently only supported for tc BPF program types, and enabled
+ * 	for IPv4 and IPv6 protocols.
  *
  * Returns
  * 	The helper returns **TC_ACT_REDIRECT** on success or
  * 	**TC_ACT_SHOT** on error.
  */
 static long (*bpf_redirect_neigh)(__u32 ifindex, __u64 flags) = (void *) 152;
+
+/*
+ * bpf_per_cpu_ptr
+ *
+ * 	Take a pointer to a percpu ksym, *percpu_ptr*, and return a
+ * 	pointer to the percpu kernel variable on *cpu*. A ksym is an
+ * 	extern variable decorated with '__ksym'. For ksym, there is a
+ * 	global var (either static or global) defined of the same name
+ * 	in the kernel. The ksym is percpu if the global var is percpu.
+ * 	The returned pointer points to the global percpu var on *cpu*.
+ *
+ * 	bpf_per_cpu_ptr() has the same semantic as per_cpu_ptr() in the
+ * 	kernel, except that bpf_per_cpu_ptr() may return NULL. This
+ * 	happens if *cpu* is larger than nr_cpu_ids. The caller of
+ * 	bpf_per_cpu_ptr() must check the returned value.
+ *
+ * Returns
+ * 	A pointer pointing to the kernel percpu variable on *cpu*, or
+ * 	NULL, if *cpu* is invalid.
+ */
+static void *(*bpf_per_cpu_ptr)(const void *percpu_ptr, __u32 cpu) = (void *) 153;
+
+/*
+ * bpf_this_cpu_ptr
+ *
+ * 	Take a pointer to a percpu ksym, *percpu_ptr*, and return a
+ * 	pointer to the percpu kernel variable on this cpu. See the
+ * 	description of 'ksym' in **bpf_per_cpu_ptr**\ ().
+ *
+ * 	bpf_this_cpu_ptr() has the same semantic as this_cpu_ptr() in
+ * 	the kernel. Different from **bpf_per_cpu_ptr**\ (), it would
+ * 	never return NULL.
+ *
+ * Returns
+ * 	A pointer pointing to the kernel percpu variable on this cpu.
+ */
+static void *(*bpf_this_cpu_ptr)(const void *percpu_ptr) = (void *) 154;
+
+/*
+ * bpf_redirect_peer
+ *
+ * 	Redirect the packet to another net device of index *ifindex*.
+ * 	This helper is somewhat similar to **bpf_redirect**\ (), except
+ * 	that the redirection happens to the *ifindex*' peer device and
+ * 	the netns switch takes place from ingress to ingress without
+ * 	going through the CPU's backlog queue.
+ *
+ * 	The *flags* argument is reserved and must be 0. The helper is
+ * 	currently only supported for tc BPF program types at the ingress
+ * 	hook and for veth device types. The peer device must reside in a
+ * 	different network namespace.
+ *
+ * Returns
+ * 	The helper returns **TC_ACT_REDIRECT** on success or
+ * 	**TC_ACT_SHOT** on error.
+ */
+static long (*bpf_redirect_peer)(__u32 ifindex, __u64 flags) = (void *) 155;
 
 
