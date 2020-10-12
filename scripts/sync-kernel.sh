@@ -47,9 +47,10 @@ PATH_MAP=(									\
 	[tools/include/uapi/linux/netlink.h]=include/uapi/linux/netlink.h	\
 )
 
-LIBBPF_PATHS="${!PATH_MAP[@]} :^tools/lib/bpf/Makefile :^tools/lib/bpf/Build :^tools/lib/bpf/.gitignore"
+LIBBPF_PATHS="${!PATH_MAP[@]} :^tools/lib/bpf/Makefile :^tools/lib/bpf/Build :^tools/lib/bpf/.gitignore :^tools/include/tools/libc_compat.h"
 LIBBPF_VIEW_PATHS="${PATH_MAP[@]}"
 LIBBPF_VIEW_EXCLUDE_REGEX='^src/(Makefile|Build|test_libbpf\.c|bpf_helper_defs\.h|\.gitignore)$'
+LINUX_VIEW_EXCLUDE_REGEX='^include/tools/libc_compat.h$'
 
 LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools && "$'\\\n'
 for p in "${!PATH_MAP[@]}"; do
@@ -308,7 +309,7 @@ cd_to ${LINUX_REPO}
 git checkout -b ${VIEW_TAG} ${TIP_COMMIT}
 FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
 FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
-git ls-files -- ${LIBBPF_VIEW_PATHS[@]} > ${TMP_DIR}/linux-view.ls
+git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LINUX_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/linux-view.ls
 
 cd_to ${LIBBPF_REPO}
 git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
