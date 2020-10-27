@@ -69,6 +69,7 @@ Distributions packaging libbpf from this mirror:
   - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
   - [Debian](https://packages.debian.org/sid/libbpf-dev)
   - [Arch](https://www.archlinux.org/packages/extra/x86_64/libbpf/)
+  - [Ubuntu](https://packages.ubuntu.com/source/groovy/libbpf)
 
 Benefits of packaging from the mirror over packaging from kernel sources:
   - Consistent versioning across distributions.
@@ -102,6 +103,7 @@ Some major Linux distributions come with kernel BTF already built in:
   - RHEL 8.2+
   - OpenSUSE Tumbleweed (in the next release, as of 2020-06-04)
   - Arch Linux (from kernel 5.7.1.arch1-1)
+  - Ubuntu 20.10
 
 If your kernel doesn't come with BTF built-in, you'll need to build custom
 kernel. You'll need:
@@ -121,6 +123,7 @@ distributions have Clang/LLVM 10+ packaged by default:
   - Fedora 32+
   - Ubuntu 20.04+
   - Arch Linux
+  - Ubuntu 20.10 (LLVM 11)
 
 Otherwise, please make sure to update it on your system.
 
