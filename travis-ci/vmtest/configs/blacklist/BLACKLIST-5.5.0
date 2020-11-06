@@ -20,6 +20,7 @@ fexit_test		# bpf_prog_test_tracing missing
 flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
+hash_large_key		# v5.11+
 kfree_skb		# 32-bit pointer arith in test_pkt_access
 ksyms			# __start_BTF has different name
 link_pinning		# bpf_link is missing
@@ -52,6 +53,7 @@ sockopt_sk
 sk_lookup		# v5.9+
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 tcp_hdr_options		# v5.10+, new TCP header options feature in BPF
+tcpbpf_user		# LINK_CREATE is missing
 test_bpffs		# v5.10+, new CONFIG_BPF_PRELOAD=y and CONFIG_BPF_PRELOAD_UMG=y|m
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
 test_local_storage	# v5.10+ feature
