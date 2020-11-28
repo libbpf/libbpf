@@ -82,14 +82,12 @@ static inline int sys_bpf_prog_load(union bpf_attr *attr, unsigned int size)
 
 int bpf_create_map_xattr(const struct bpf_create_map_attr *create_attr)
 {
-#ifdef ENABLE_REMOTE_LIBBPF
     int err, fd;
 	union bpf_attr attr;
 
-    printf("enable_remote_libbpf = %d\n", enable_remote_libbpf);
-    if (enable_remote_libbpf) {
+    if (strlen(create_attr->host)) {
         create_map_para_t para = {
-            .server = "192.168.122.122",
+            .server = create_attr->host,
             .err = &err
         };
         fd = bpf_remote_create_map_xattr(&para, create_attr);
@@ -119,33 +117,6 @@ int bpf_create_map_xattr(const struct bpf_create_map_attr *create_attr)
 		attr.inner_map_fd = create_attr->inner_map_fd;
 
 	return sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
-
-#else
-	union bpf_attr attr;
-
-	memset(&attr, '\0', sizeof(attr));
-
-	attr.map_type = create_attr->map_type;
-	attr.key_size = create_attr->key_size;
-	attr.value_size = create_attr->value_size;
-	attr.max_entries = create_attr->max_entries;
-	attr.map_flags = create_attr->map_flags;
-	if (create_attr->name)
-		memcpy(attr.map_name, create_attr->name,
-		       min(strlen(create_attr->name), BPF_OBJ_NAME_LEN - 1));
-	attr.numa_node = create_attr->numa_node;
-	attr.btf_fd = create_attr->btf_fd;
-	attr.btf_key_type_id = create_attr->btf_key_type_id;
-	attr.btf_value_type_id = create_attr->btf_value_type_id;
-	attr.map_ifindex = create_attr->map_ifindex;
-	if (attr.map_type == BPF_MAP_TYPE_STRUCT_OPS)
-		attr.btf_vmlinux_value_type_id =
-			create_attr->btf_vmlinux_value_type_id;
-	else
-		attr.inner_map_fd = create_attr->inner_map_fd;
-
-	return sys_bpf(BPF_MAP_CREATE, &attr, sizeof(attr));
-#endif
 }
 
 int bpf_create_map_node(enum bpf_map_type map_type, const char *name,
@@ -261,15 +232,14 @@ alloc_zero_tailing_info(const void *orecord, __u32 cnt,
 int bpf_load_program_xattr(const struct bpf_load_program_attr *load_attr,
 			   char *log_buf, size_t log_buf_sz)
 {
-#ifdef ENABLE_REMOTE_LIBBPF
     int err, fd;
 	void *finfo = NULL, *linfo = NULL;
 	union bpf_attr attr;
 	__u32 log_level;
 
-    if (enable_remote_libbpf) {
+    if (strlen(load_attr->host)) {
         load_prog_para_t para = {
-            .server = "192.168.122.122",
+            .server = load_attr->host,
             .err = &err
         };
         fd = bpf_remote_load_prog_xattr(&para, load_attr, log_buf, log_buf_sz);
@@ -379,117 +349,6 @@ done:
 	free(finfo);
 	free(linfo);
 	return fd;
-
-
-#else
-	void *finfo = NULL, *linfo = NULL;
-	union bpf_attr attr;
-	__u32 log_level;
-	int fd;
-
-	if (!load_attr || !log_buf != !log_buf_sz)
-		return -EINVAL;
-
-	log_level = load_attr->log_level;
-	if (log_level > (4 | 2 | 1) || (log_level && !log_buf))
-		return -EINVAL;
-
-	memset(&attr, 0, sizeof(attr));
-	attr.prog_type = load_attr->prog_type;
-	attr.expected_attach_type = load_attr->expected_attach_type;
-	if (attr.prog_type == BPF_PROG_TYPE_STRUCT_OPS ||
-	    attr.prog_type == BPF_PROG_TYPE_LSM) {
-		attr.attach_btf_id = load_attr->attach_btf_id;
-	} else if (attr.prog_type == BPF_PROG_TYPE_TRACING ||
-		   attr.prog_type == BPF_PROG_TYPE_EXT) {
-		attr.attach_btf_id = load_attr->attach_btf_id;
-		attr.attach_prog_fd = load_attr->attach_prog_fd;
-	} else {
-		attr.prog_ifindex = load_attr->prog_ifindex;
-		attr.kern_version = load_attr->kern_version;
-	}
-	attr.insn_cnt = (__u32)load_attr->insns_cnt;
-	attr.insns = ptr_to_u64(load_attr->insns);
-	attr.license = ptr_to_u64(load_attr->license);
-
-	attr.log_level = log_level;
-	if (log_level) {
-		attr.log_buf = ptr_to_u64(log_buf);
-		attr.log_size = log_buf_sz;
-	} else {
-		attr.log_buf = ptr_to_u64(NULL);
-		attr.log_size = 0;
-	}
-
-	attr.prog_btf_fd = load_attr->prog_btf_fd;
-	attr.func_info_rec_size = load_attr->func_info_rec_size;
-	attr.func_info_cnt = load_attr->func_info_cnt;
-	attr.func_info = ptr_to_u64(load_attr->func_info);
-	attr.line_info_rec_size = load_attr->line_info_rec_size;
-	attr.line_info_cnt = load_attr->line_info_cnt;
-	attr.line_info = ptr_to_u64(load_attr->line_info);
-	if (load_attr->name)
-		memcpy(attr.prog_name, load_attr->name,
-		       min(strlen(load_attr->name), BPF_OBJ_NAME_LEN - 1));
-	attr.prog_flags = load_attr->prog_flags;
-
-	fd = sys_bpf_prog_load(&attr, sizeof(attr));
-	if (fd >= 0)
-		return fd;
-
-	/* After bpf_prog_load, the kernel may modify certain attributes
-	 * to give user space a hint how to deal with loading failure.
-	 * Check to see whether we can make some changes and load again.
-	 */
-	while (errno == E2BIG && (!finfo || !linfo)) {
-		if (!finfo && attr.func_info_cnt &&
-		    attr.func_info_rec_size < load_attr->func_info_rec_size) {
-			/* try with corrected func info records */
-			finfo = alloc_zero_tailing_info(load_attr->func_info,
-							load_attr->func_info_cnt,
-							load_attr->func_info_rec_size,
-							attr.func_info_rec_size);
-			if (!finfo)
-				goto done;
-
-			attr.func_info = ptr_to_u64(finfo);
-			attr.func_info_rec_size = load_attr->func_info_rec_size;
-		} else if (!linfo && attr.line_info_cnt &&
-			   attr.line_info_rec_size <
-			   load_attr->line_info_rec_size) {
-			linfo = alloc_zero_tailing_info(load_attr->line_info,
-							load_attr->line_info_cnt,
-							load_attr->line_info_rec_size,
-							attr.line_info_rec_size);
-			if (!linfo)
-				goto done;
-
-			attr.line_info = ptr_to_u64(linfo);
-			attr.line_info_rec_size = load_attr->line_info_rec_size;
-		} else {
-			break;
-		}
-
-		fd = sys_bpf_prog_load(&attr, sizeof(attr));
-
-		if (fd >= 0)
-			goto done;
-	}
-
-	if (log_level || !log_buf)
-		goto done;
-
-	/* Try again with log */
-	attr.log_buf = ptr_to_u64(log_buf);
-	attr.log_size = log_buf_sz;
-	attr.log_level = 1;
-	log_buf[0] = 0;
-	fd = sys_bpf_prog_load(&attr, sizeof(attr));
-done:
-	free(finfo);
-	free(linfo);
-	return fd;
-#endif
 }
 
 int bpf_load_program(enum bpf_prog_type type, const struct bpf_insn *insns,
@@ -536,7 +395,6 @@ int bpf_verify_program(enum bpf_prog_type type, const struct bpf_insn *insns,
 int bpf_map_update_elem(int fd, const void *key, const void *value,
 			__u64 flags)
 {
-#ifdef ENABLE_REMOTE_LIBBPF
     int ret = 0;
     union bpf_attr attr;
 
@@ -545,24 +403,13 @@ int bpf_map_update_elem(int fd, const void *key, const void *value,
     };
 
     printf("map_update_elem: fd %d, key %d, value %d, flags %lld\n", fd, *(uint32_t *)key, *(int32_t *)value, flags);
-    if (enable_remote_libbpf) {
-        if (fd & 0x10000000) {
-            ret = bpf_remote_map_update_elem(&para, fd, key, value, flags);
-            errno = para.err;
-            if (ret) {
-                perror("Error: ");
-            }
-            return ret;
-        } else {
-            memset(&attr, 0, sizeof(attr));
-            attr.map_fd = fd;
-            attr.key = ptr_to_u64(key);
-            attr.value = ptr_to_u64(value);
-            attr.flags = flags;
-
-            return sys_bpf(BPF_MAP_UPDATE_ELEM, &attr, sizeof(attr));
+    if (fd & 0x10000000) {
+        ret = bpf_remote_map_update_elem(&para, fd, key, value, flags);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
         }
-
+        return ret;
     } else {
         memset(&attr, 0, sizeof(attr));
         attr.map_fd = fd;
@@ -572,23 +419,10 @@ int bpf_map_update_elem(int fd, const void *key, const void *value,
 
         return sys_bpf(BPF_MAP_UPDATE_ELEM, &attr, sizeof(attr));
     }
-
-#else
-	union bpf_attr attr;
-
-	memset(&attr, 0, sizeof(attr));
-	attr.map_fd = fd;
-	attr.key = ptr_to_u64(key);
-	attr.value = ptr_to_u64(value);
-	attr.flags = flags;
-
-	return sys_bpf(BPF_MAP_UPDATE_ELEM, &attr, sizeof(attr));
-#endif
 }
 
 int bpf_map_lookup_elem(int fd, const void *key, void *value)
 {
-#ifdef ENABLE_REMOTE_LIBBPF
     int ret;
  	union bpf_attr attr;
 
@@ -597,43 +431,23 @@ int bpf_map_lookup_elem(int fd, const void *key, void *value)
     };
 
     printf("map_lookup_elem: fd %d, key %d\n", fd, *(uint32_t *)key);
-    if (enable_remote_libbpf) {
-        if (fd & 0x10000000) {
-            ret = bpf_remote_map_lookup_elem(&para, fd, key, value);
-            errno = para.err;
-            if (ret) {
-                perror("Error: ");
-            } else {
-                printf("value = %d\n", *(__u32 *)value);
-            }
-            return ret;
+    if (fd & 0x10000000) {
+        ret = bpf_remote_map_lookup_elem(&para, fd, key, value);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
         } else {
-            memset(&attr, 0, sizeof(attr));
-            attr.map_fd = fd;
-            attr.key = ptr_to_u64(key);
-            attr.value = ptr_to_u64(value);
-
-            return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
-
+            printf("value = %d\n", *(__u32 *)value);
         }
+        return ret;
+    } else {
+        memset(&attr, 0, sizeof(attr));
+        attr.map_fd = fd;
+        attr.key = ptr_to_u64(key);
+        attr.value = ptr_to_u64(value);
+
+        return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
     }
-
-	memset(&attr, 0, sizeof(attr));
-	attr.map_fd = fd;
-	attr.key = ptr_to_u64(key);
-	attr.value = ptr_to_u64(value);
-
-	return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
-#else
-	union bpf_attr attr;
-
-	memset(&attr, 0, sizeof(attr));
-	attr.map_fd = fd;
-	attr.key = ptr_to_u64(key);
-	attr.value = ptr_to_u64(value);
-
-	return sys_bpf(BPF_MAP_LOOKUP_ELEM, &attr, sizeof(attr));
-#endif
 }
 
 int bpf_map_lookup_elem_flags(int fd, const void *key, void *value, __u64 flags)
@@ -663,7 +477,6 @@ int bpf_map_lookup_and_delete_elem(int fd, const void *key, void *value)
 
 int bpf_map_delete_elem(int fd, const void *key)
 {
-#ifdef ENABLE_REMOTE_LIBBPF
     int ret;
  	union bpf_attr attr;
 
@@ -672,39 +485,20 @@ int bpf_map_delete_elem(int fd, const void *key)
     };
 
     printf("map_delete_elem: fd %d, key %d\n", fd, *(uint32_t *)key);
-    if (enable_remote_libbpf) {
-        if (fd & 0x10000000) {
-            ret = bpf_remote_map_delete_elem(&para, fd, key);
-            errno = para.err;
-            if (ret) {
-                perror("Error: ");
-            }
-            return ret;
-        } else {
-            memset(&attr, 0, sizeof(attr));
-            attr.map_fd = fd;
-            attr.key = ptr_to_u64(key);
-
-            return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
-
+    if (fd & 0x10000000) {
+        ret = bpf_remote_map_delete_elem(&para, fd, key);
+        errno = para.err;
+        if (ret) {
+            perror("Error: ");
         }
+        return ret;
+    } else {
+        memset(&attr, 0, sizeof(attr));
+        attr.map_fd = fd;
+        attr.key = ptr_to_u64(key);
+
+        return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
     }
-
-	memset(&attr, 0, sizeof(attr));
-	attr.map_fd = fd;
-	attr.key = ptr_to_u64(key);
-
-	return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
-
-#else
-	union bpf_attr attr;
-
-	memset(&attr, 0, sizeof(attr));
-	attr.map_fd = fd;
-	attr.key = ptr_to_u64(key);
-
-	return sys_bpf(BPF_MAP_DELETE_ELEM, &attr, sizeof(attr));
-#endif
 }
 
 int bpf_map_get_next_key(int fd, const void *key, void *next_key)
@@ -1055,14 +849,12 @@ int bpf_raw_tracepoint_open(const char *name, int prog_fd)
 }
 
 int bpf_load_btf(void *btf, __u32 btf_size, char *log_buf, __u32 log_buf_size,
-		 bool do_log)
+		 bool do_log, const char *host)
 {
-
-#ifdef ENABLE_REMOTE_LIBBPF
     int err, fd;
-    if (enable_remote_libbpf) {
+    if (strlen(host)) {
         load_btf_para_t para = {
-            .server = "192.168.122.122",
+            .server = host,
             .err = &err
         };
         fd = bpf_remote_load_btf(&para, btf, btf_size, log_buf, log_buf_size, do_log);
@@ -1088,28 +880,6 @@ retry:
 		goto retry;
 	}
 	return fd;
-
-#else
-	int fd;
-	union bpf_attr attr = {};
-
-	attr.btf = ptr_to_u64(btf);
-	attr.btf_size = btf_size;
-
-retry:
-	if (do_log && log_buf && log_buf_size) {
-		attr.btf_log_level = 1;
-		attr.btf_log_size = log_buf_size;
-		attr.btf_log_buf = ptr_to_u64(log_buf);
-	}
-
-	fd = sys_bpf(BPF_BTF_LOAD, &attr, sizeof(attr));
-	if (fd == -1 && !do_log && log_buf && log_buf_size) {
-		do_log = true;
-		goto retry;
-	}
-	return fd;
-#endif
 }
 
 int bpf_task_fd_query(int pid, int fd, __u32 flags, char *buf, __u32 *buf_len,

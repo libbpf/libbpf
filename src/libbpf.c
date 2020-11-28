@@ -2421,7 +2421,7 @@ static int bpf_object__sanitize_and_load_btf(struct bpf_object *obj)
 	bpf_object__sanitize_btf(obj);
 	bpf_object__sanitize_btf_ext(obj);
 
-	err = btf__load(obj->btf);
+	err = btf__load(obj->btf, "");
 	if (err) {
 		pr_warn("Error loading %s into kernel: %d.\n",
 			BTF_ELF_SEC, err);

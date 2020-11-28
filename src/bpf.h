@@ -50,6 +50,7 @@ struct bpf_create_map_attr {
 		__u32 inner_map_fd;
 		__u32 btf_vmlinux_value_type_id;
 	};
+    const char *host;
 };
 
 LIBBPF_API int
@@ -95,6 +96,7 @@ struct bpf_load_program_attr {
 	__u32 line_info_cnt;
 	__u32 log_level;
 	__u32 prog_flags;
+    const char *host;
 };
 
 /* Flags to direct loading requirements */
@@ -225,7 +227,7 @@ LIBBPF_API int bpf_prog_query(int target_fd, enum bpf_attach_type type,
 			      __u32 *prog_ids, __u32 *prog_cnt);
 LIBBPF_API int bpf_raw_tracepoint_open(const char *name, int prog_fd);
 LIBBPF_API int bpf_load_btf(void *btf, __u32 btf_size, char *log_buf,
-			    __u32 log_buf_size, bool do_log);
+			    __u32 log_buf_size, bool do_log, const char *host);
 LIBBPF_API int bpf_task_fd_query(int pid, int fd, __u32 flags, char *buf,
 				 __u32 *buf_len, __u32 *prog_id, __u32 *fd_type,
 				 __u64 *probe_offset, __u64 *probe_addr);

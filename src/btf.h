@@ -67,7 +67,7 @@ LIBBPF_API struct btf *btf__new(__u8 *data, __u32 size);
 LIBBPF_API struct btf *btf__parse_elf(const char *path,
 				      struct btf_ext **btf_ext);
 LIBBPF_API int btf__finalize_data(struct bpf_object *obj, struct btf *btf);
-LIBBPF_API int btf__load(struct btf *btf);
+LIBBPF_API int btf__load(struct btf *btf, const char *host);
 LIBBPF_API __s32 btf__find_by_name(const struct btf *btf,
 				   const char *type_name);
 LIBBPF_API __s32 btf__find_by_name_kind(const struct btf *btf,

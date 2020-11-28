@@ -655,7 +655,7 @@ int btf__finalize_data(struct bpf_object *obj, struct btf *btf)
 	return err;
 }
 
-int btf__load(struct btf *btf)
+int btf__load(struct btf *btf, const char *host)
 {
 	__u32 log_buf_size = 0;
 	char *log_buf = NULL;
@@ -674,7 +674,7 @@ retry_load:
 	}
 
 	btf->fd = bpf_load_btf(btf->data, btf->data_size,
-			       log_buf, log_buf_size, false);
+			       log_buf, log_buf_size, false, host);
 	if (btf->fd < 0) {
 		if (!log_buf || errno == ENOSPC) {
 			log_buf_size = max((__u32)BPF_LOG_BUF_SIZE,
