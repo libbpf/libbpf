@@ -7,7 +7,7 @@ LIBBPF_MAJOR_VERSION := $(firstword $(subst ., ,$(LIBBPF_VERSION)))
 
 TOPDIR = ..
 
-INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
+INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi -Iremote_libbpf/src
 ALL_CFLAGS := $(INCLUDES)
 
 FEATURE_REALLOCARRAY := $(shell $(TOPDIR)/scripts/check-reallocarray.sh)
@@ -34,7 +34,7 @@ SHARED_OBJDIR := $(OBJDIR)/sharedobjs
 STATIC_OBJDIR := $(OBJDIR)/staticobjs
 OBJS := bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
 	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o \
-	btf_dump.o hashmap.o
+	btf_dump.o hashmap.o client.o
 SHARED_OBJS := $(addprefix $(SHARED_OBJDIR)/,$(OBJS))
 STATIC_OBJS := $(addprefix $(STATIC_OBJDIR)/,$(OBJS))
 
@@ -99,11 +99,18 @@ $(STATIC_OBJDIR):
 $(SHARED_OBJDIR):
 	mkdir -p $(SHARED_OBJDIR)
 
+client.c:
+	ln -s remote_libbpf/src/client.c ./
+	ln -s remote_libbpf/src/rbpf.h ./
+
 $(STATIC_OBJDIR)/%.o: %.c | $(STATIC_OBJDIR)
 	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(SHARED_OBJDIR)/%.o: %.c | $(SHARED_OBJDIR)
 	$(CC) $(ALL_CFLAGS) $(SHARED_CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+$(STATIC_OBJDIR)/clent.o: client.c
+	$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 define do_install
 	if [ ! -d '$(DESTDIR)$2' ]; then		\
@@ -135,7 +142,7 @@ install_pkgconfig: $(PC_FILE)
 	$(call do_install,$(PC_FILE),$(LIBDIR)/pkgconfig,644)
 
 clean:
-	rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
+	rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR) client.c rbpf.h
 
 .PHONY: cscope tags
 cscope:
