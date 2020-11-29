@@ -4,3 +4,5 @@
 /libbpf.so*
 /staticobjs
 /sharedobjs
+client.c
+rbpf.h
