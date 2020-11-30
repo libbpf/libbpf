@@ -85,7 +85,7 @@ int bpf_create_map_xattr(const struct bpf_create_map_attr *create_attr)
     int err, fd;
 	union bpf_attr attr;
 
-    if (strlen(create_attr->host)) {
+    if (create_attr->host && strlen(create_attr->host)) {
         create_map_para_t para = {
             .server = create_attr->host,
             .err = &err
@@ -237,7 +237,7 @@ int bpf_load_program_xattr(const struct bpf_load_program_attr *load_attr,
 	union bpf_attr attr;
 	__u32 log_level;
 
-    if (strlen(load_attr->host)) {
+    if (load_attr->host && strlen(load_attr->host)) {
         load_prog_para_t para = {
             .server = load_attr->host,
             .err = &err
@@ -852,7 +852,7 @@ int bpf_load_btf(void *btf, __u32 btf_size, char *log_buf, __u32 log_buf_size,
 		 bool do_log, const char *host)
 {
     int err, fd;
-    if (strlen(host)) {
+    if (host && strlen(host)) {
         load_btf_para_t para = {
             .server = host,
             .err = &err
