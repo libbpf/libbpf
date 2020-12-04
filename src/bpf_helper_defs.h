@@ -6,6 +6,7 @@ struct bpf_sk_lookup;
 struct bpf_perf_event_data;
 struct bpf_perf_event_value;
 struct bpf_pidns_info;
+struct bpf_redir_neigh;
 struct bpf_sock;
 struct bpf_sock_addr;
 struct bpf_sock_ops;
@@ -15,6 +16,7 @@ struct bpf_sysctl;
 struct bpf_tcp_sock;
 struct bpf_tunnel_key;
 struct bpf_xfrm_state;
+struct linux_binprm;
 struct pt_regs;
 struct sk_reuseport_md;
 struct sockaddr;
@@ -31,6 +33,7 @@ struct sk_msg_md;
 struct xdp_md;
 struct path;
 struct btf_ptr;
+struct inode;
 
 /*
  * bpf_map_lookup_elem
@@ -3615,5 +3618,103 @@ static void *(*bpf_this_cpu_ptr)(const void *percpu_ptr) = (void *) 154;
  * 	**TC_ACT_SHOT** on error.
  */
 static long (*bpf_redirect_peer)(__u32 ifindex, __u64 flags) = (void *) 155;
+
+/*
+ * bpf_task_storage_get
+ *
+ * 	Get a bpf_local_storage from the *task*.
+ *
+ * 	Logically, it could be thought of as getting the value from
+ * 	a *map* with *task* as the **key**.  From this
+ * 	perspective,  the usage is not much different from
+ * 	**bpf_map_lookup_elem**\ (*map*, **&**\ *task*) except this
+ * 	helper enforces the key must be an task_struct and the map must also
+ * 	be a **BPF_MAP_TYPE_TASK_STORAGE**.
+ *
+ * 	Underneath, the value is stored locally at *task* instead of
+ * 	the *map*.  The *map* is used as the bpf-local-storage
+ * 	"type". The bpf-local-storage "type" (i.e. the *map*) is
+ * 	searched against all bpf_local_storage residing at *task*.
+ *
+ * 	An optional *flags* (**BPF_LOCAL_STORAGE_GET_F_CREATE**) can be
+ * 	used such that a new bpf_local_storage will be
+ * 	created if one does not exist.  *value* can be used
+ * 	together with **BPF_LOCAL_STORAGE_GET_F_CREATE** to specify
+ * 	the initial value of a bpf_local_storage.  If *value* is
+ * 	**NULL**, the new bpf_local_storage will be zero initialized.
+ *
+ * Returns
+ * 	A bpf_local_storage pointer is returned on success.
+ *
+ * 	**NULL** if not found or there was an error in adding
+ * 	a new bpf_local_storage.
+ */
+static void *(*bpf_task_storage_get)(void *map, struct task_struct *task, void *value, __u64 flags) = (void *) 156;
+
+/*
+ * bpf_task_storage_delete
+ *
+ * 	Delete a bpf_local_storage from a *task*.
+ *
+ * Returns
+ * 	0 on success.
+ *
+ * 	**-ENOENT** if the bpf_local_storage cannot be found.
+ */
+static long (*bpf_task_storage_delete)(void *map, struct task_struct *task) = (void *) 157;
+
+/*
+ * bpf_get_current_task_btf
+ *
+ * 	Return a BTF pointer to the "current" task.
+ * 	This pointer can also be used in helpers that accept an
+ * 	*ARG_PTR_TO_BTF_ID* of type *task_struct*.
+ *
+ * Returns
+ * 	Pointer to the current task.
+ */
+static struct task_struct *(*bpf_get_current_task_btf)(void) = (void *) 158;
+
+/*
+ * bpf_bprm_opts_set
+ *
+ * 	Set or clear certain options on *bprm*:
+ *
+ * 	**BPF_F_BPRM_SECUREEXEC** Set the secureexec bit
+ * 	which sets the **AT_SECURE** auxv for glibc. The bit
+ * 	is cleared if the flag is not specified.
+ *
+ * Returns
+ * 	**-EINVAL** if invalid *flags* are passed, zero otherwise.
+ */
+static long (*bpf_bprm_opts_set)(struct linux_binprm *bprm, __u64 flags) = (void *) 159;
+
+/*
+ * bpf_ktime_get_coarse_ns
+ *
+ * 	Return a coarse-grained version of the time elapsed since
+ * 	system boot, in nanoseconds. Does not include time the system
+ * 	was suspended.
+ *
+ * 	See: **clock_gettime**\ (**CLOCK_MONOTONIC_COARSE**)
+ *
+ * Returns
+ * 	Current *ktime*.
+ */
+static __u64 (*bpf_ktime_get_coarse_ns)(void) = (void *) 160;
+
+/*
+ * bpf_ima_inode_hash
+ *
+ * 	Returns the stored IMA hash of the *inode* (if it's avaialable).
+ * 	If the hash is larger than *size*, then only *size*
+ * 	bytes will be copied to *dst*
+ *
+ * Returns
+ * 	The **hash_algo** is returned on success,
+ * 	**-EOPNOTSUP** if IMA is disabled or **-EINVAL** if
+ * 	invalid arguments are passed.
+ */
+static long (*bpf_ima_inode_hash)(struct inode *inode, void *dst, __u32 size) = (void *) 161;
 
 
