@@ -34,6 +34,8 @@ struct xdp_md;
 struct path;
 struct btf_ptr;
 struct inode;
+struct socket;
+struct file;
 
 /*
  * bpf_map_lookup_elem
@@ -3716,5 +3718,17 @@ static __u64 (*bpf_ktime_get_coarse_ns)(void) = (void *) 160;
  * 	invalid arguments are passed.
  */
 static long (*bpf_ima_inode_hash)(struct inode *inode, void *dst, __u32 size) = (void *) 161;
+
+/*
+ * bpf_sock_from_file
+ *
+ * 	If the given file represents a socket, returns the associated
+ * 	socket.
+ *
+ * Returns
+ * 	A pointer to a struct socket on success or NULL if the file is
+ * 	not a socket.
+ */
+static struct socket *(*bpf_sock_from_file)(struct file *file) = (void *) 162;
 
 
