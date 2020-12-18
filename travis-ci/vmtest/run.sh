@@ -434,8 +434,10 @@ sudo chmod 755 "$mnt/etc/rcS.d/S99-poweroff"
 
 sudo umount "$mnt"
 
+echo "Starting VM with $(nproc) CPUs..."
+
 qemu-system-x86_64 -nodefaults -display none -serial mon:stdio \
-	-cpu kvm64 -enable-kvm -smp "$(nproc)" -m 2G \
+	-cpu kvm64 -enable-kvm -smp "$(nproc)" -m 4G \
 	-drive file="$IMG",format=raw,index=1,media=disk,if=virtio,cache=none \
 	-kernel "$vmlinuz" -append "root=/dev/vda rw console=ttyS0,115200$APPEND"
 
