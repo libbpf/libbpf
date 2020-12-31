@@ -28,6 +28,7 @@ ifdef NO_PKG_CONFIG
 else
 	PKG_CONFIG ?= pkg-config
 	ALL_CFLAGS += $(shell $(PKG_CONFIG) --cflags libelf zlib)
+	ALL_CFLAGS += $(shell $(PKG_CONFIG) --cflags libelf)/..
 	ALL_LDFLAGS += $(shell $(PKG_CONFIG) --libs libelf zlib)
 endif
 
