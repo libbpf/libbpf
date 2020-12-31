@@ -3725,7 +3725,8 @@ bpf_object__probe_loading(struct bpf_object *obj)
 	/* make sure basic loading works */
 
 	memset(&attr, 0, sizeof(attr));
-	attr.prog_type = BPF_PROG_TYPE_SOCKET_FILTER;
+//	attr.prog_type = BPF_PROG_TYPE_SOCKET_FILTER;
+	attr.prog_type = BPF_PROG_TYPE_TRACEPOINT;
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
