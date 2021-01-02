@@ -66,6 +66,13 @@ else
 	LIBSUBDIR := lib
 endif
 
+# By default let the pc file itself use ${prefix} in includedir/libdir so that
+# the prefix can be overridden at runtime (eg: --define-prefix)
+ifndef LIBDIR
+	LIBDIR_PC := $$\{prefix\}/$(LIBSUBDIR)
+else
+	LIBDIR_PC := $(LIBDIR)
+endif
 PREFIX ?= /usr
 LIBDIR ?= $(PREFIX)/$(LIBSUBDIR)
 INCLUDEDIR ?= $(PREFIX)/include
@@ -93,7 +100,7 @@ $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(SHARED_OBJS)
 
 $(OBJDIR)/libbpf.pc:
 	$(Q)sed -e "s|@PREFIX@|$(PREFIX)|" \
-		-e "s|@LIBDIR@|$(LIBDIR)|" \
+		-e "s|@LIBDIR@|$(LIBDIR_PC)|" \
 		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
 		< libbpf.pc.template > $@
 
