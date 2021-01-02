@@ -61,7 +61,7 @@ Distributions
 Distributions packaging libbpf from this mirror:
   - [Fedora](https://src.fedoraproject.org/rpms/libbpf)
   - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
-  - [Debian](https://packages.debian.org/sid/libbpf-dev)
+  - [Debian](https://packages.debian.org/source/sid/libbpf)
   - [Arch](https://www.archlinux.org/packages/extra/x86_64/libbpf/)
   - [Ubuntu](https://packages.ubuntu.com/source/groovy/libbpf)
 
