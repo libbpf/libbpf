@@ -118,6 +118,7 @@ distributions have Clang/LLVM 10+ packaged by default:
   - Ubuntu 20.04+
   - Arch Linux
   - Ubuntu 20.10 (LLVM 11)
+  - Debian 11 (LLVM 11)
 
 Otherwise, please make sure to update it on your system.
 
