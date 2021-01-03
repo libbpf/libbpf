@@ -87,20 +87,31 @@
 	(offsetof(TYPE, FIELD) + sizeof(((TYPE *)0)->FIELD))
 #endif
 
+#ifdef __GNUC__
+# if __GNUC__ >= 10
+#  define DEFAULT_VERSION(internal_name, api_name, version) \
+__attribute__((__symver__(#api_name "@@" #version)))
+#  define COMPAT_VERSION(internal_name, api_name, version) \
+__attribute__((__symver__(#api_name "@" #version)))
+# endif
+#endif
+
+#if ! defined(COMPAT_VERSION) || ! defined(DEFAULT_VERSION)
 /* Symbol versioning is different between static and shared library.
  * Properly versioned symbols are needed for shared library, but
  * only the symbol of the new version is needed for static library.
  */
-#ifdef SHARED
-# define COMPAT_VERSION(internal_name, api_name, version) \
+# ifdef SHARED
+#  define COMPAT_VERSION(internal_name, api_name, version) \
 	asm(".symver " #internal_name "," #api_name "@" #version);
-# define DEFAULT_VERSION(internal_name, api_name, version) \
+#  define DEFAULT_VERSION(internal_name, api_name, version) \
 	asm(".symver " #internal_name "," #api_name "@@" #version);
-#else
-# define COMPAT_VERSION(internal_name, api_name, version)
-# define DEFAULT_VERSION(internal_name, api_name, version) \
+# else
+#  define COMPAT_VERSION(internal_name, api_name, version)
+#  define DEFAULT_VERSION(internal_name, api_name, version) \
 	extern typeof(internal_name) api_name \
 	__attribute__((alias(#internal_name)));
+# endif
 #endif
 
 extern void libbpf_print(enum libbpf_print_level level,
