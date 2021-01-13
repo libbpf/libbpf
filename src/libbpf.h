@@ -759,6 +759,34 @@ enum libbpf_tristate {
 	TRI_MODULE = 2,
 };
 
+// Customization:
+/*
+ * libbpf does all kinds of probing as part of its flow.
+ *
+ * This function configures the prog_type used by
+ * relevant *probe_* functions.
+ *
+ * This way, if eBPF program uses a specific bpf_prog_type,
+ * it's possible to configure libbpf *probe_* functions to use SAME type.
+ *
+ * Thus, extends libbpf portability, as on old kernels/distros
+ * not all bpf_prog_types are supported and using unexpected bpf_prog_type
+ * might result in bpf syscall error, failing the whole program.
+ *
+ * IMPORTANT:
+ *   - call this function at most ONCE in your program
+ *     and BEFORE using libbpf API
+ */
+LIBBPF_API bool bpf_set_once_probe_prog_type(enum bpf_prog_type type);
+
+// Customization:
+/*
+ *  if 'bpf_set_once_probe_prog_type' was called before,
+ *  this function will return the pre-configured type,
+ *  otherwise, given 'default_type' is returned
+ */
+LIBBPF_API enum bpf_prog_type bpf_get_probe_prog_type(enum bpf_prog_type default_type);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
