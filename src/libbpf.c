@@ -64,6 +64,9 @@ __asm__(".symver fmemopen,fmemopen@GLIBC_2.2.5");
 // Customization:
 enum bpf_prog_type customized_probe_prog_type = BPF_PROG_TYPE_UNSPEC;
 
+// Customization:
+bool probe_with_kernel_version_enabled = false;
+
 #ifndef EM_BPF
 #define EM_BPF 247
 #endif
@@ -3738,6 +3741,7 @@ bpf_object__probe_loading(struct bpf_object *obj)
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
+	attr.kern_version = libbpf_get_kprobe_kernel_version(attr.prog_type);
 
 	ret = bpf_load_program_xattr(&attr, NULL, 0);
 	if (ret < 0) {
@@ -3777,6 +3781,7 @@ static int probe_kern_prog_name(void)
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
+	attr.kern_version = libbpf_get_kprobe_kernel_version(attr.prog_type);
 	attr.name = "test";
 	ret = bpf_load_program_xattr(&attr, NULL, 0);
 	return probe_fd(ret);
@@ -3817,6 +3822,7 @@ static int probe_kern_global_data(void)
 	prg_attr.insns = insns;
 	prg_attr.insns_cnt = ARRAY_SIZE(insns);
 	prg_attr.license = "GPL";
+	prg_attr.kern_version = libbpf_get_kprobe_kernel_version(prg_attr.prog_type);
 
 	ret = bpf_load_program_xattr(&prg_attr, NULL, 0);
 	close(map);
@@ -3917,11 +3923,12 @@ static int probe_kern_exp_attach_type(void)
 	 * to see if kernel supports expected_attach_type field for
 	 * BPF_PROG_LOAD command
 	 */
-	attr.prog_type = BPF_PROG_TYPE_CGROUP_SOCK;
+	attr.prog_type = libbpf_get_probe_prog_type(BPF_PROG_TYPE_CGROUP_SOCK);
 	attr.expected_attach_type = BPF_CGROUP_INET_SOCK_CREATE;
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
+	attr.kern_version = libbpf_get_kprobe_kernel_version(attr.prog_type);
 
 	return probe_fd(bpf_load_program_xattr(&attr, NULL, 0));
 }
@@ -3978,6 +3985,7 @@ static int probe_prog_bind_map(void)
 	prg_attr.insns = insns;
 	prg_attr.insns_cnt = ARRAY_SIZE(insns);
 	prg_attr.license = "GPL";
+	prg_attr.kern_version = libbpf_get_kprobe_kernel_version(prg_attr.prog_type);
 
 	prog = bpf_load_program_xattr(&prg_attr, NULL, 0);
 	if (prog < 0) {
@@ -11197,4 +11205,27 @@ enum bpf_prog_type libbpf_get_probe_prog_type(enum bpf_prog_type default_type)
                                         BPF_PROG_TYPE_UNSPEC,
                                         BPF_PROG_TYPE_UNSPEC) ? default_type :
                                                                 customized_probe_prog_type;
+}
+
+// Customization:
+bool libbpf_set_once_enable_probe_with_kernel_version()
+{
+    return __sync_bool_compare_and_swap(&probe_with_kernel_version_enabled,
+                                        false,
+                                        true);
+}
+
+// Customization:
+__u32 libbpf_get_kprobe_kernel_version(enum bpf_prog_type type)
+{
+    if (!probe_with_kernel_version_enabled || type != BPF_PROG_TYPE_KPROBE) {
+        return 0;
+    }
+
+    __u32 kversion = get_kernel_version();
+    if (kversion == 0) {
+        pr_warn("libbpf: failed to get kernel version");
+    }
+
+	return kversion;
 }

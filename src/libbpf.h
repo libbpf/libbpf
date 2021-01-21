@@ -787,6 +787,31 @@ LIBBPF_API bool libbpf_set_once_probe_prog_type(enum bpf_prog_type type);
  */
 LIBBPF_API enum bpf_prog_type libbpf_get_probe_prog_type(enum bpf_prog_type default_type);
 
+// Customization:
+/*
+ * On few old kernels, when using BPF_PROG_TYPE_KPROBE,
+ * kernel version MUST be populated as well.
+ *
+ * Thus, '*_probe_*' functions using BPF_PROG_TYPE_KPROBE,
+ * should populate attr.kern_version as well.
+ * 
+ * This function enables this logic.
+ *
+ * IMPORTANT:
+ *   - call this function at most ONCE in your program
+ *     and BEFORE using libbpf API
+ *   - refer also to bpf_load_program_xattr()
+ */
+LIBBPF_API bool libbpf_set_once_enable_probe_with_kernel_version();
+
+// Customization:
+/*
+ *  If enabled and it's BPF_PROG_TYPE_KPROBE type,
+ *  return detected kernel version (using 'uname'),
+ *  otherwise returns 0
+ */
+LIBBPF_API __u32 libbpf_get_kprobe_kernel_version(enum bpf_prog_type type);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
