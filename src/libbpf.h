@@ -777,15 +777,15 @@ enum libbpf_tristate {
  *   - call this function at most ONCE in your program
  *     and BEFORE using libbpf API
  */
-LIBBPF_API bool bpf_set_once_probe_prog_type(enum bpf_prog_type type);
+LIBBPF_API bool libbpf_set_once_probe_prog_type(enum bpf_prog_type type);
 
 // Customization:
 /*
- *  if 'bpf_set_once_probe_prog_type' was called before,
+ *  if 'libbpf_set_once_probe_prog_type' was called before,
  *  this function will return the pre-configured type,
  *  otherwise, given 'default_type' is returned
  */
-LIBBPF_API enum bpf_prog_type bpf_get_probe_prog_type(enum bpf_prog_type default_type);
+LIBBPF_API enum bpf_prog_type libbpf_get_probe_prog_type(enum bpf_prog_type default_type);
 
 #ifdef __cplusplus
 } /* extern "C" */

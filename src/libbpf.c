@@ -3734,7 +3734,7 @@ bpf_object__probe_loading(struct bpf_object *obj)
 	/* make sure basic loading works */
 
 	memset(&attr, 0, sizeof(attr));
-	attr.prog_type = bpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
+	attr.prog_type = libbpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
@@ -3773,7 +3773,7 @@ static int probe_kern_prog_name(void)
 	/* make sure loading with name works */
 
 	memset(&attr, 0, sizeof(attr));
-	attr.prog_type = bpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
+	attr.prog_type = libbpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
 	attr.insns = insns;
 	attr.insns_cnt = ARRAY_SIZE(insns);
 	attr.license = "GPL";
@@ -3813,7 +3813,7 @@ static int probe_kern_global_data(void)
 	insns[0].imm = map;
 
 	memset(&prg_attr, 0, sizeof(prg_attr));
-	prg_attr.prog_type = bpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
+	prg_attr.prog_type = libbpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
 	prg_attr.insns = insns;
 	prg_attr.insns_cnt = ARRAY_SIZE(insns);
 	prg_attr.license = "GPL";
@@ -3974,7 +3974,7 @@ static int probe_prog_bind_map(void)
 	}
 
 	memset(&prg_attr, 0, sizeof(prg_attr));
-	prg_attr.prog_type = bpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
+	prg_attr.prog_type = libbpf_get_probe_prog_type(BPF_PROG_TYPE_SOCKET_FILTER);
 	prg_attr.insns = insns;
 	prg_attr.insns_cnt = ARRAY_SIZE(insns);
 	prg_attr.license = "GPL";
@@ -11183,7 +11183,7 @@ void bpf_object__destroy_skeleton(struct bpf_object_skeleton *s)
 }
 
 // Customization:
-bool bpf_set_once_probe_prog_type(enum bpf_prog_type type)
+bool libbpf_set_once_probe_prog_type(enum bpf_prog_type type)
 {
     return __sync_bool_compare_and_swap(&customized_probe_prog_type,
                                         BPF_PROG_TYPE_UNSPEC,
@@ -11191,7 +11191,7 @@ bool bpf_set_once_probe_prog_type(enum bpf_prog_type type)
 }
 
 // Customization:
-enum bpf_prog_type bpf_get_probe_prog_type(enum bpf_prog_type default_type)
+enum bpf_prog_type libbpf_get_probe_prog_type(enum bpf_prog_type default_type)
 {
     return __sync_bool_compare_and_swap(&customized_probe_prog_type,
                                         BPF_PROG_TYPE_UNSPEC,
