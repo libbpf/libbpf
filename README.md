@@ -98,6 +98,7 @@ Some major Linux distributions come with kernel BTF already built in:
   - OpenSUSE Tumbleweed (in the next release, as of 2020-06-04)
   - Arch Linux (from kernel 5.7.1.arch1-1)
   - Ubuntu 20.10
+  - Debian 11 (amd64/arm64)
 
 If your kernel doesn't come with BTF built-in, you'll need to build custom
 kernel. You'll need:
