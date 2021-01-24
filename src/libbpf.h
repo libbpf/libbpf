@@ -807,7 +807,7 @@ LIBBPF_API bool libbpf_set_once_enable_probe_with_kernel_version();
 // Customization:
 /*
  *  If enabled and it's BPF_PROG_TYPE_KPROBE type,
- *  return detected kernel version (using 'uname'),
+ *  return detected kernel version,
  *  otherwise returns 0
  */
 LIBBPF_API __u32 libbpf_get_kprobe_kernel_version(enum bpf_prog_type type);

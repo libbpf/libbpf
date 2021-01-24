@@ -704,7 +704,9 @@ bpf_object__add_programs(struct bpf_object *obj, Elf_Data *sec_data,
 	return 0;
 }
 
-static __u32 get_kernel_version(void)
+// Customization:
+// rename original function name
+static __u32 get_kernel_version_uname(void)
 {
 	__u32 major, minor, patch;
 	struct utsname info;
@@ -713,6 +715,53 @@ static __u32 get_kernel_version(void)
 	if (sscanf(info.release, "%u.%u.%u", &major, &minor, &patch) != 3)
 		return 0;
 	return KERNEL_VERSION(major, minor, patch);
+}
+
+// Customization:
+// In few Ubuntu releases 'uname' is broken,
+// so using alternative way to get the correct kernel version code
+static __u32 get_ubuntu_kernel_version(void)
+{
+	__u32 kversion = 0;
+	__u32 major, minor, patch;
+	char buf[256] = {0};
+
+	FILE *fp = fopen("/proc/version_signature", "r");
+	if (fp == NULL) {
+		pr_warn("fopen /proc/version_signature failed: %s\n", strerror(errno));
+		goto done;
+	}
+
+    if (fgets(buf, 256, fp) == NULL) {
+		pr_warn("Reading /proc/version_signature failed: %s\n", strerror(errno));
+		goto cleanup;
+	}
+
+	if (sscanf(buf, "%*s %*s %u.%u.%u", &major, &minor, &patch) != 3) {
+		pr_warn("Parsing /proc/version_signature failed. Unexpected content: %s\n", buf);
+		goto cleanup;
+	}
+
+	kversion = KERNEL_VERSION(major, minor, patch);
+
+cleanup:
+	fclose(fp);
+done:
+	return kversion;
+}
+
+// Customization:
+// TODO: another approach is to get kernel version from vdso .note section
+//       refer to: https://github.com/iovisor/bpftrace/issues/274
+
+// Customization:
+// Change get kernel version code runtime logic, to increase portability
+static __u32 get_kernel_version(void)
+{
+	int is_ubuntu = access("/proc/version_signature", R_OK) == 0;
+
+	return is_ubuntu ? get_ubuntu_kernel_version() :
+	                   get_kernel_version_uname();
 }
 
 static const struct btf_member *
