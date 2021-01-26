@@ -130,7 +130,7 @@ define do_s_install
 	$(Q)if [ ! -d '$(DESTDIR)$2' ]; then		\
 		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
 	fi;
-	$(Q)cp -fpR $1 '$(DESTDIR)$2'
+	$(Q)cp -fR $1 '$(DESTDIR)$2'
 endef
 
 install: all install_headers install_pkgconfig
