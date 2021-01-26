@@ -2071,7 +2071,7 @@ static __u64 (*bpf_get_current_cgroup_id)(void) = (void *) 80;
  * 	running simultaneously.
  *
  * 	A user should care about the synchronization by himself.
- * 	For example, by using the **BPF_STX_XADD** instruction to alter
+ * 	For example, by using the **BPF_ATOMIC** instructions to alter
  * 	the shared data.
  *
  * Returns
@@ -2748,10 +2748,10 @@ static long (*bpf_probe_read_kernel)(void *dst, __u32 size, const void *unsafe_p
  * 	string length is larger than *size*, just *size*-1 bytes are
  * 	copied and the last byte is set to NUL.
  *
- * 	On success, the length of the copied string is returned. This
- * 	makes this helper useful in tracing programs for reading
- * 	strings, and more importantly to get its length at runtime. See
- * 	the following snippet:
+ * 	On success, returns the number of bytes that were written,
+ * 	including the terminal NUL. This makes this helper useful in
+ * 	tracing programs for reading strings, and more importantly to
+ * 	get its length at runtime. See the following snippet:
  *
  * 	::
  *
@@ -2780,7 +2780,7 @@ static long (*bpf_probe_read_kernel)(void *dst, __u32 size, const void *unsafe_p
  * 	one can quickly iterate at the right offset of the memory area.
  *
  * Returns
- * 	On success, the strictly positive length of the string,
+ * 	On success, the strictly positive length of the output string,
  * 	including the trailing NUL character. On error, a negative
  * 	value.
  */
