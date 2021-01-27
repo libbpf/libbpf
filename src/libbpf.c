@@ -47,6 +47,7 @@
 #include <libelf.h>
 #include <gelf.h>
 #include <zlib.h>
+#include <sys/auxv.h>
 
 #include "libbpf.h"
 #include "bpf.h"
@@ -54,6 +55,10 @@
 #include "str_error.h"
 #include "libbpf_internal.h"
 #include "hashmap.h"
+
+// Customization:
+#define ALIGN_UP(x,a)         ALIGN_MASK(x,(typeof(x))(a)-1)
+#define ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
 
 // Customization:
 // was fmemopen@GLIBC_2.2.22,
@@ -751,17 +756,78 @@ done:
 }
 
 // Customization:
-// TODO: another approach is to get kernel version from vdso .note section
-//       refer to: https://github.com/iovisor/bpftrace/issues/274
+// Another approach, get kernel version from vdso 'note' section
+// Should be more robust detecting actual RUNNING kernel version
+// NOTE: 64bit only (can support 32bit by adjusting ELF types)
+static __u32 get_kernel_version_vdso_x64()
+{
+    __u32 kversion = 0;
+
+    unsigned long vdso_base = getauxval(AT_SYSINFO_EHDR);
+    if (vdso_base == 0) {
+        pr_warn("getauxval failed: %s\n", strerror(errno));
+        goto done;
+    }
+
+    Elf64_Ehdr * ehdr = (Elf64_Ehdr *)vdso_base;
+    if (memcmp(ehdr, ELFMAG, 4)) {
+        pr_warn("invalid elf format");
+        goto done;
+    }
+
+    for (int i = 0; i < ehdr->e_shnum; ++i) {
+        Elf64_Shdr * shdr = (Elf64_Shdr *)(vdso_base + ehdr->e_shoff + i * ehdr->e_shentsize);
+
+        if (shdr->sh_type != SHT_NOTE) {
+            continue;
+        }
+
+        // Iterate all notes in note section, to find LINUX_VERSION_CODE
+        char * p = (char *)(vdso_base + shdr->sh_offset);
+        char * p_end = p + shdr->sh_size;
+
+        while (p < p_end) {
+            Elf64_Nhdr * nhdr = (Elf64_Nhdr *)p;
+
+            // IMPORTANT: must NOT use 'name','desc'
+            //            before verifying 'n_namesz', 'n_descsz' (see below condition)
+            void * name = p + sizeof(*nhdr);
+            void * desc = p + sizeof(*nhdr) + ALIGN_UP(nhdr->n_namesz, 4);
+
+            if (nhdr->n_namesz > 5            &&
+                memcmp(name, "Linux", 5) == 0 &&
+                nhdr->n_descsz == 4           &&
+                nhdr->n_type == 0) {
+                kversion = *(uint32_t *)desc;
+                goto done;
+            }
+
+            // next note (refer to elf(5) manpage)
+            p += sizeof(*nhdr) + ALIGN_UP(nhdr->n_namesz, 4) + ALIGN_UP(nhdr->n_descsz, 4);
+        }
+    }
+
+done:
+    return kversion;
+}
 
 // Customization:
 // Change get kernel version code runtime logic, to increase portability
 static __u32 get_kernel_version(void)
 {
+	__u32 kversion = 0;
+
+	kversion = get_kernel_version_vdso_x64();
+	if (kversion != 0) {
+		goto done;
+	}
+
 	int is_ubuntu = access("/proc/version_signature", R_OK) == 0;
 
-	return is_ubuntu ? get_ubuntu_kernel_version() :
-	                   get_kernel_version_uname();
+	kversion = is_ubuntu ? get_ubuntu_kernel_version() :
+	                       get_kernel_version_uname();
+done:
+    return kversion;
 }
 
 static const struct btf_member *
