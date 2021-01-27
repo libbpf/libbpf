@@ -1,5 +1,6 @@
 # PERMANENTLY DISABLED
 align			# verifier output format changed
+atomics			# new atomic operations (v5.12+)
 bpf_iter		# bpf_iter support is missing
 bpf_obj_id		# bpf_link support missing for GET_OBJ_INFO, GET_FD_BY_ID, etc
 bpf_tcp_ca		# STRUCT_OPS is missing
