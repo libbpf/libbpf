@@ -22,6 +22,7 @@ addons:
             - libcap-dev
             - libelf-dev
             - libdw-dev
+            - libdwarf-dev
 
 stages:
     # Run Coverity periodically instead of for each PR for following reasons:
