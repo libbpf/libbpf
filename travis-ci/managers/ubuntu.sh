@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eux
 
-RELEASE="bionic"
+RELEASE="focal"
 
 echo "deb-src http://archive.ubuntu.com/ubuntu/ $RELEASE main restricted universe multiverse" >>/etc/apt/sources.list
 
