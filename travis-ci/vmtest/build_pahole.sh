@@ -15,7 +15,7 @@ cd ${REPO_PATH}
 git init
 git remote add origin ${PAHOLE_ORIGIN}
 git fetch origin
-git checkout master
+git checkout v1.19
 
 mkdir -p build
 cd build
