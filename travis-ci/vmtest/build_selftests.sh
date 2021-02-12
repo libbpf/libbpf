@@ -8,7 +8,7 @@ travis_fold start prepare_selftests "Building selftests"
 
 sudo apt-get -y install python-docutils # for rst2man
 
-LLVM_VER=12
+LLVM_VER=13
 LIBBPF_PATH="${REPO_ROOT}"
 REPO_PATH="travis-ci/vmtest/bpf-next"
 
