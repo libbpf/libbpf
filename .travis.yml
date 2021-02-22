@@ -75,16 +75,16 @@ jobs:
           script:         $CI_ROOT/managers/debian.sh RUN_CLANG_ASAN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
-        - name: Debian Build (gcc-8)
+        - name: Debian Build (gcc-10)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_GCC8 || travis_terminate 1
+          script:         $CI_ROOT/managers/debian.sh RUN_GCC10 || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
-        - name: Debian Build (gcc-8 ASan+UBSan)
+        - name: Debian Build (gcc-10 ASan+UBSan)
           language: bash
           install:        $CI_ROOT/managers/debian.sh SETUP
-          script:         $CI_ROOT/managers/debian.sh RUN_GCC8_ASAN || travis_terminate 1
+          script:         $CI_ROOT/managers/debian.sh RUN_GCC10_ASAN || travis_terminate 1
           after_script:   $CI_ROOT/managers/debian.sh CLEANUP
 
         - name: Ubuntu Bionic Build
