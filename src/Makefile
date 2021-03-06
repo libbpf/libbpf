@@ -121,7 +121,7 @@ define do_install
 	$(Q)if [ ! -d '$(DESTDIR)$2' ]; then		\
 		$(INSTALL) -d -m 755 '$(DESTDIR)$2';	\
 	fi;
-	$(Q)$(INSTALL) $1 $(if $3,-m $3,) '$(DESTDIR)$2'
+	$(Q)$(INSTALL) $(if $3,-m $3,) $1 '$(DESTDIR)$2'
 endef
 
 # Preserve symlinks at installation.
