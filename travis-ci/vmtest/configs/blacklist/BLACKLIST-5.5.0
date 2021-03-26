@@ -1,3 +1,6 @@
+# This file is not used and is there for historic purposes only.
+# See WHITELIST-5.5.0 instead.
+
 # PERMANENTLY DISABLED
 align			# verifier output format changed
 atomics			# new atomic operations (v5.12+)

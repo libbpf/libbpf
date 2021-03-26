@@ -37,6 +37,6 @@ cd ${LIBBPF_PATH}
 rm selftests/bpf/.gitignore
 git add selftests
 
-git add "${VMTEST_ROOT}/configs/blacklist"
+git add "${VMTEST_ROOT}"/configs/blacklist/BLACKLIST-* "${VMTEST_ROOT}"/configs/whitelist/WHITELIST-*
 
 travis_fold end prepare_selftests
