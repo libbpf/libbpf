@@ -1,4 +1,4 @@
-/* This is auto-generated file. See bpf_helpers_doc.py for details. */
+/* This is auto-generated file. See bpf_doc.py for details. */
 
 /* Forward declarations of BPF structs */
 struct bpf_fib_lookup;
@@ -1248,6 +1248,10 @@ static long (*bpf_setsockopt)(void *bpf_socket, int level, int optname, void *op
  * 	* **BPF_F_ADJ_ROOM_ENCAP_L2**\ (*len*):
  * 	  Use with ENCAP_L3/L4 flags to further specify the tunnel
  * 	  type; *len* is the length of the inner MAC header.
+ *
+ * 	* **BPF_F_ADJ_ROOM_ENCAP_L2_ETH**:
+ * 	  Use with BPF_F_ADJ_ROOM_ENCAP_L2 flag to further specify the
+ * 	  L2 type as Ethernet.
  *
  * 	A call to this helper is susceptible to change the underlying
  * 	packet buffer. Therefore, at load time, all checks on pointers
