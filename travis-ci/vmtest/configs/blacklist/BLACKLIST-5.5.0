@@ -20,6 +20,7 @@ enable_stats		# BPF_ENABLE_STATS support is missing
 fentry_fexit		# bpf_prog_test_tracing missing
 fentry_test		# bpf_prog_test_tracing missing
 fexit_bpf2bpf		# freplace is missing
+fexit_sleep		# relies on bpf_trampoline fix in 5.12+
 fexit_test		# bpf_prog_test_tracing missing
 flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
