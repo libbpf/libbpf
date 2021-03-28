@@ -125,8 +125,8 @@ Otherwise, please make sure to update it on your system.
 
 The following resources are useful to understand what BPF CO-RE is and how to
 use it:
-- [BPF Portability and CO-RE](https://facebookmicrosites.github.io/bpf/blog/2020/02/19/bpf-portability-and-co-re.html)
-- [HOWTO: BCC to libbpf conversion](https://facebookmicrosites.github.io/bpf/blog/2020/02/20/bcc-to-libbpf-howto-guide.html)
+- [BPF Portability and CO-RE](https://nakryiko.com/posts/bpf-portability-and-co-re/)
+- [HOWTO: BCC to libbpf conversion](https://nakryiko.com/posts/bcc-to-libbpf-howto-guide/)
 - [libbpf-tools in BCC repo](https://github.com/iovisor/bcc/tree/master/libbpf-tools)
   contain lots of real-world tools converted from BCC to BPF CO-RE. Consider
   converting some more to both contribute to the BPF community and gain some
