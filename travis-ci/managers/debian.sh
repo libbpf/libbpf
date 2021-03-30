@@ -21,7 +21,7 @@ function docker_exec() {
     docker exec $ENV_VARS -it $CONT_NAME "$@"
 }
 
-set -e
+set -eu
 
 source "$(dirname $0)/travis_wait.bash"
 
