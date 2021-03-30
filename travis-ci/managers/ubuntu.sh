@@ -1,6 +1,5 @@
 #!/bin/bash
-set -e
-set -x
+set -eux
 
 RELEASE="bionic"
 
