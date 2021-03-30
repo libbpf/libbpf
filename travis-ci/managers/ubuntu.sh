@@ -14,7 +14,7 @@ source "$(dirname $0)/travis_wait.bash"
 
 cd $REPO_ROOT
 
-CFLAGS="-g -O2 -Werror -Wall -fsanitize=address,undefined"
+CFLAGS="-g -O2 -Werror -Wall -fsanitize=address,undefined -Wno-stringop-truncation"
 mkdir build install
 cc --version
 make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
