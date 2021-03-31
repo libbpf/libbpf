@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -x
 
 source $(cd $(dirname $0) && pwd)/helpers.sh
 
@@ -17,8 +17,15 @@ travis_fold start install_clang "Installing Clang/LLVM"
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
 sudo add-apt-repository "deb http://apt.llvm.org/bionic/ llvm-toolchain-bionic main"
 sudo apt-get update
-sudo apt-get install -y clang-13 lld-13 llvm-13
+sudo apt-cache policy clang-13 || true
+sudo dpkg -l | grep clang || true
+sudo dpkg -l | grep lld || true
+sudo dpkg -l | grep llvm || true
+sudo apt-get install -y clang-13=13~++20210321100630+2554b95db57c-1~exp1~20210321211340.3856 \
+			lld-13=13~++20210321100630+2554b95db57c-1~exp1~20210321211340.3856 \
+			llvm-13=13~++20210321100630+2554b95db57c-1~exp1~20210321211340.3856
 
+llvm-toolchain-snapshot/clang-13_13~%2b%2b20210321100630%2b2554b95db57c-1~exp1~20210321211340.3856_i386.deb
 travis_fold end install_clang
 
 # Build selftests (and latest kernel, if necessary)
