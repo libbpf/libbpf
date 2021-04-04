@@ -64,6 +64,7 @@ Distributions packaging libbpf from this mirror:
   - [Debian](https://packages.debian.org/source/sid/libbpf)
   - [Arch](https://www.archlinux.org/packages/extra/x86_64/libbpf/)
   - [Ubuntu](https://packages.ubuntu.com/source/groovy/libbpf)
+  - [Alpine](https://pkgs.alpinelinux.org/packages?name=libbpf)
 
 Benefits of packaging from the mirror over packaging from kernel sources:
   - Consistent versioning across distributions.
@@ -120,6 +121,7 @@ distributions have Clang/LLVM 10+ packaged by default:
   - Arch Linux
   - Ubuntu 20.10 (LLVM 11)
   - Debian 11 (LLVM 11)
+  - Alpine 3.13+
 
 Otherwise, please make sure to update it on your system.
 
