@@ -30,6 +30,7 @@ hash_large_key		# v5.11+
 ima			# v5.11+
 kfree_skb		# 32-bit pointer arith in test_pkt_access
 ksyms			# __start_BTF has different name
+kfunc_call		# v5.13+
 link_pinning		# bpf_link is missing
 load_bytes_relative	# new functionality in 5.8
 map_init		# per-CPU LRU missing
