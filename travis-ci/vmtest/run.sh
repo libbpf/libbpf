@@ -415,8 +415,8 @@ set -eux
 
 echo 'Running setup commands'
 %s
-%s
-echo $? > /exitstatus
+set +e; %s; exitstatus=\$?; set -e
+echo \$exitstatus > /exitstatus
 chmod 644 /exitstatus" "${setup_envvars}" "${setup_cmd}")
 fi
 
