@@ -32,6 +32,7 @@ kfree_skb		# 32-bit pointer arith in test_pkt_access
 ksyms			# __start_BTF has different name
 kfunc_call		# v5.13+
 link_pinning		# bpf_link is missing
+linked_vars		# v5.13+
 load_bytes_relative	# new functionality in 5.8
 map_init		# per-CPU LRU missing
 map_ptr			# test uses BPF_MAP_TYPE_RINGBUF, added in 5.8
@@ -60,6 +61,7 @@ sk_lookup		# v5.9+
 sk_storage_tracing	# missing bpf_sk_storage_get() helper
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 skb_helpers		# helpers added in 5.8+
+snprintf		# v5.13+
 snprintf_btf		# v5.10+
 sock_fields		# v5.10+
 socket_cookie		# v5.12+
