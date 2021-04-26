@@ -3092,6 +3092,13 @@ static __u64 (*bpf_sk_ancestor_cgroup_id)(void *sk, int ancestor_level) = (void 
  * 	of new data availability is sent.
  * 	If **BPF_RB_FORCE_WAKEUP** is specified in *flags*, notification
  * 	of new data availability is sent unconditionally.
+ * 	If **0** is specified in *flags*, an adaptive notification
+ * 	of new data availability is sent.
+ *
+ * 	An adaptive notification is a notification sent whenever the user-space
+ * 	process has caught up and consumed all available payloads. In case the user-space
+ * 	process is still processing a previous payload, then no notification is needed
+ * 	as it will process the newly added payload automatically.
  *
  * Returns
  * 	0 on success, or a negative error in case of failure.
@@ -3102,6 +3109,7 @@ static long (*bpf_ringbuf_output)(void *ringbuf, void *data, __u64 size, __u64 f
  * bpf_ringbuf_reserve
  *
  * 	Reserve *size* bytes of payload in a ring buffer *ringbuf*.
+ * 	*flags* must be 0.
  *
  * Returns
  * 	Valid pointer with *size* bytes of memory available; NULL,
@@ -3117,6 +3125,10 @@ static void *(*bpf_ringbuf_reserve)(void *ringbuf, __u64 size, __u64 flags) = (v
  * 	of new data availability is sent.
  * 	If **BPF_RB_FORCE_WAKEUP** is specified in *flags*, notification
  * 	of new data availability is sent unconditionally.
+ * 	If **0** is specified in *flags*, an adaptive notification
+ * 	of new data availability is sent.
+ *
+ * 	See 'bpf_ringbuf_output()' for the definition of adaptive notification.
  *
  * Returns
  * 	Nothing. Always succeeds.
@@ -3131,6 +3143,10 @@ static void (*bpf_ringbuf_submit)(void *data, __u64 flags) = (void *) 132;
  * 	of new data availability is sent.
  * 	If **BPF_RB_FORCE_WAKEUP** is specified in *flags*, notification
  * 	of new data availability is sent unconditionally.
+ * 	If **0** is specified in *flags*, an adaptive notification
+ * 	of new data availability is sent.
+ *
+ * 	See 'bpf_ringbuf_output()' for the definition of adaptive notification.
  *
  * Returns
  * 	Nothing. Always succeeds.
@@ -3741,7 +3757,7 @@ static struct socket *(*bpf_sock_from_file)(struct file *file) = (void *) 162;
 /*
  * bpf_check_mtu
  *
- * 	Check ctx packet size against exceeding MTU of net device (based
+ * 	Check packet size against exceeding MTU of net device (based
  * 	on *ifindex*).  This helper will likely be used in combination
  * 	with helpers that adjust/change the packet size.
  *
@@ -3757,6 +3773,14 @@ static struct socket *(*bpf_sock_from_file)(struct file *file) = (void *) 162;
  * 	Specifying *ifindex* zero means the MTU check is performed
  * 	against the current net device.  This is practical if this isn't
  * 	used prior to redirect.
+ *
+ * 	On input *mtu_len* must be a valid pointer, else verifier will
+ * 	reject BPF program.  If the value *mtu_len* is initialized to
+ * 	zero then the ctx packet size is use.  When value *mtu_len* is
+ * 	provided as input this specify the L3 length that the MTU check
+ * 	is done against. Remember XDP and TC length operate at L2, but
+ * 	this value is L3 as this correlate to MTU and IP-header tot_len
+ * 	values which are L3 (similar behavior as bpf_fib_lookup).
  *
  * 	The Linux kernel route table can configure MTUs on a more
  * 	specific per route level, which is not provided by this helper.
@@ -3782,11 +3806,9 @@ static struct socket *(*bpf_sock_from_file)(struct file *file) = (void *) 162;
  *
  * 	On return *mtu_len* pointer contains the MTU value of the net
  * 	device.  Remember the net device configured MTU is the L3 size,
- * 	which is returned here and XDP and TX length operate at L2.
+ * 	which is returned here and XDP and TC length operate at L2.
  * 	Helper take this into account for you, but remember when using
- * 	MTU value in your BPF-code.  On input *mtu_len* must be a valid
- * 	pointer and be initialized (to zero), else verifier will reject
- * 	BPF program.
+ * 	MTU value in your BPF-code.
  *
  *
  * Returns
@@ -3835,5 +3857,36 @@ static long (*bpf_check_mtu)(void *ctx, __u32 ifindex, __u32 *mtu_len, __s32 len
  * 	invalid **flags**.
  */
 static long (*bpf_for_each_map_elem)(void *map, void *callback_fn, void *callback_ctx, __u64 flags) = (void *) 164;
+
+/*
+ * bpf_snprintf
+ *
+ * 	Outputs a string into the **str** buffer of size **str_size**
+ * 	based on a format string stored in a read-only map pointed by
+ * 	**fmt**.
+ *
+ * 	Each format specifier in **fmt** corresponds to one u64 element
+ * 	in the **data** array. For strings and pointers where pointees
+ * 	are accessed, only the pointer values are stored in the *data*
+ * 	array. The *data_len* is the size of *data* in bytes.
+ *
+ * 	Formats **%s** and **%p{i,I}{4,6}** require to read kernel
+ * 	memory. Reading kernel memory may fail due to either invalid
+ * 	address or valid address but requiring a major memory fault. If
+ * 	reading kernel memory fails, the string for **%s** will be an
+ * 	empty string, and the ip address for **%p{i,I}{4,6}** will be 0.
+ * 	Not returning error to bpf program is consistent with what
+ * 	**bpf_trace_printk**\ () does for now.
+ *
+ *
+ * Returns
+ * 	The strictly positive length of the formatted string, including
+ * 	the trailing zero character. If the return value is greater than
+ * 	**str_size**, **str** contains a truncated string, guaranteed to
+ * 	be zero-terminated except when **str_size** is 0.
+ *
+ * 	Or **-EBUSY** if the per-CPU memory copy buffer is busy.
+ */
+static long (*bpf_snprintf)(char *str, __u32 str_size, const char *fmt, __u64 *data, __u32 data_len) = (void *) 165;
 
 
