@@ -17,7 +17,7 @@ travis_fold start install_clang "Installing Clang/LLVM"
 wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
 sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal main"
 sudo apt-get update
-sudo apt-get install -y clang-13 lld-13 llvm-13
+sudo apt-get install -y clang-14 lld-14 llvm-14
 
 travis_fold end install_clang
 
