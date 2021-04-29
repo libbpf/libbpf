@@ -3,11 +3,8 @@ set -eux
 
 RELEASE="focal"
 
-echo "deb-src http://archive.ubuntu.com/ubuntu/ $RELEASE main restricted universe multiverse" >>/etc/apt/sources.list
-
 apt-get update
-apt-get -y build-dep libelf-dev
-apt-get install -y libelf-dev pkg-config
+apt-get install -y pkg-config
 
 source "$(dirname $0)/travis_wait.bash"
 
