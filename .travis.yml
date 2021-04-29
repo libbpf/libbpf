@@ -36,7 +36,12 @@ stages:
 jobs:
     include:
         - stage: Builds & Tests
-          name: Kernel LATEST + selftests
+          name: Kernel 5.5.0 + selftests
+          language: bash
+          env: KERNEL=5.5.0
+          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
+
+        - name: Kernel LATEST + selftests
           language: bash
           env: KERNEL=LATEST
           script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
@@ -44,11 +49,6 @@ jobs:
         - name: Kernel 4.9.0 + selftests
           language: bash
           env: KERNEL=4.9.0
-          script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
-
-        - name: Kernel 5.5.0 + selftests
-          language: bash
-          env: KERNEL=5.5.0
           script:  $CI_ROOT/vmtest/run_vmtest.sh || travis_terminate 1
 
         - name: Debian Build
