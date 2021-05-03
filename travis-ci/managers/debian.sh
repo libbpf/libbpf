@@ -40,9 +40,10 @@ for phase in "${PHASES[@]}"; do
                         -dit --net=host debian:$DEBIAN_RELEASE /bin/bash
             docker_exec bash -c "echo deb-src http://deb.debian.org/debian $DEBIAN_RELEASE main >>/etc/apt/sources.list"
             docker_exec apt-get -y update
-            docker_exec apt-get -y build-dep libelf-dev
-            docker_exec apt-get -y install libelf-dev
-            docker_exec apt-get -y install "${ADDITIONAL_DEPS[@]}"
+            docker_exec apt-get -y install aptitude
+            docker_exec aptitude -y build-dep libelf-dev
+            docker_exec aptitude -y install libelf-dev
+            docker_exec aptitude -y install "${ADDITIONAL_DEPS[@]}"
             ;;
         RUN|RUN_CLANG|RUN_GCC10|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC10_ASAN)
             if [[ "$phase" = *"CLANG"* ]]; then
