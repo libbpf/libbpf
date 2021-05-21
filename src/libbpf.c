@@ -3974,6 +3974,9 @@ bpf_object__probe_loading(struct bpf_object *obj)
 	};
 	int ret;
 
+	if (obj->gen_loader)
+		return 0;
+
 	/* make sure basic loading works */
 
 	memset(&attr, 0, sizeof(attr));
