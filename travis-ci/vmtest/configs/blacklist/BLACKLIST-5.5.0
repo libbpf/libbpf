@@ -34,6 +34,7 @@ kfunc_call		# v5.13+
 link_pinning		# bpf_link is missing
 linked_vars		# v5.13+
 load_bytes_relative	# new functionality in 5.8
+lookup_and_delete	# v5.14+
 map_init		# per-CPU LRU missing
 map_ptr			# test uses BPF_MAP_TYPE_RINGBUF, added in 5.8
 metadata		# v5.10+
@@ -70,6 +71,7 @@ sockmap_listen		# no listen socket supportin SOCKMAP
 sockopt_sk
 stacktrace_build_id	# v5.9+
 stack_var_off		# v5.12+
+syscall			# v5.14+
 task_local_storage	# v5.12+
 tcp_hdr_options		# v5.10+, new TCP header options feature in BPF
 tcpbpf_user		# LINK_CREATE is missing
@@ -82,6 +84,7 @@ test_overhead		# no fmod_ret support
 test_profiler		# needs verifier logic improvements from v5.10+
 test_skb_pkt_end	# v5.11+
 trace_ext		# v5.10+
+trace_printk		# v5.14+
 trampoline_count	# v5.12+ have lower allowed limits
 udp_limit		# no cgroup/sock_release BPF program type (5.9+)
 varlen			# verifier bug fixed in later kernels
