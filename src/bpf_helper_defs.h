@@ -1277,8 +1277,12 @@ static long (*bpf_skb_adjust_room)(struct __sk_buff *skb, __s32 len_diff, __u32 
  * 	The lower two bits of *flags* are used as the return code if
  * 	the map lookup fails. This is so that the return value can be
  * 	one of the XDP program return codes up to **XDP_TX**, as chosen
- * 	by the caller. Any higher bits in the *flags* argument must be
- * 	unset.
+ * 	by the caller. The higher bits of *flags* can be set to
+ * 	BPF_F_BROADCAST or BPF_F_EXCLUDE_INGRESS as defined below.
+ *
+ * 	With BPF_F_BROADCAST the packet will be broadcasted to all the
+ * 	interfaces in the map, with BPF_F_EXCLUDE_INGRESS the ingress
+ * 	interface will be excluded when do broadcasting.
  *
  * 	See also **bpf_redirect**\ (), which only supports redirecting
  * 	to an ifindex, but doesn't require a map to do so.
@@ -3888,5 +3892,35 @@ static long (*bpf_for_each_map_elem)(void *map, void *callback_fn, void *callbac
  * 	Or **-EBUSY** if the per-CPU memory copy buffer is busy.
  */
 static long (*bpf_snprintf)(char *str, __u32 str_size, const char *fmt, __u64 *data, __u32 data_len) = (void *) 165;
+
+/*
+ * bpf_sys_bpf
+ *
+ * 	Execute bpf syscall with given arguments.
+ *
+ * Returns
+ * 	A syscall result.
+ */
+static long (*bpf_sys_bpf)(__u32 cmd, void *attr, __u32 attr_size) = (void *) 166;
+
+/*
+ * bpf_btf_find_by_name_kind
+ *
+ * 	Find BTF type with given name and kind in vmlinux BTF or in module's BTFs.
+ *
+ * Returns
+ * 	Returns btf_id and btf_obj_fd in lower and upper 32 bits.
+ */
+static long (*bpf_btf_find_by_name_kind)(char *name, int name_sz, __u32 kind, int flags) = (void *) 167;
+
+/*
+ * bpf_sys_close
+ *
+ * 	Execute close syscall for given FD.
+ *
+ * Returns
+ * 	A syscall result.
+ */
+static long (*bpf_sys_close)(__u32 fd) = (void *) 168;
 
 
