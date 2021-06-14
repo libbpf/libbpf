@@ -1,0 +1,15 @@
+name: 'vmtest'
+description: 'Build + run vmtest'
+inputs:
+  kernel:
+    description: 'kernel or LATEST'
+    required: true
+    default: 'LATEST'
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        source /tmp/ci_setup
+        export KERNEL=${{ inputs.kernel }}
+        $CI_ROOT/vmtest/run_vmtest.sh
+      shell: bash
