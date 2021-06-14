@@ -18,7 +18,7 @@ function error() {
 }
 
 function docker_exec() {
-    docker exec $ENV_VARS -it $CONT_NAME "$@"
+    docker exec $ENV_VARS $CONT_NAME "$@"
 }
 
 set -eu
