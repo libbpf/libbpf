@@ -38,6 +38,7 @@ lookup_and_delete	# v5.14+
 map_init		# per-CPU LRU missing
 map_ptr			# test uses BPF_MAP_TYPE_RINGBUF, added in 5.8
 metadata		# v5.10+
+migrate_reuseport	# v5.14+
 mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret support is missing
 module_attach		# module BTF support missing (v5.11+)
@@ -75,6 +76,7 @@ syscall			# v5.14+
 task_local_storage	# v5.12+
 tcp_hdr_options		# v5.10+, new TCP header options feature in BPF
 tcpbpf_user		# LINK_CREATE is missing
+tc_redirect		# v5.14+
 test_bpffs		# v5.10+, new CONFIG_BPF_PRELOAD=y and CONFIG_BPF_PRELOAD_UMG=y|m
 test_bprm_opts		# v5.11+
 test_global_funcs	# kernel doesn't support BTF linkage=global on FUNCs
