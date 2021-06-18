@@ -12,6 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Kernel ${{ matrix.kernel }} + selftests
     strategy:
+      fail-fast: false
       matrix:
         include:
           - kernel: 'LATEST'
@@ -28,6 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Debian Build (${{ matrix.name }})
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: default
@@ -53,6 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     name: Ubuntu Focal Build (${{ matrix.arch }})
     strategy:
+      fail-fast: false
       matrix:
         include:
           - arch: aarch64
