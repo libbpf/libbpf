@@ -2,19 +2,34 @@ name: 'vmtest'
 description: 'Build + run vmtest'
 inputs:
   kernel:
-    description: 'kernel or LATEST'
+    description: 'kernel version or LATEST'
     required: true
     default: 'LATEST'
+  kernel-rev:
+    description: 'CHECKPOINT or rev/tag/branch'
+    required: true
+    default: 'CHECKPOINT'
+  kernel-origin:
+    description: 'kernel repo'
+    required: true
+    default: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
   pahole:
-    description: 'pahole branch'
+    description: 'pahole rev/tag/branch'
     required: true
     default: 'master'
+  pahole-origin:
+    description: 'pahole repo'
+    required: true
+    default: 'https://git.kernel.org/pub/scm/devel/pahole/pahole.git'
 runs:
   using: "composite"
   steps:
     - run: |
         source /tmp/ci_setup
         export KERNEL=${{ inputs.kernel }}
+        export KERNEL_BRANCH=${{ inputs.kernel-rev }}
+        export KERNEL_ORIGIN=${{ inputs.kernel-origin }}
         export PAHOLE_BRANCH=${{ inputs.pahole }}
+        export PAHOLE_ORIGIN=${{ inputs.pahole-origin }}
         $CI_ROOT/vmtest/run_vmtest.sh
       shell: bash

@@ -4,12 +4,12 @@ set -eu
 
 source $(cd $(dirname $0) && pwd)/helpers.sh
 
-travis_fold start build_pahole "Building pahole"
-
 CWD=$(pwd)
 REPO_PATH=$1
-PAHOLE_ORIGIN=https://git.kernel.org/pub/scm/devel/pahole/pahole.git
+PAHOLE_ORIGIN=${PAHOLE_ORIGIN:-https://git.kernel.org/pub/scm/devel/pahole/pahole.git}
 PAHOLE_BRANCH=${PAHOLE_BRANCH:-master}
+
+travis_fold start build_pahole "Building pahole ${PAHOLE_ORIGIN} ${PAHOLE_BRANCH}"
 
 mkdir -p ${REPO_PATH}
 cd ${REPO_PATH}

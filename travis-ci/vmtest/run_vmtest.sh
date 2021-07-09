@@ -24,7 +24,7 @@ sudo aptitude install -y clang-13 lld-13 llvm-13
 travis_fold end install_clang
 
 # Build selftests (and latest kernel, if necessary)
-KERNEL="${KERNEL}" ${VMTEST_ROOT}/prepare_selftests.sh travis-ci/vmtest/bpf-next
+${VMTEST_ROOT}/prepare_selftests.sh travis-ci/vmtest/bpf-next
 
 # Escape whitespace characters.
 setup_cmd=$(sed 's/\([[:space:]]\)/\\\1/g' <<< "${VMTEST_SETUPCMD}")
