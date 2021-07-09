@@ -85,6 +85,7 @@ test_lsm		# no BPF_LSM support
 test_overhead		# no fmod_ret support
 test_profiler		# needs verifier logic improvements from v5.10+
 test_skb_pkt_end	# v5.11+
+test_xdp_context_test_run	# v5.14+
 trace_ext		# v5.10+
 trace_printk		# v5.14+
 trampoline_count	# v5.12+ have lower allowed limits
