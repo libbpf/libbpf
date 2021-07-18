@@ -60,7 +60,7 @@ INSTALL = install
 
 DESTDIR ?=
 
-ifeq ($(shell uname -m),x86_64)
+ifeq ($(filter-out %64 %64be %64eb %64le %64el s390x, $(shell uname -m)),)
 	LIBSUBDIR := lib64
 else
 	LIBSUBDIR := lib
