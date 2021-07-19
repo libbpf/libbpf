@@ -10,6 +10,7 @@ runs:
         # this is somewhat ugly, but that is the easiest way to share this code with
         # arch specific docker
         echo export DEBIAN_FRONTEND=noninteractive > /tmp/ci_setup
+        echo sudo apt-get update >> /tmp/ci_setup
         echo sudo apt-get install -y aptitude qemu-kvm zstd binutils-dev elfutils libcap-dev libelf-dev libdw-dev >> /tmp/ci_setup
         echo export PROJECT_NAME='libbpf' >> /tmp/ci_setup
         echo export AUTHOR_EMAIL="$(git log -1 --pretty=\"%aE\")" >> /tmp/ci_setup
