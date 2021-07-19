@@ -98,7 +98,7 @@ Some major Linux distributions come with kernel BTF already built in:
   - RHEL 8.2+
   - OpenSUSE Tumbleweed (in the next release, as of 2020-06-04)
   - Arch Linux (from kernel 5.7.1.arch1-1)
-  - Manjaro
+  - Manjaro (from kernel 5.4 if compiled after 2021-06-18)
   - Ubuntu 20.10
   - Debian 11 (amd64/arm64)
 
