@@ -1,4 +1,4 @@
-btf_dump
+# btf_dump -- need to disable data dump sub-tests
 core_retro
 cpu_mask
 hashmap

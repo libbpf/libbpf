@@ -25,6 +25,7 @@ fexit_test		# bpf_prog_test_tracing missing
 flow_dissector		# bpf_link-based flow dissector is in 5.8+
 flow_dissector_reattach
 for_each		# v5.12+
+get_func_ip_test	# v5.15+
 get_stack_raw_tp	# exercising BPF verifier bug causing infinite loop
 hash_large_key		# v5.11+
 ima			# v5.11+
@@ -85,6 +86,8 @@ test_lsm		# no BPF_LSM support
 test_overhead		# no fmod_ret support
 test_profiler		# needs verifier logic improvements from v5.10+
 test_skb_pkt_end	# v5.11+
+timer			# v5.15+
+timer_mim		# v5.15+
 trace_ext		# v5.10+
 trace_printk		# v5.14+
 trampoline_count	# v5.12+ have lower allowed limits
@@ -94,6 +97,7 @@ vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_adjust_tail		# new XDP functionality added in 5.8
 xdp_attach		# IFLA_XDP_EXPECTED_FD support is missing
 xdp_bpf2bpf		# freplace is missing
+xdp_context_test_run	# v5.15+
 xdp_cpumap_attach	# v5.9+
 xdp_devmap_attach	# new feature in 5.8
 xdp_link		# v5.9+
