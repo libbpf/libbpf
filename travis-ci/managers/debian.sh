@@ -52,6 +52,7 @@ for phase in "${PHASES[@]}"; do
             elif [[ "$phase" = *"GCC10"* ]]; then
                 ENV_VARS="-e CC=gcc-10 -e CXX=g++-10"
                 CC="gcc-10"
+                CFLAGS="${CFLAGS} -Wno-stringop-truncation"
             else
                 CFLAGS="${CFLAGS} -Wno-stringop-truncation"
             fi
