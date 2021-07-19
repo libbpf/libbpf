@@ -18,6 +18,9 @@ git remote add origin ${PAHOLE_ORIGIN}
 git fetch origin
 git checkout ${PAHOLE_BRANCH}
 
+# temporary work-around to bump pahole to 1.22 before it is officially released
+sed -i 's/DDWARVES_MINOR_VERSION=21/DDWARVES_MINOR_VERSION=22/' CMakeLists.txt
+
 mkdir -p build
 cd build
 cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -D__LIB=lib ..
