@@ -1,3 +1,15 @@
+This is a mirror of [bpf-next Linux source
+tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)'s
+`tools/lib/bpf` directory plus its supporting header files.
+
+All the gory details of syncing can be found in `scripts/sync-kernel.sh`
+script.
+
+Some header files in this repo (`include/linux/*.h`) are reduced versions of
+their counterpart files at
+[bpf-next](https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/)'s
+`tools/include/linux/*.h` to make compilation successful.
+
 BPF/libbpf usage and questions
 ==============================
 
@@ -133,20 +145,6 @@ use it:
   contain lots of real-world tools converted from BCC to BPF CO-RE. Consider
   converting some more to both contribute to the BPF community and gain some
   more experience with it.
-  
-Details
-=======
-This is a mirror of [bpf-next Linux source
-tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)'s
-`tools/lib/bpf` directory plus its supporting header files.
-
-All the gory details of syncing can be found in `scripts/sync-kernel.sh`
-script.
-
-Some header files in this repo (`include/linux/*.h`) are reduced versions of
-their counterpart files at
-[bpf-next](https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/)'s
-`tools/include/linux/*.h` to make compilation successful.
 
 License
 =======
