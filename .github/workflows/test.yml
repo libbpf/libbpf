@@ -6,6 +6,9 @@ on:
   schedule:
     - cron:  '0 18 * * *'
 
+concurrency: 
+  group: ci-test-${{ github.head_ref }}
+  cancel-in-progress: true
 
 jobs:
   vmtest:
