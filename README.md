@@ -33,7 +33,6 @@ libbpf mirror repo is set up and organized.
 
 Build
 [![Github Actions Builds & Tests](https://github.com/libbpf/libbpf/actions/workflows/test.yml/badge.svg)](https://github.com/libbpf/libbpf/actions/workflows/test.yml)
-[![Build Status](https://travis-ci.com/libbpf/libbpf.svg?branch=master)](https://travis-ci.com/github/libbpf/libbpf)
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
 [![Coverity](https://img.shields.io/coverity/scan/18195.svg)](https://scan.coverity.com/projects/libbpf)
 =====
