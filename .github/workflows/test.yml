@@ -23,8 +23,11 @@ jobs:
           - kernel: '4.9.0'
     steps:
       - uses: actions/checkout@v2
+        name: Checkout
       - uses: ./.github/actions/setup
+        name: Setup
       - uses: ./.github/actions/vmtest
+        name: vmtest
         with:
           kernel: ${{ matrix.kernel }}
 
@@ -49,8 +52,11 @@ jobs:
             target: RUN_GCC10_ASAN
     steps:
       - uses: actions/checkout@v2
+        name: Checkout
       - uses: ./.github/actions/setup
+        name: Setup
       - uses: ./.github/actions/debian
+        name: Build
         with:
           target: ${{ matrix.target }}
 
@@ -67,9 +73,12 @@ jobs:
           - arch: x86
     steps:
       - uses: actions/checkout@v2
+        name: Checkout
       - uses: ./.github/actions/setup
+        name: Pre-Setup
       - run: source /tmp/ci_setup && sudo -E $CI_ROOT/managers/ubuntu.sh
         if: matrix.arch == 'x86'
+        name: Setup
       - uses: uraimo/run-on-arch-action@v2.0.5
         name: Build in docker
         if: matrix.arch != 'x86'
