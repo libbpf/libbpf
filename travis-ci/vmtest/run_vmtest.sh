@@ -19,7 +19,7 @@ sudo add-apt-repository "deb http://apt.llvm.org/focal/ llvm-toolchain-focal mai
 sudo apt-get update
 sudo apt-get install --allow-downgrades -y libc6=2.31-0ubuntu9.2
 sudo aptitude install -y g++ libelf-dev
-sudo aptitude install -y clang-13 lld-13 llvm-13
+sudo aptitude install -y clang-14 lld-14 llvm-14
 
 travis_fold end install_clang
 
