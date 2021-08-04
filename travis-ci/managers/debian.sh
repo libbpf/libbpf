@@ -48,6 +48,7 @@ for phase in "${PHASES[@]}"; do
             echo -e "::endgroup::"
             ;;
         RUN|RUN_CLANG|RUN_GCC10|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC10_ASAN)
+            CC="cc"
             if [[ "$phase" = *"CLANG"* ]]; then
                 ENV_VARS="-e CC=clang -e CXX=clang++"
                 CC="clang"
@@ -62,7 +63,7 @@ for phase in "${PHASES[@]}"; do
                 CFLAGS="${CFLAGS} -fsanitize=address,undefined"
             fi
             docker_exec mkdir build install
-            docker_exec ${CC:-cc} --version
+            docker_exec ${CC} --version
             info "build"
             docker_exec make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
@@ -73,7 +74,8 @@ for phase in "${PHASES[@]}"; do
             fi
             info "install"
             docker_exec make -j$((4*$(nproc))) -C src OBJDIR=../build DESTDIR=../install install
-            docker_exec rm -rf build install
+            info "link binary"
+            docker_exec bash -c "CFLAGS=\"${CFLAGS}\" ./travis-ci/managers/test_compile.sh"
             ;;
         CLEANUP)
             info "Cleanup phase"
