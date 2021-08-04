@@ -38,12 +38,14 @@ for phase in "${PHASES[@]}"; do
             $DOCKER_RUN -v $REPO_ROOT:/build:rw \
                         -w /build --privileged=true --name $CONT_NAME \
                         -dit --net=host debian:$DEBIAN_RELEASE /bin/bash
+            echo -e "::group::Build Env Setup"
             docker_exec bash -c "echo deb-src http://deb.debian.org/debian $DEBIAN_RELEASE main >>/etc/apt/sources.list"
             docker_exec apt-get -y update
             docker_exec apt-get -y install aptitude
             docker_exec aptitude -y build-dep libelf-dev
             docker_exec aptitude -y install libelf-dev
             docker_exec aptitude -y install "${ADDITIONAL_DEPS[@]}"
+            echo -e "::endgroup::"
             ;;
         RUN|RUN_CLANG|RUN_GCC10|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC10_ASAN)
             if [[ "$phase" = *"CLANG"* ]]; then
@@ -62,7 +64,7 @@ for phase in "${PHASES[@]}"; do
             docker_exec mkdir build install
             docker_exec ${CC:-cc} --version
             info "build"
-	    docker_exec make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
+            docker_exec make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
             docker_exec ldd build/libbpf.so
             if ! docker_exec ldd build/libbpf.so | grep -q libelf; then
