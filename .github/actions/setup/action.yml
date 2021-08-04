@@ -18,6 +18,6 @@ runs:
         echo export REPO_ROOT=$GITHUB_WORKSPACE >> /tmp/ci_setup
         echo export CI_ROOT=$REPO_ROOT/travis-ci >> /tmp/ci_setup
         echo export VMTEST_ROOT=$CI_ROOT/vmtest >> /tmp/ci_setup
-        echo 'echo ::endgroup' >> /tmp/ci_setup
+        echo 'echo ::endgroup::' >> /tmp/ci_setup
       shell: bash
 

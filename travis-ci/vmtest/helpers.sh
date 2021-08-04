@@ -17,7 +17,7 @@ travis_fold() {
         line="$line - ${YELLOW}$3${NOCOLOR}"
       fi
     else
-      line="::endgroup"
+      line="::endgroup::"
     fi
     echo -e "$line"
   fi
