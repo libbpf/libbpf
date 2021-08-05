@@ -43,6 +43,7 @@ migrate_reuseport	# v5.14+
 mmap			# 5.5 kernel is too permissive with re-mmaping
 modify_return		# fmod_ret support is missing
 module_attach		# module BTF support missing (v5.11+)
+netcnt
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 pe_preserve_elems	# v5.10+
 perf_branches		# bpf_read_branch_records() helper is missing
