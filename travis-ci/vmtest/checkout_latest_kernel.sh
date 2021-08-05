@@ -32,7 +32,7 @@ if [ ! -d "${REPO_PATH}" ]; then
 	mkdir -p $(dirname "${REPO_PATH}")
 	cd $(dirname "${REPO_PATH}")
 	# attempt to fetch desired bpf-next repo snapshot
-	if wget ${SNAPSHOT_URL} && tar xf bpf-next-${LINUX_SHA}.tar.gz ; then
+	if wget -nv ${SNAPSHOT_URL} && tar xf bpf-next-${LINUX_SHA}.tar.gz --totals ; then
 		mv bpf-next-${LINUX_SHA} $(basename ${REPO_PATH})
 	else
 		# but fallback to git fetch approach if that fails
