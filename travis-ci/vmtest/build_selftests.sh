@@ -30,7 +30,7 @@ make \
 	VMLINUX_BTF="${VMLINUX_BTF}" \
 	VMLINUX_H=${VMLINUX_H} \
 	-C "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
-	-j $((4*$(nproc)))
+	-j $((4*$(nproc))) >/dev/null
 mkdir ${LIBBPF_PATH}/selftests
 cp -R "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
 	${LIBBPF_PATH}/selftests
