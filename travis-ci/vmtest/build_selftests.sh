@@ -10,7 +10,6 @@ sudo apt-get -y install python-docutils # for rst2man
 
 LLVM_VER=14
 LIBBPF_PATH="${REPO_ROOT}"
-REPO_PATH="travis-ci/vmtest/bpf-next"
 
 PREPARE_SELFTESTS_SCRIPT=${VMTEST_ROOT}/prepare_selftests-${KERNEL}.sh
 if [ -f "${PREPARE_SELFTESTS_SCRIPT}" ]; then
