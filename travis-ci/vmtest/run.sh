@@ -92,6 +92,12 @@ SKIPSOURCE=0
 APPEND=""
 DIR="$PWD"
 LIST=0
+
+# by default will copy all files that aren't listed in git exclusions
+# but it doesn't work for entire kernel tree very well
+# so for full kernel tree you may need to SOURCE_FULLCOPY=0
+SOURCE_FULLCOPY=${SOURCE_FULLCOPY:-1}
+
 while true; do
 	case "$1" in
 		-k|--kernel)
@@ -374,9 +380,10 @@ fi
 
 travis_fold end vmlinux_setup
 
+REPO_PATH="${SELFTEST_REPO_PATH:-travis-ci/vmtest/bpf-next}"
 LIBBPF_PATH="${REPO_ROOT}" \
-	REPO_PATH="travis-ci/vmtest/bpf-next" \
 	VMTEST_ROOT="${VMTEST_ROOT}" \
+	REPO_PATH="${REPO_PATH}" \
 	VMLINUX_BTF=${vmlinux} ${VMTEST_ROOT}/build_selftests.sh
 
 travis_fold start vm_init "Starting virtual machine..."
@@ -385,16 +392,17 @@ if (( SKIPSOURCE )); then
 	echo "Not copying source files..." >&2
 else
 	echo "Copying source files..." >&2
-
 	# Copy the source files in.
 	sudo mkdir -p -m 0755 "$mnt/${PROJECT_NAME}"
-	{
-	if [[ -e .git ]]; then
-		git ls-files -z
+	if [[ "${SOURCE_FULLCOPY}" == "1" ]]; then
+		git ls-files -z | sudo rsync --files-from=- -0cpt . "$mnt/${PROJECT_NAME}"
 	else
-		tr '\n' '\0' < "${PROJECT_NAME}.egg-info/SOURCES.txt"
-	fi
-	} | sudo rsync --files-from=- -0cpt . "$mnt/${PROJECT_NAME}"
+		sudo mkdir -p -m 0755 ${mnt}/${PROJECT_NAME}/{selftests,travis-ci}
+		tree --du -shaC "${REPO_ROOT}/selftests/bpf"
+		sudo rsync -avm "${REPO_ROOT}/selftests/bpf" "$mnt/${PROJECT_NAME}/selftests/"
+		sudo rsync -avm "${REPO_ROOT}/travis-ci/vmtest" "$mnt/${PROJECT_NAME}/travis-ci/"
+        fi
+
 fi
 
 setup_script="#!/bin/sh
