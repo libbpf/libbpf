@@ -386,6 +386,15 @@ LIBBPF_PATH="${REPO_ROOT}" \
 	REPO_PATH="${REPO_PATH}" \
 	VMLINUX_BTF=${vmlinux} ${VMTEST_ROOT}/build_selftests.sh
 
+travis_fold start bpftool_checks "Running bpftool checks..."
+if [[ "${KERNEL}" = 'LATEST' ]]; then
+	"${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/test_bpftool_synctypes.py" && \
+		echo "Consistency checks passed successfully."
+else
+	echo "Consistency checks skipped."
+fi
+travis_fold end bpftool_checks
+
 travis_fold start vm_init "Starting virtual machine..."
 
 if (( SKIPSOURCE )); then
