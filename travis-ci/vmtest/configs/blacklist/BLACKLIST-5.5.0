@@ -3,6 +3,7 @@ align			# verifier output format changed
 atomics			# new atomic operations (v5.12+)
 atomic_bounds		# new atomic operations (v5.12+)
 bind_perm		# changed semantics of return values (v5.12+)
+bpf_cookie		# 5.15+
 bpf_iter		# bpf_iter support is missing
 bpf_obj_id		# bpf_link support missing for GET_OBJ_INFO, GET_FD_BY_ID, etc
 bpf_tcp_ca		# STRUCT_OPS is missing
@@ -47,6 +48,7 @@ netcnt
 ns_current_pid_tgid	# bpf_get_ns_current_pid_tgid() helper is missing
 pe_preserve_elems	# v5.10+
 perf_branches		# bpf_read_branch_records() helper is missing
+perf_link		# v5.15+
 pkt_access		# 32-bit pointer arith in test_pkt_access
 probe_read_user_str	# kernel bug with garbage bytes at the end
 prog_run_xattr		# 32-bit pointer arith in test_pkt_access
@@ -97,6 +99,7 @@ varlen			# verifier bug fixed in later kernels
 vmlinux			# hrtimer_nanosleep() signature changed incompatibly
 xdp_adjust_tail		# new XDP functionality added in 5.8
 xdp_attach		# IFLA_XDP_EXPECTED_FD support is missing
+xdp_bonding		# v5.15+
 xdp_bpf2bpf		# freplace is missing
 xdp_context_test_run	# v5.15+
 xdp_cpumap_attach	# v5.9+
