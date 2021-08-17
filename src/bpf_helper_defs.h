@@ -4014,4 +4014,23 @@ static long (*bpf_timer_cancel)(struct bpf_timer *timer) = (void *) 172;
  */
 static __u64 (*bpf_get_func_ip)(void *ctx) = (void *) 173;
 
+/*
+ * bpf_get_attach_cookie
+ *
+ * 	Get bpf_cookie value provided (optionally) during the program
+ * 	attachment. It might be different for each individual
+ * 	attachment, even if BPF program itself is the same.
+ * 	Expects BPF program context *ctx* as a first argument.
+ *
+ * 	Supported for the following program types:
+ * 		- kprobe/uprobe;
+ * 		- tracepoint;
+ * 		- perf_event.
+ *
+ * Returns
+ * 	Value specified by user at BPF link creation/attachment time
+ * 	or 0, if it was not specified.
+ */
+static __u64 (*bpf_get_attach_cookie)(void *ctx) = (void *) 174;
+
 
