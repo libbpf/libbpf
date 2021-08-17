@@ -3,7 +3,7 @@
 .. _api:
 
 .. toctree:: Table of Contents
-   
+
 
 LIBBPF API
 ==================
