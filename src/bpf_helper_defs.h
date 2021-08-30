@@ -4033,4 +4033,14 @@ static __u64 (*bpf_get_func_ip)(void *ctx) = (void *) 173;
  */
 static __u64 (*bpf_get_attach_cookie)(void *ctx) = (void *) 174;
 
+/*
+ * bpf_task_pt_regs
+ *
+ * 	Get the struct pt_regs associated with **task**.
+ *
+ * Returns
+ * 	A pointer to struct pt_regs.
+ */
+static long (*bpf_task_pt_regs)(struct task_struct *task) = (void *) 175;
+
 
