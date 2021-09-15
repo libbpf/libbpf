@@ -4043,4 +4043,29 @@ static __u64 (*bpf_get_attach_cookie)(void *ctx) = (void *) 174;
  */
 static long (*bpf_task_pt_regs)(struct task_struct *task) = (void *) 175;
 
+/*
+ * bpf_get_branch_snapshot
+ *
+ * 	Get branch trace from hardware engines like Intel LBR. The
+ * 	hardware engine is stopped shortly after the helper is
+ * 	called. Therefore, the user need to filter branch entries
+ * 	based on the actual use case. To capture branch trace
+ * 	before the trigger point of the BPF program, the helper
+ * 	should be called at the beginning of the BPF program.
+ *
+ * 	The data is stored as struct perf_branch_entry into output
+ * 	buffer *entries*. *size* is the size of *entries* in bytes.
+ * 	*flags* is reserved for now and must be zero.
+ *
+ *
+ * Returns
+ * 	On success, number of bytes written to *buf*. On error, a
+ * 	negative value.
+ *
+ * 	**-EINVAL** if *flags* is not zero.
+ *
+ * 	**-ENOENT** if architecture does not support branch records.
+ */
+static long (*bpf_get_branch_snapshot)(void *entries, __u32 size, __u64 flags) = (void *) 176;
+
 
