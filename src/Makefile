@@ -51,7 +51,7 @@ endif
 
 HEADERS := bpf.h libbpf.h btf.h libbpf_common.h libbpf_legacy.h xsk.h \
 	   bpf_helpers.h bpf_helper_defs.h bpf_tracing.h \
-	   bpf_endian.h bpf_core_read.h skel_internal.h
+	   bpf_endian.h bpf_core_read.h skel_internal.h libbpf_version.h
 UAPI_HEADERS := $(addprefix $(TOPDIR)/include/uapi/linux/,\
 			    bpf.h bpf_common.h btf.h)
 
