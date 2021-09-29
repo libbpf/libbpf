@@ -7,12 +7,12 @@ source $(cd $(dirname $0) && pwd)/helpers.sh
 test_progs() {
 	if [[ "${KERNEL}" != '4.9.0' ]]; then
 		travis_fold start test_progs "Testing test_progs"
-		./test_progs ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
+		./test_progs ${BLACKLIST:+-d$BLACKLIST} ${WHITELIST:+-a$WHITELIST}
 		travis_fold end test_progs
 	fi
 
 	travis_fold start test_progs-no_alu32 "Testing test_progs-no_alu32"
-	./test_progs-no_alu32 ${BLACKLIST:+-b$BLACKLIST} ${WHITELIST:+-t$WHITELIST}
+	./test_progs-no_alu32 ${BLACKLIST:+-d$BLACKLIST} ${WHITELIST:+-a$WHITELIST}
 	travis_fold end test_progs-no_alu32
 }
 
