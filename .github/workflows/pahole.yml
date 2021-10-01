@@ -14,27 +14,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/setup
-      - name: Get current pahole sha
-        id: current_sha
-        run:
-          git ls-remote https://git.kernel.org/pub/scm/devel/pahole/pahole.git $STAGING | awk '{print "::set-output name=sha::" $1}'
-      - name: Get latest result for this sha
-        id: latest
-        uses: pat-s/always-upload-cache@v2
-        with:
-          path: last_tested_pahole
-          key: ${{ steps.current_sha.outputs.sha }}
-      - name: Return cached test result
-        run: exit `cat last_tested_pahole || echo 1` # if file is empty that mean previous run timed out of canceled, returning failure
-        if: steps.latest.outputs.cache-hit == 'true'
       - uses: ./.github/actions/vmtest
         with:
           kernel: LATEST
           pahole: $STAGING
-        if: steps.latest.outputs.cache-hit != 'true'
-      - name: Save success
-        run: echo 0 > last_tested_pahole
-        if: steps.latest.outputs.cache-hit != 'true'
-      - name: Save failure
-        run: echo 1 > last_tested_pahole
-        if: ${{ failure() && steps.latest.outputs.cache-hit != 'true' }}
