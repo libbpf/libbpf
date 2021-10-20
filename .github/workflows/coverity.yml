@@ -8,6 +8,7 @@ on:
 jobs:
   coverity:
     runs-on: ubuntu-latest
+    if: github.repository == 'libbpf/libbpf'
     name: Coverity
     steps:
       - uses: actions/checkout@v2
