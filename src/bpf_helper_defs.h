@@ -27,6 +27,7 @@ struct tcp_sock;
 struct tcp_timewait_sock;
 struct tcp_request_sock;
 struct udp6_sock;
+struct unix_sock;
 struct task_struct;
 struct __sk_buff;
 struct sk_msg_md;
@@ -4082,5 +4083,15 @@ static long (*bpf_get_branch_snapshot)(void *entries, __u32 size, __u64 flags) =
  * 	in case of failure.
  */
 static long (*bpf_trace_vprintk)(const char *fmt, __u32 fmt_size, const void *data, __u32 data_len) = (void *) 177;
+
+/*
+ * bpf_skc_to_unix_sock
+ *
+ * 	Dynamically cast a *sk* pointer to a *unix_sock* pointer.
+ *
+ * Returns
+ * 	*sk* if casting is valid, or **NULL** otherwise.
+ */
+static struct unix_sock *(*bpf_skc_to_unix_sock)(void *sk) = (void *) 178;
 
 
