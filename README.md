@@ -19,6 +19,11 @@ the examples of building BPF applications with libbpf.
 [libbpf-tools](https://github.com/iovisor/bcc/tree/master/libbpf-tools) are also
 a good source of the real-world libbpf-based tracing tools.
 
+See also ["BPF CO-RE reference guide"](https://nakryiko.com/posts/bpf-core-reference-guide/)
+for the coverage of practical aspects of building BPF CO-RE applications and
+["BPF CO-RE"](https://nakryiko.com/posts/bpf-portability-and-co-re/) for
+general introduction into BPF portability issues and BPF CO-RE origins.
+
 All general BPF questions, including kernel functionality, libbpf APIs and
 their application, should be sent to bpf@vger.kernel.org mailing list. You can
 subscribe to it [here](http://vger.kernel.org/vger-lists.html#bpf) and search
@@ -141,6 +146,7 @@ Otherwise, please make sure to update it on your system.
 
 The following resources are useful to understand what BPF CO-RE is and how to
 use it:
+- [BPF CO-RE reference guide](https://nakryiko.com/posts/bpf-core-reference-guide/)
 - [BPF Portability and CO-RE](https://nakryiko.com/posts/bpf-portability-and-co-re/)
 - [HOWTO: BCC to libbpf conversion](https://nakryiko.com/posts/bcc-to-libbpf-howto-guide/)
 - [libbpf-tools in BCC repo](https://github.com/iovisor/bcc/tree/master/libbpf-tools)
