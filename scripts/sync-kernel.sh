@@ -74,7 +74,7 @@ commit_desc()
 }
 
 # Create commit single-line signature, which consists of:
-# - full commit hash
+# - full commit subject
 # - author date in ISO8601 format
 # - full commit body with newlines replaced with vertical bars (|)
 # - shortstat appended at the end
