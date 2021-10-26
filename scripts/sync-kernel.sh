@@ -17,7 +17,7 @@ BPF_BRANCH=${3-""}
 BASELINE_COMMIT=${BPF_NEXT_BASELINE:-$(cat ${LIBBPF_REPO}/CHECKPOINT-COMMIT)}
 BPF_BASELINE_COMMIT=${BPF_BASELINE:-$(cat ${LIBBPF_REPO}/BPF-CHECKPOINT-COMMIT)}
 
-if [ -z "${LIBBPF_REPO}" ] || [ -z "${LINUX_REPO}" ] || [ -z "${BPF_BRANCH}" ]; then
+if [ -z "${LIBBPF_REPO}" ] || [ -z "${LINUX_REPO}" ]; then
 	echo "Error: libbpf or linux repos are not specified"
 	usage
 fi
