@@ -4094,4 +4094,23 @@ static long (*bpf_trace_vprintk)(const char *fmt, __u32 fmt_size, const void *da
  */
 static struct unix_sock *(*bpf_skc_to_unix_sock)(void *sk) = (void *) 178;
 
+/*
+ * bpf_kallsyms_lookup_name
+ *
+ * 	Get the address of a kernel symbol, returned in *res*. *res* is
+ * 	set to 0 if the symbol is not found.
+ *
+ * Returns
+ * 	On success, zero. On error, a negative value.
+ *
+ * 	**-EINVAL** if *flags* is not zero.
+ *
+ * 	**-EINVAL** if string *name* is not the same size as *name_sz*.
+ *
+ * 	**-ENOENT** if symbol is not found.
+ *
+ * 	**-EPERM** if caller does not have permission to obtain kernel address.
+ */
+static long (*bpf_kallsyms_lookup_name)(const char *name, int name_sz, int flags, __u64 *res) = (void *) 179;
+
 
