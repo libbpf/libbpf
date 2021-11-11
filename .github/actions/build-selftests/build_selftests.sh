@@ -2,16 +2,16 @@
 
 set -euo pipefail
 
-source $(cd $(dirname $0) && pwd)/helpers.sh
+THISDIR="$(cd $(dirname $0) && pwd)"
+
+source ${THISDIR}/helpers.sh
 
 travis_fold start prepare_selftests "Building selftests"
-
-sudo apt-get -y install python3-docutils # for rst2man
 
 LLVM_VER=14
 LIBBPF_PATH="${REPO_ROOT}"
 
-PREPARE_SELFTESTS_SCRIPT=${VMTEST_ROOT}/prepare_selftests-${KERNEL}.sh
+PREPARE_SELFTESTS_SCRIPT=${THISDIR}/prepare_selftests-${KERNEL}.sh
 if [ -f "${PREPARE_SELFTESTS_SCRIPT}" ]; then
 	(cd "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" && ${PREPARE_SELFTESTS_SCRIPT})
 fi
@@ -19,9 +19,10 @@ fi
 if [[ "${KERNEL}" = 'LATEST' ]]; then
 	VMLINUX_H=
 else
-	VMLINUX_H=${VMTEST_ROOT}/vmlinux.h
+	VMLINUX_H=${THISDIR}/vmlinux.h
 fi
 
+cd ${REPO_ROOT}/${REPO_PATH}
 make \
 	CLANG=clang-${LLVM_VER} \
 	LLC=llc-${LLVM_VER} \
@@ -29,14 +30,13 @@ make \
 	VMLINUX_BTF="${VMLINUX_BTF}" \
 	VMLINUX_H=${VMLINUX_H} \
 	-C "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
-	-j $((4*$(nproc))) >/dev/null
+	-j $((4*$(nproc))) > /dev/null
+cd -
 mkdir ${LIBBPF_PATH}/selftests
 cp -R "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
 	${LIBBPF_PATH}/selftests
 cd ${LIBBPF_PATH}
 rm selftests/bpf/.gitignore
 git add selftests
-
-git add "${VMTEST_ROOT}"/configs/blacklist/BLACKLIST-* "${VMTEST_ROOT}"/configs/whitelist/WHITELIST-*
 
 travis_fold end prepare_selftests
