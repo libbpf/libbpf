@@ -5,31 +5,78 @@ inputs:
     description: 'kernel version or LATEST'
     required: true
     default: 'LATEST'
-  kernel-rev:
-    description: 'CHECKPOINT or rev/tag/branch'
+  arch:
+    description: 'what arch to test'
     required: true
-    default: 'CHECKPOINT'
-  kernel-origin:
-    description: 'kernel repo'
-    required: true
-    default: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
+    default: 'x86_64'
   pahole:
-    description: 'pahole rev/tag/branch'
+    description: 'pahole rev or master'
     required: true
     default: 'master'
-  pahole-origin:
-    description: 'pahole repo'
-    required: true
-    default: 'https://git.kernel.org/pub/scm/devel/pahole/pahole.git'
 runs:
   using: "composite"
   steps:
-    - run: |
-        source /tmp/ci_setup
-        export KERNEL=${{ inputs.kernel }}
-        export KERNEL_BRANCH=${{ inputs.kernel-rev }}
-        export KERNEL_ORIGIN=${{ inputs.kernel-origin }}
-        export PAHOLE_BRANCH=${{ inputs.pahole }}
-        export PAHOLE_ORIGIN=${{ inputs.pahole-origin }}
-        $CI_ROOT/vmtest/run_vmtest.sh
+    # setup envinronment
+    - name: Setup environment
+      uses: libbpf/ci/setup-build-env@master
+      with:
+        pahole: ${{ inputs.pahole }}
+    # 1. download CHECKPOINT kernel source
+    - name: Get checkpoint commit
       shell: bash
+      run: |
+        cat CHECKPOINT-COMMIT
+        echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
+    - name: Get kernel source at checkpoint
+      uses: libbpf/ci/get-linux-source@master
+      with:
+        repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
+        rev: ${{ env.CHECKPOINT }}
+        dest: '${{ github.workspace }}/.kernel'
+    - name: Prepare to build BPF selftests
+      shell: bash
+      run: |
+        echo "::group::Prepare buidling selftest"
+        cd .kernel
+        cp ${{ github.workspace }}/travis-ci/vmtest/configs/config-latest.${{ inputs.arch }} .config
+        make olddefconfig && make prepare
+        cd -
+        echo "::endgroup::"
+    # 2. if kernel == LATEST, build kernel image from tree
+    - name: Build kernel image
+      if: ${{ inputs.kernel == 'LATEST' }}
+      shell: bash
+      run: |
+        echo "::group::Build Kernel Image"
+        cd .kernel
+        make -j $((4*$(nproc))) all > /dev/null
+        cp vmlinux ${{ github.workspace }}
+        cd -
+        echo "::endgroup::"
+    # else, just download prebuilt kernel image
+    - name: Download prebuilt kernel
+      if: ${{ inputs.kernel != 'LATEST' }}
+      uses: libbpf/ci/download-vmlinux@master
+      with:
+        kernel: ${{ inputs.kernel }}
+        arch: ${{ inputs.arch }}
+    # 3. build selftests
+    - name: Build BPF selftests
+      uses: ./.github/actions/build-selftests
+      with:
+        repo-path: '.kernel'
+        kernel: ${{ inputs.kernel }}
+    # 4. prepare rootfs
+    - name: prepare rootfs
+      uses: libbpf/ci/prepare-rootfs@master
+      with:
+        kernel: ${{ inputs.kernel }}
+        project-name: 'libbpf'
+        arch: ${{ inputs.arch }}
+    # 5. run selftest in QEMU
+    - name: Run selftests
+      uses: libbpf/ci/run-qemu@master
+      with:
+        img: '/tmp/root.img'
+        vmlinuz: 'vmlinuz'
+        arch: ${{ inputs.arch }}

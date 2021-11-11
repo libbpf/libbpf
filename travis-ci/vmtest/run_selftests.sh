@@ -4,6 +4,8 @@ set -euo pipefail
 
 source $(cd $(dirname $0) && pwd)/helpers.sh
 
+ARCH=$(uname -m)
+
 STATUS_FILE=/exitstatus
 
 read_lists() {
@@ -47,11 +49,11 @@ test_verifier() {
 
 travis_fold end vm_init
 
-configs_path=libbpf/travis-ci/vmtest/configs
+configs_path=${PROJECT_NAME}/vmtest/configs
 BLACKLIST=$(read_lists "$configs_path/blacklist/BLACKLIST-${KERNEL}" "$configs_path/blacklist/BLACKLIST-${KERNEL}.${ARCH}")
 WHITELIST=$(read_lists "$configs_path/whitelist/WHITELIST-${KERNEL}" "$configs_path/whitelist/WHITELIST-${KERNEL}.${ARCH}")
 
-cd libbpf/selftests/bpf
+cd ${PROJECT_NAME}/selftests/bpf
 
 test_progs
 
