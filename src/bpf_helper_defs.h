@@ -314,7 +314,7 @@ static long (*bpf_l4_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 fr
  * 	if the maximum number of tail calls has been reached for this
  * 	chain of programs. This limit is defined in the kernel by the
  * 	macro **MAX_TAIL_CALL_CNT** (not accessible to user space),
- * 	which is currently set to 32.
+ * 	which is currently set to 33.
  *
  * Returns
  * 	0 on success, or a negative error in case of failure.
