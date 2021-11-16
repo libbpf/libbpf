@@ -475,12 +475,11 @@ guestfish --remote \
 	upload "$tmp" /etc/rcS.d/S50-run-tests : \
 	chmod 755 /etc/rcS.d/S50-run-tests
 
-fold_shutdown="$(travis_fold start shutdown)"
+fold_shutdown="$(travis_fold start shutdown Shutdown)"
 cat <<HERE >"$tmp"
 #!/bin/sh
 
-echo ${fold_shutdown}
-echo -e '\033[1;33mShutdown\033[0m\n'
+echo -e '${fold_shutdown}'
 
 poweroff
 HERE
