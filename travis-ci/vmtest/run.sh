@@ -410,10 +410,20 @@ LIBBPF_PATH="${REPO_ROOT}" \
 	REPO_PATH="${REPO_PATH}" \
 	VMLINUX_BTF=$(realpath ${source_vmlinux}) ${VMTEST_ROOT}/build_selftests.sh
 
+declare -A test_results
+
 travis_fold start bpftool_checks "Running bpftool checks..."
 if [[ "${KERNEL}" = 'LATEST' ]]; then
-	"${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/test_bpftool_synctypes.py" && \
-		echo "Consistency checks passed successfully."
+	# "&& true" does not change the return code (it is not executed if the
+	# Python script fails), but it prevents the trap on ERR set at the top
+	# of this file to trigger on failure.
+	"${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/test_bpftool_synctypes.py" && true
+	test_results["bpftool"]=$?
+	if [[ ${test_results["bpftool"]} -eq 0 ]]; then
+		echo "::notice title=bpftool_checks::bpftool checks passed successfully."
+	else
+		echo "::error title=bpftool_checks::bpftool checks returned ${test_results["bpftool"]}."
+	fi
 else
 	echo "Consistency checks skipped."
 fi
@@ -531,5 +541,22 @@ else
 fi
 
 travis_fold end shutdown
+
+test_results["vm_tests"]=$exitstatus
+
+# Final summary - Don't use a fold, keep it visible
+echo -e "\033[1;33mTest Results:\033[0m"
+for testgroup in ${!test_results[@]}; do
+	# Print final result for each group of tests
+	if [[ ${test_results[$testgroup]} -eq 0 ]]; then
+		printf "%20s: \033[1;32mPASS\033[0m\n" $testgroup
+	else
+		printf "%20s: \033[1;31mFAIL\033[0m\n" $testgroup
+	fi
+	# Make exitstatus > 0 if at least one test group has failed
+	if [[ ${test_results[$testgroup]} -ne 0 ]]; then
+		exitstatus=1
+	fi
+done
 
 exit "$exitstatus"
