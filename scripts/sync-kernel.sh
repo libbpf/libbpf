@@ -263,8 +263,11 @@ cd_to ${LIBBPF_REPO}
 git checkout -b ${LIBBPF_SYNC_TAG}
 
 for patch in $(ls -1 ${TMP_DIR}/patches | tail -n +2); do
-	if ! git am --3way --committer-date-is-author-date "${TMP_DIR}/patches/${patch}"; then
-		read -p "Applying ${TMP_DIR}/patches/${patch} failed, please resolve manually and press <return> to proceed..."
+	if ! git am -3 --committer-date-is-author-date "${TMP_DIR}/patches/${patch}"; then
+		if ! git apply -3 "${TMP_DIR}/patches/${patch}"; then
+			read -p "Applying ${TMP_DIR}/patches/${patch} failed, please resolve manually and press <return> to proceed..."
+		fi
+		git am --continue
 	fi
 done
 
