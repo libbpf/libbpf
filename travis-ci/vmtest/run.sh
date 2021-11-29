@@ -410,22 +410,22 @@ LIBBPF_PATH="${REPO_ROOT}" \
 	REPO_PATH="${REPO_PATH}" \
 	VMLINUX_BTF=$(realpath ${source_vmlinux}) ${VMTEST_ROOT}/build_selftests.sh
 
-declare -A test_results
-
 travis_fold start bpftool_checks "Running bpftool checks..."
+bpftool_exitstatus=
 if [[ "${KERNEL}" = 'LATEST' ]]; then
 	# "&& true" does not change the return code (it is not executed if the
 	# Python script fails), but it prevents the trap on ERR set at the top
 	# of this file to trigger on failure.
 	"${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/test_bpftool_synctypes.py" && true
-	test_results["bpftool"]=$?
-	if [[ ${test_results["bpftool"]} -eq 0 ]]; then
+	bpftool_exitstatus=$?
+	if [[ "$bpftool_exitstatus" -eq 0 ]]; then
 		print_notice bpftool_checks "bpftool checks passed successfully."
 	else
-		print_error bpftool_checks "bpftool checks returned ${test_results["bpftool"]}."
+		print_error bpftool_checks "bpftool checks returned ${bpftool_exitstatus}."
 	fi
+	bpftool_exitstatus="bpftool:${bpftool_exitstatus}"
 else
-	echo "Consistency checks skipped."
+	echo "bpftool checks skipped."
 fi
 travis_fold end bpftool_checks
 
@@ -458,7 +458,7 @@ cat <<HERE >"$tmp"
 "#!/bin/sh
 
 echo 'Skipping setup commands'
-echo 0 > /exitstatus
+echo vm_start:0 > /exitstatus
 chmod 644 /exitstatus
 HERE
 
@@ -476,7 +476,10 @@ set -eux
 echo 'Running setup commands'
 ${setup_envvars}
 set +e; ${setup_cmd}; exitstatus=\$?; set -e
-echo \$exitstatus > /exitstatus
+# If setup command did not write its exit status to /exitstatus, do it now
+if [[ -s /exitstatus ]]; then
+	echo setup_cmd:\$exitstatus > /exitstatus
+fi
 chmod 644 /exitstatus
 HERE
 fi
@@ -533,29 +536,31 @@ fi
   -drive file="$IMG",format=raw,index=1,media=disk,if=virtio,cache=none \
   -kernel "$vmlinuz" -append "root=/dev/vda rw console=$console kernel.panic=-1 $APPEND"
 
-if exitstatus="$(guestfish --ro -a "$IMG" -i cat /exitstatus 2>/dev/null)"; then
+# Set exit status to 1 if at least one group test returned non-0
+exitfile="${bpftool_exitstatus}${bpftool_exitstatus:+\n}"
+exitfile+="$(guestfish --ro -a "$IMG" -i cat /exitstatus 2>/dev/null)"
+exitstatus="$(echo -e "$exitfile" | awk --field-separator ':' \
+	'BEGIN { s=0 } { if ($2) {s=1} } END { print s }')"
+
+if [[ "$exitstatus" =~ ^[0-9]+$ ]]; then
 	printf '\nTests exit status: %s\n' "$exitstatus" >&2
 else
-	printf '\nCould not read tests exit status\n' >&2
+	printf '\nCould not read tests exit status ("%s")\n' "$exitstatus" >&2
 	exitstatus=1
 fi
 
 travis_fold end shutdown
 
-test_results["vm_tests"]=$exitstatus
-
 # Final summary - Don't use a fold, keep it visible
 echo -e "\033[1;33mTest Results:\033[0m"
-for testgroup in ${!test_results[@]}; do
+echo -e "$exitfile" | while read result; do
+	testgroup=${result%:*}
+	status=${result#*:}
 	# Print final result for each group of tests
-	if [[ ${test_results[$testgroup]} -eq 0 ]]; then
-		printf "%20s: \033[1;32mPASS\033[0m\n" $testgroup
+	if [[ "$status" -eq 0 ]]; then
+		printf "%20s: \033[1;32mPASS\033[0m\n" "$testgroup"
 	else
-		printf "%20s: \033[1;31mFAIL\033[0m\n" $testgroup
-	fi
-	# Make exitstatus > 0 if at least one test group has failed
-	if [[ ${test_results[$testgroup]} -ne 0 ]]; then
-		exitstatus=1
+		printf "%20s: \033[1;31mFAIL\033[0m (returned %s)\n" "$testgroup" "$status"
 	fi
 done
 
