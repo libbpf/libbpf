@@ -420,9 +420,9 @@ if [[ "${KERNEL}" = 'LATEST' ]]; then
 	"${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf/test_bpftool_synctypes.py" && true
 	test_results["bpftool"]=$?
 	if [[ ${test_results["bpftool"]} -eq 0 ]]; then
-		echo "::notice title=bpftool_checks::bpftool checks passed successfully."
+		print_notice bpftool_checks "bpftool checks passed successfully."
 	else
-		echo "::error title=bpftool_checks::bpftool checks returned ${test_results["bpftool"]}."
+		print_error bpftool_checks "bpftool checks returned ${test_results["bpftool"]}."
 	fi
 else
 	echo "Consistency checks skipped."
