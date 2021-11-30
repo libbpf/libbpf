@@ -18,6 +18,7 @@ global_data_init
 global_func_args
 hashmap
 l4lb_all
+legacy_printk
 linked_funcs
 linked_maps
 map_lock
