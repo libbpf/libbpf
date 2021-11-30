@@ -301,10 +301,10 @@ if [[ $SKIPIMG -eq 0 && ! -v ROOTFSVERSION ]]; then
 	ROOTFSVERSION="$(newest_rootfs_version)"
 fi
 
+travis_fold start vmlinux_setup "Preparing Linux image"
+
 echo "Kernel release: $KERNELRELEASE" >&2
 echo
-
-travis_fold start vmlinux_setup "Preparing Linux image"
 
 if (( SKIPIMG )); then
 	echo "Not extracting root filesystem" >&2
@@ -475,12 +475,17 @@ set -eux
 
 echo 'Running setup commands'
 ${setup_envvars}
-set +e; ${setup_cmd}; exitstatus=\$?; set -e
+set +e
+${setup_cmd}; exitstatus=\$?
+echo -e '$(travis_fold start collect_status "Collect status")'
+set -e
 # If setup command did not write its exit status to /exitstatus, do it now
 if [[ -s /exitstatus ]]; then
 	echo setup_cmd:\$exitstatus > /exitstatus
 fi
 chmod 644 /exitstatus
+echo -e '$(travis_fold end collect_status)'
+echo -e '$(travis_fold start shutdown Shutdown)'
 HERE
 fi
 
@@ -488,11 +493,8 @@ guestfish --remote \
 	upload "$tmp" /etc/rcS.d/S50-run-tests : \
 	chmod 755 /etc/rcS.d/S50-run-tests
 
-fold_shutdown="$(travis_fold start shutdown Shutdown)"
 cat <<HERE >"$tmp"
 #!/bin/sh
-
-echo -e '${fold_shutdown}'
 
 poweroff
 HERE
