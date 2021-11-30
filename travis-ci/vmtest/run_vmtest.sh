@@ -35,10 +35,12 @@ else
   ${VMTEST_ROOT}/prepare_selftests.sh
 fi
 
+travis_fold start adduser_to_kvm "Add user ${USER}"
+sudo adduser "${USER}" kvm
+travis_fold stop adduser_to_kvm
+
 # Escape whitespace characters.
 setup_cmd=$(sed 's/\([[:space:]]\)/\\\1/g' <<< "${VMTEST_SETUPCMD}")
-
-sudo adduser "${USER}" kvm
 
 if [[ "${KERNEL}" = 'LATEST' ]]; then
   if [[ "$CHECKOUT_KERNEL" == "1" ]]; then
