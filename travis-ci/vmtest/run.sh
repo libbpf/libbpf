@@ -480,7 +480,7 @@ ${setup_cmd}; exitstatus=\$?
 echo -e '$(travis_fold start collect_status "Collect status")'
 set -e
 # If setup command did not write its exit status to /exitstatus, do it now
-if [[ -s /exitstatus ]]; then
+if [[ ! -s /exitstatus ]]; then
 	echo setup_cmd:\$exitstatus > /exitstatus
 fi
 chmod 644 /exitstatus
