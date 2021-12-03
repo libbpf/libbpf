@@ -33,13 +33,14 @@ RUN ln -fs /etc/resolv.conf /usr/x86_64-linux-gnu/etc/
 ENV QEMU_LD_PREFIX=/usr/x86_64-linux-gnu
 
 # amd64 Github Actions Runner.
+ARG version=2.285.0
 RUN useradd -m actions-runner
 RUN echo "actions-runner ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 RUN echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >>/etc/sudoers
 USER actions-runner
 ENV USER=actions-runner
 WORKDIR /home/actions-runner
-RUN curl -L https://github.com/actions/runner/releases/download/v2.283.2/actions-runner-linux-x64-2.283.2.tar.gz | tar -xz
+RUN curl -L https://github.com/actions/runner/releases/download/v${version}/actions-runner-linux-x64-${version}.tar.gz | tar -xz
 VOLUME /home/actions-runner
 
 # Scripts.
