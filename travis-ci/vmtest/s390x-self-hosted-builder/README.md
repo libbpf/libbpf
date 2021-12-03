@@ -62,8 +62,8 @@ $ sudo systemctl restart actions-runner-libbpf
 The `actions-runner-libbpf` service stores various temporary data, such as
 runner  registration information, work directories and logs, in the
 `actions-runner-libbpf` volume. In order to remove it and start from scratch,
-e.g. when switching the runner to a different repository, use the following
-commands:
+e.g. when upgrading the runner or switching it to a different repository, use
+the following commands:
 
 ```
 $ sudo systemctl stop actions-runner-libbpf
