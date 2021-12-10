@@ -4136,4 +4136,32 @@ static long (*bpf_kallsyms_lookup_name)(const char *name, int name_sz, int flags
  */
 static long (*bpf_find_vma)(struct task_struct *task, __u64 addr, void *callback_fn, void *callback_ctx, __u64 flags) = (void *) 180;
 
+/*
+ * bpf_loop
+ *
+ * 	For **nr_loops**, call **callback_fn** function
+ * 	with **callback_ctx** as the context parameter.
+ * 	The **callback_fn** should be a static function and
+ * 	the **callback_ctx** should be a pointer to the stack.
+ * 	The **flags** is used to control certain aspects of the helper.
+ * 	Currently, the **flags** must be 0. Currently, nr_loops is
+ * 	limited to 1 << 23 (~8 million) loops.
+ *
+ * 	long (\*callback_fn)(u32 index, void \*ctx);
+ *
+ * 	where **index** is the current index in the loop. The index
+ * 	is zero-indexed.
+ *
+ * 	If **callback_fn** returns 0, the helper will continue to the next
+ * 	loop. If return value is 1, the helper will skip the rest of
+ * 	the loops and return. Other return values are not used now,
+ * 	and will be rejected by the verifier.
+ *
+ *
+ * Returns
+ * 	The number of loops performed, **-EINVAL** for invalid **flags**,
+ * 	**-E2BIG** if **nr_loops** exceeds the maximum number of loops.
+ */
+static long (*bpf_loop)(__u32 nr_loops, void *callback_fn, void *callback_ctx, __u64 flags) = (void *) 181;
+
 
