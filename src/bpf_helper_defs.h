@@ -4164,4 +4164,55 @@ static long (*bpf_find_vma)(struct task_struct *task, __u64 addr, void *callback
  */
 static long (*bpf_loop)(__u32 nr_loops, void *callback_fn, void *callback_ctx, __u64 flags) = (void *) 181;
 
+/*
+ * bpf_strncmp
+ *
+ * 	Do strncmp() between **s1** and **s2**. **s1** doesn't need
+ * 	to be null-terminated and **s1_sz** is the maximum storage
+ * 	size of **s1**. **s2** must be a read-only string.
+ *
+ * Returns
+ * 	An integer less than, equal to, or greater than zero
+ * 	if the first **s1_sz** bytes of **s1** is found to be
+ * 	less than, to match, or be greater than **s2**.
+ */
+static long (*bpf_strncmp)(const char *s1, __u32 s1_sz, const char *s2) = (void *) 182;
+
+/*
+ * bpf_get_func_arg
+ *
+ * 	Get **n**-th argument (zero based) of the traced function (for tracing programs)
+ * 	returned in **value**.
+ *
+ *
+ * Returns
+ * 	0 on success.
+ * 	**-EINVAL** if n >= arguments count of traced function.
+ */
+static long (*bpf_get_func_arg)(void *ctx, __u32 n, __u64 *value) = (void *) 183;
+
+/*
+ * bpf_get_func_ret
+ *
+ * 	Get return value of the traced function (for tracing programs)
+ * 	in **value**.
+ *
+ *
+ * Returns
+ * 	0 on success.
+ * 	**-EOPNOTSUPP** for tracing programs other than BPF_TRACE_FEXIT or BPF_MODIFY_RETURN.
+ */
+static long (*bpf_get_func_ret)(void *ctx, __u64 *value) = (void *) 184;
+
+/*
+ * bpf_get_func_arg_cnt
+ *
+ * 	Get number of arguments of the traced function (for tracing programs).
+ *
+ *
+ * Returns
+ * 	The number of arguments of the traced function.
+ */
+static long (*bpf_get_func_arg_cnt)(void *ctx) = (void *) 185;
+
 
