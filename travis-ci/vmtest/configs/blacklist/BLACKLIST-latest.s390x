@@ -3,6 +3,7 @@ atomics                                  # attach(add): actual -524 <= expected 
 bpf_iter_setsockopt                      # JIT does not support calling kernel function                                (kfunc)
 bloom_filter_map                         # failed to find kernel BTF type ID of '__x64_sys_getpgid': -3                (?)
 bpf_tcp_ca                               # JIT does not support calling kernel function                                (kfunc)
+bpf_loop                                 # attaches to __x64_sys_nanosleep
 core_read_macros                         # unknown func bpf_probe_read#4                                               (overlapping)
 d_path                                   # failed to auto-attach program 'prog_stat': -524                             (trampoline)
 dummy_st_ops                             # test_run unexpected error: -524 (errno 524)                                 (trampoline)
@@ -12,6 +13,7 @@ fexit_bpf2bpf                            # freplace_attach_trace unexpected erro
 fexit_sleep                              # fexit_skel_load fexit skeleton failed                                       (trampoline)
 fexit_stress                             # fexit attach failed prog 0 failed: -524                                     (trampoline)
 fexit_test                               # fexit_first_attach unexpected error: -524                                   (trampoline)
+get_func_args_test	                 # trampoline
 get_func_ip_test                         # get_func_ip_test__attach unexpected error: -524                             (trampoline)
 get_stack_raw_tp                         # user_stack corrupted user stack                                             (no backchain userspace)
 kfree_skb                                # attach fentry unexpected error: -524                                        (trampoline)
