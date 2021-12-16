@@ -1791,7 +1791,14 @@ CONFIG_BCMA_POSSIBLE=y
 # end of Multifunction device drivers
 
 # CONFIG_REGULATOR is not set
-# CONFIG_RC_CORE is not set
+CONFIG_RC_CORE=y
+# CONFIG_RC_MAP is not set
+CONFIG_LIRC=y
+CONFIG_BPF_LIRC_MODE2=y
+# CONFIG_RC_DECODERS is not set
+CONFIG_RC_DEVICES=y
+CONFIG_RC_LOOPBACK=y
+# CONFIG_IR_SERIAL is not set
 # CONFIG_MEDIA_CEC_SUPPORT is not set
 # CONFIG_MEDIA_SUPPORT is not set
 
