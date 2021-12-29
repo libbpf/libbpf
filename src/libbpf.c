@@ -1447,7 +1447,7 @@ static size_t bpf_map_mmap_sz(const struct bpf_map *map)
 
 static char *internal_map_name(struct bpf_object *obj, const char *real_name)
 {
-	char map_name[BPF_OBJ_NAME_LEN], *p;
+	char map_name[BPF_OBJ_NAME_LEN] = {}, *p;
 	int pfx_len, sfx_len = max((size_t)7, strlen(real_name));
 
 	/* This is one of the more confusing parts of libbpf for various
