@@ -25,7 +25,7 @@ set -eux
 /bin/mount proc /proc -t proc
 
 # Mount devtmpfs if not mounted
-if [[ -z $(/bin/mount -l -t devtmpfs) ]]; then
+if [[ -z $(/bin/mount -t devtmpfs) ]]; then
 	/bin/mount devtmpfs /dev -t devtmpfs
 fi
 
