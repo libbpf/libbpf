@@ -43,7 +43,7 @@ For example:
     ptr = some_libbpf_api_returning_ptr();
     if (!ptr) {
         /* note no minus sign for EINVAL and E2BIG below */
-        if (errno = EINVAL) {
+        if (errno == EINVAL) {
            /* handle EINVAL error */
         } else if (errno == E2BIG) {
            /* handle E2BIG error */
