@@ -352,6 +352,7 @@ static long (*bpf_clone_redirect)(struct __sk_buff *skb, __u32 ifindex, __u64 fl
 /*
  * bpf_get_current_pid_tgid
  *
+ * 	Get the current pid and tgid.
  *
  * Returns
  * 	A 64-bit integer containing the current tgid and pid, and
@@ -364,6 +365,7 @@ static __u64 (*bpf_get_current_pid_tgid)(void) = (void *) 14;
 /*
  * bpf_get_current_uid_gid
  *
+ * 	Get the current uid and gid.
  *
  * Returns
  * 	A 64-bit integer containing the current GID and UID, and
@@ -919,6 +921,7 @@ static __u32 (*bpf_get_hash_recalc)(struct __sk_buff *skb) = (void *) 34;
 /*
  * bpf_get_current_task
  *
+ * 	Get the current task.
  *
  * Returns
  * 	A pointer to the current task struct.
@@ -1057,6 +1060,8 @@ static __s64 (*bpf_csum_update)(struct __sk_buff *skb, __wsum csum) = (void *) 4
  * 	recalculation the next time the kernel tries to access this
  * 	hash or when the **bpf_get_hash_recalc**\ () helper is called.
  *
+ * Returns
+ * 	void.
  */
 static void (*bpf_set_hash_invalid)(struct __sk_buff *skb) = (void *) 41;
 
@@ -1156,6 +1161,7 @@ static __u64 (*bpf_get_socket_cookie)(void *ctx) = (void *) 46;
 /*
  * bpf_get_socket_uid
  *
+ * 	Get the owner UID of the socked associated to *skb*.
  *
  * Returns
  * 	The owner UID of the socket associated to *skb*. If the socket
@@ -2063,6 +2069,8 @@ static __u64 (*bpf_skb_cgroup_id)(struct __sk_buff *skb) = (void *) 79;
 /*
  * bpf_get_current_cgroup_id
  *
+ * 	Get the current cgroup id based on the cgroup within which
+ * 	the current task is running.
  *
  * Returns
  * 	A 64-bit integer containing the current cgroup id based
@@ -4214,5 +4222,29 @@ static long (*bpf_get_func_ret)(void *ctx, __u64 *value) = (void *) 184;
  * 	The number of arguments of the traced function.
  */
 static long (*bpf_get_func_arg_cnt)(void *ctx) = (void *) 185;
+
+/*
+ * bpf_get_retval
+ *
+ * 	Get the syscall's return value that will be returned to userspace.
+ *
+ * 	This helper is currently supported by cgroup programs only.
+ *
+ * Returns
+ * 	The syscall's return value.
+ */
+static int (*bpf_get_retval)(void) = (void *) 186;
+
+/*
+ * bpf_set_retval
+ *
+ * 	Set the syscall's return value that will be returned to userspace.
+ *
+ * 	This helper is currently supported by cgroup programs only.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static int (*bpf_set_retval)(int retval) = (void *) 187;
 
 
