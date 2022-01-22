@@ -4,6 +4,8 @@ bpf_iter_setsockopt                      # JIT does not support calling kernel f
 bloom_filter_map                         # failed to find kernel BTF type ID of '__x64_sys_getpgid': -3                (?)
 bpf_tcp_ca                               # JIT does not support calling kernel function                                (kfunc)
 bpf_loop                                 # attaches to __x64_sys_nanosleep
+bpf_mod_race                             # BPF trampoline
+bpf_nf                                   # JIT does not support calling kernel function
 core_read_macros                         # unknown func bpf_probe_read#4                                               (overlapping)
 d_path                                   # failed to auto-attach program 'prog_stat': -524                             (trampoline)
 dummy_st_ops                             # test_run unexpected error: -524 (errno 524)                                 (trampoline)
