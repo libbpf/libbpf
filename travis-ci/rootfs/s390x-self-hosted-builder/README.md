@@ -10,7 +10,8 @@ the master branch.
 ### Install prerequisites.
 
 ```
-$ sudo dnf install docker
+$ sudo dnf install docker        # RHEL
+$ sudo apt install -y docker.io  # Ubuntu
 ```
 
 ### Add services.
@@ -53,14 +54,15 @@ get the latest OS security fixes, use the following commands:
 $ sudo docker build \
       --pull \
       -f actions-runner-libbpf.Dockerfile \
-      -t iiilinuxibmcom/actions-runner-libbpf
+      -t iiilinuxibmcom/actions-runner-libbpf \
+      .
 $ sudo systemctl restart actions-runner-libbpf
 ```
 
 ## Removing persistent data
 
 The `actions-runner-libbpf` service stores various temporary data, such as
-runner  registration information, work directories and logs, in the
+runner registration information, work directories and logs, in the
 `actions-runner-libbpf` volume. In order to remove it and start from scratch,
 e.g. when upgrading the runner or switching it to a different repository, use
 the following commands:
