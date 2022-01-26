@@ -47,6 +47,7 @@ PATH_MAP=(									\
 	[tools/include/uapi/linux/netlink.h]=include/uapi/linux/netlink.h	\
 	[tools/include/uapi/linux/pkt_cls.h]=include/uapi/linux/pkt_cls.h	\
 	[tools/include/uapi/linux/pkt_sched.h]=include/uapi/linux/pkt_sched.h	\
+	[include/uapi/linux/perf_event.h]=include/uapi/linux/perf_event.h	\
 	[Documentation/bpf/libbpf]=docs						\
 )
 
