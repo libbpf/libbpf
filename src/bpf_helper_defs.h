@@ -4247,4 +4247,52 @@ static int (*bpf_get_retval)(void) = (void *) 186;
  */
 static int (*bpf_set_retval)(int retval) = (void *) 187;
 
+/*
+ * bpf_xdp_get_buff_len
+ *
+ * 	Get the total size of a given xdp buff (linear and paged area)
+ *
+ * Returns
+ * 	The total size of a given xdp buffer.
+ */
+static __u64 (*bpf_xdp_get_buff_len)(struct xdp_md *xdp_md) = (void *) 188;
+
+/*
+ * bpf_xdp_load_bytes
+ *
+ * 	This helper is provided as an easy way to load data from a
+ * 	xdp buffer. It can be used to load *len* bytes from *offset* from
+ * 	the frame associated to *xdp_md*, into the buffer pointed by
+ * 	*buf*.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static long (*bpf_xdp_load_bytes)(struct xdp_md *xdp_md, __u32 offset, void *buf, __u32 len) = (void *) 189;
+
+/*
+ * bpf_xdp_store_bytes
+ *
+ * 	Store *len* bytes from buffer *buf* into the frame
+ * 	associated to *xdp_md*, at *offset*.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static long (*bpf_xdp_store_bytes)(struct xdp_md *xdp_md, __u32 offset, void *buf, __u32 len) = (void *) 190;
+
+/*
+ * bpf_copy_from_user_task
+ *
+ * 	Read *size* bytes from user space address *user_ptr* in *tsk*'s
+ * 	address space, and stores the data in *dst*. *flags* is not
+ * 	used yet and is provided for future extensibility. This helper
+ * 	can only be used by sleepable programs.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure. On error
+ * 	*dst* buffer is zeroed out.
+ */
+static long (*bpf_copy_from_user_task)(void *dst, __u32 size, const void *user_ptr, struct task_struct *tsk, __u64 flags) = (void *) 191;
+
 
