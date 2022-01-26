@@ -37,6 +37,7 @@ ARG version=2.285.0
 RUN useradd -m actions-runner
 RUN echo "actions-runner ALL=(ALL) NOPASSWD: ALL" >>/etc/sudoers
 RUN echo "Defaults env_keep += \"DEBIAN_FRONTEND\"" >>/etc/sudoers
+RUN usermod -a -G kvm actions-runner
 USER actions-runner
 ENV USER=actions-runner
 WORKDIR /home/actions-runner
