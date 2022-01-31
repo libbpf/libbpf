@@ -22,10 +22,10 @@ export LIB_FUZZING_ENGINE=${LIB_FUZZING_ENGINE:--fsanitize=fuzzer}
 # fail to compile (for example, elfutils-0.185 fails to compile with LDFLAGS enabled
 # due to https://bugs.gentoo.org/794601) so let's just point the script to
 # commits referring to versions of libelf that actually can be built
-elfutils=$(mktemp -d)
-git clone git://sourceware.org/git/elfutils.git "$elfutils"
+rm -rf elfutils
+git clone git://sourceware.org/git/elfutils.git
 (
-cd "$elfutils"
+cd elfutils
 git checkout 983e86fd89e8bf02f2d27ba5dce5bf078af4ceda
 git log --oneline -1
 
@@ -50,11 +50,9 @@ make -C libelf -j$(nproc) V=1
 )
 
 make -C src BUILD_STATIC_ONLY=y V=1 clean
-make -C src -j$(nproc) CFLAGS="-I$elfutils/libelf $CFLAGS" BUILD_STATIC_ONLY=y V=1
+make -C src -j$(nproc) CFLAGS="-I$(pwd)/elfutils/libelf $CFLAGS" BUILD_STATIC_ONLY=y V=1
 
 $CC $CFLAGS -Isrc -Iinclude -Iinclude/uapi -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64  -c fuzz/bpf-object-fuzzer.c -o bpf-object-fuzzer.o
-$CXX $CXXFLAGS $LIB_FUZZING_ENGINE bpf-object-fuzzer.o src/libbpf.a "$elfutils/libelf/libelf.a" -l:libz.a -o "$OUT/bpf-object-fuzzer"
+$CXX $CXXFLAGS $LIB_FUZZING_ENGINE bpf-object-fuzzer.o src/libbpf.a "$(pwd)/elfutils/libelf/libelf.a" -l:libz.a -o "$OUT/bpf-object-fuzzer"
 
 cp fuzz/bpf-object-fuzzer_seed_corpus.zip "$OUT"
-
-rm -rf "$elfutils"
