@@ -214,6 +214,7 @@
 #define __PT_RC_REG a5
 #define __PT_SP_REG sp
 #define __PT_IP_REG pc
+#define PT_REGS_SYSCALL_REGS(ctx) ctx
 
 #endif
 
