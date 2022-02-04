@@ -213,7 +213,7 @@
 #define __PT_FP_REG fp
 #define __PT_RC_REG a5
 #define __PT_SP_REG sp
-#define __PT_IP_REG epc
+#define __PT_IP_REG pc
 
 #endif
 
