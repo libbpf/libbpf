@@ -117,6 +117,7 @@
 /* s390 provides user_pt_regs instead of struct pt_regs to userspace */
 #define __PT_REGS_CAST(x) ((const user_pt_regs *)(x))
 #define __PT_PARM1_REG gprs[2]
+#define __PT_PARM1_REG_SYSCALL orig_gpr2
 #define __PT_PARM2_REG gprs[3]
 #define __PT_PARM3_REG gprs[4]
 #define __PT_PARM4_REG gprs[5]
