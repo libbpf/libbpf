@@ -145,6 +145,7 @@
 /* arm64 provides struct user_pt_regs instead of struct pt_regs to userspace */
 #define __PT_REGS_CAST(x) ((const struct user_pt_regs *)(x))
 #define __PT_PARM1_REG regs[0]
+#define __PT_PARM1_REG_SYSCALL orig_x0
 #define __PT_PARM2_REG regs[1]
 #define __PT_PARM3_REG regs[2]
 #define __PT_PARM4_REG regs[3]
