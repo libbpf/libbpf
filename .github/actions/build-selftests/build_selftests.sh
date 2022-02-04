@@ -8,7 +8,7 @@ source ${THISDIR}/helpers.sh
 
 travis_fold start prepare_selftests "Building selftests"
 
-LLVM_VER=14
+LLVM_VER=15
 LIBBPF_PATH="${REPO_ROOT}"
 
 PREPARE_SELFTESTS_SCRIPT=${THISDIR}/prepare_selftests-${KERNEL}.sh
