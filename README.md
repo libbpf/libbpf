@@ -73,34 +73,6 @@ $ cd src
 $ PKG_CONFIG_PATH=/build/root/lib64/pkgconfig DESTDIR=/build/root make install
 ```
 
-Distributions
-=============
-
-Distributions packaging libbpf from this mirror:
-  - [Fedora](https://src.fedoraproject.org/rpms/libbpf)
-  - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
-  - [Debian](https://packages.debian.org/source/sid/libbpf)
-  - [Arch](https://www.archlinux.org/packages/extra/x86_64/libbpf/)
-  - [Ubuntu](https://packages.ubuntu.com/source/impish/libbpf)
-  - [Alpine](https://pkgs.alpinelinux.org/packages?name=libbpf)
-
-Benefits of packaging from the mirror over packaging from kernel sources:
-  - Consistent versioning across distributions.
-  - No ties to any specific kernel, transparent handling of older kernels.
-    Libbpf is designed to be kernel-agnostic and work across multitude of
-    kernel versions. It has built-in mechanisms to gracefully handle older
-    kernels, that are missing some of the features, by working around or
-    gracefully degrading functionality. Thus libbpf is not tied to a specific
-    kernel version and can/should be packaged and versioned independently.
-  - Continuous integration testing via
-    [TravisCI](https://travis-ci.org/libbpf/libbpf).
-  - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf)
-    and [Coverity](https://scan.coverity.com/projects/libbpf).
-
-Package dependencies of libbpf, package names may vary across distros:
-  - zlib
-  - libelf
-
 BPF CO-RE (Compile Once – Run Everywhere)
 =========================================
 
@@ -153,6 +125,36 @@ use it:
   contain lots of real-world tools converted from BCC to BPF CO-RE. Consider
   converting some more to both contribute to the BPF community and gain some
   more experience with it.
+
+Distributions
+=============
+
+Distributions packaging libbpf from this mirror:
+  - [Fedora](https://src.fedoraproject.org/rpms/libbpf)
+  - [Gentoo](https://packages.gentoo.org/packages/dev-libs/libbpf)
+  - [Debian](https://packages.debian.org/source/sid/libbpf)
+  - [Arch](https://www.archlinux.org/packages/extra/x86_64/libbpf/)
+  - [Ubuntu](https://packages.ubuntu.com/source/impish/libbpf)
+  - [Alpine](https://pkgs.alpinelinux.org/packages?name=libbpf)
+
+Benefits of packaging from the mirror over packaging from kernel sources:
+  - Consistent versioning across distributions.
+  - No ties to any specific kernel, transparent handling of older kernels.
+    Libbpf is designed to be kernel-agnostic and work across multitude of
+    kernel versions. It has built-in mechanisms to gracefully handle older
+    kernels, that are missing some of the features, by working around or
+    gracefully degrading functionality. Thus libbpf is not tied to a specific
+    kernel version and can/should be packaged and versioned independently.
+  - Continuous integration testing via
+    [TravisCI](https://travis-ci.org/libbpf/libbpf).
+  - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf)
+    and [Coverity](https://scan.coverity.com/projects/libbpf).
+
+Package dependencies of libbpf, package names may vary across distros:
+  - zlib
+  - libelf
+
+[![libbpf distro packaging status](https://repology.org/badge/vertical-allrepos/libbpf.svg)](https://repology.org/project/libbpf/versions)
 
 License
 =======
