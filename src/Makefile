@@ -8,10 +8,15 @@ else
 	msg = @printf '  %-8s %s%s\n' "$(1)" "$(2)" "$(if $(3), $(3))";
 endif
 
-LIBBPF_VERSION := $(shell \
-	grep -oE '^LIBBPF_([0-9.]+)' libbpf.map | \
-	sort -rV | head -n1 | cut -d'_' -f2)
-LIBBPF_MAJOR_VERSION := $(firstword $(subst ., ,$(LIBBPF_VERSION)))
+LIBBPF_MAJOR_VERSION := 0
+LIBBPF_MINOR_VERSION := 7
+LIBBPF_PATCH_VERSION := 0
+LIBBPF_VERSION := $(LIBBPF_MAJOR_VERSION).$(LIBBPF_MINOR_VERSION).$(LIBBPF_PATCH_VERSION)
+LIBBPF_MAJMIN_VERSION := $(LIBBPF_MAJOR_VERSION).$(LIBBPF_MINOR_VERSION).0
+LIBBPF_MAP_VERSION := $(shell grep -oE '^LIBBPF_([0-9.]+)' libbpf.map | sort -rV | head -n1 | cut -d'_' -f2)
+ifneq ($(LIBBPF_MAJMIN_VERSION), $(LIBBPF_MAP_VERSION))
+$(error Libbpf release ($(LIBBPF_VERSION)) and map ($(LIBBPF_MAP_VERSION)) versions are out of sync!)
+endif
 
 TOPDIR = ..
 
@@ -99,7 +104,7 @@ $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(SHARED_OBJS)
 		  -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
 		  $^ $(ALL_LDFLAGS) -o $@
 
-$(OBJDIR)/libbpf.pc:
+$(OBJDIR)/libbpf.pc: force
 	$(Q)sed -e "s|@PREFIX@|$(PREFIX)|" \
 		-e "s|@LIBDIR@|$(LIBDIR_PC)|" \
 		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
@@ -152,7 +157,7 @@ clean:
 	$(call msg,CLEAN)
 	$(Q)rm -rf *.o *.a *.so *.so.* *.pc $(SHARED_OBJDIR) $(STATIC_OBJDIR)
 
-.PHONY: cscope tags
+.PHONY: cscope tags force
 cscope:
 	$(call msg,CSCOPE)
 	$(Q)ls *.c *.h > cscope.files
@@ -162,3 +167,5 @@ tags:
 	$(call msg,CTAGS)
 	$(Q)rm -f TAGS tags
 	$(Q)ls *.c *.h | xargs $(TAGS_PROG) -a
+
+force:
