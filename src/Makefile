@@ -20,7 +20,7 @@ endif
 
 TOPDIR = ..
 
-INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
+INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi -I$(TOPDIR)/include/uapi/linux
 ALL_CFLAGS := $(INCLUDES)
 
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
