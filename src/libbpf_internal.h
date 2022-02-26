@@ -31,6 +31,10 @@
 #define EM_BPF 247
 #endif
 
+#ifndef F_DUPFD_CLOEXEC
+#define F_DUPFD_CLOEXEC 1030
+#endif
+
 #ifndef R_BPF_64_64
 #define R_BPF_64_64 1
 #endif
