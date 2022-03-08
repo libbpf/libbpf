@@ -4295,4 +4295,39 @@ static long (*bpf_xdp_store_bytes)(struct xdp_md *xdp_md, __u32 offset, void *bu
  */
 static long (*bpf_copy_from_user_task)(void *dst, __u32 size, const void *user_ptr, struct task_struct *tsk, __u64 flags) = (void *) 191;
 
+/*
+ * bpf_skb_set_delivery_time
+ *
+ * 	Set a *dtime* (delivery time) to the __sk_buff->tstamp and also
+ * 	change the __sk_buff->delivery_time_type to *dtime_type*.
+ *
+ * 	When setting a delivery time (non zero *dtime*) to
+ * 	__sk_buff->tstamp, only BPF_SKB_DELIVERY_TIME_MONO *dtime_type*
+ * 	is supported.  It is the only delivery_time_type that will be
+ * 	kept after bpf_redirect_*().
+ *
+ * 	If there is no need to change the __sk_buff->delivery_time_type,
+ * 	the delivery time can be directly written to __sk_buff->tstamp
+ * 	instead.
+ *
+ * 	*dtime* 0 and *dtime_type* BPF_SKB_DELIVERY_TIME_NONE
+ * 	can be used to clear any delivery time stored in
+ * 	__sk_buff->tstamp.
+ *
+ * 	Only IPv4 and IPv6 skb->protocol are supported.
+ *
+ * 	This function is most useful when it needs to set a
+ * 	mono delivery time to __sk_buff->tstamp and then
+ * 	bpf_redirect_*() to the egress of an iface.  For example,
+ * 	changing the (rcv) timestamp in __sk_buff->tstamp at
+ * 	ingress to a mono delivery time and then bpf_redirect_*()
+ * 	to sch_fq@phy-dev.
+ *
+ * Returns
+ * 	0 on success.
+ * 	**-EINVAL** for invalid input
+ * 	**-EOPNOTSUPP** for unsupported delivery_time_type and protocol
+ */
+static long (*bpf_skb_set_delivery_time)(struct __sk_buff *skb, __u64 dtime, __u32 dtime_type) = (void *) 192;
+
 
