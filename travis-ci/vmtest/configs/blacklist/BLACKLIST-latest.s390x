@@ -30,6 +30,7 @@ probe_user                               # check_kprobe_res wrong kprobe res fro
 recursion                                # skel_attach unexpected error: -524                                          (trampoline)
 ringbuf                                  # skel_load skeleton load failed                                              (?)
 sk_assign                                # Can't read on server: Invalid argument                                      (?)
+sk_lookup                                # endianness problem
 sk_storage_tracing                       # test_sk_storage_tracing__attach unexpected error: -524                      (trampoline)
 skc_to_unix_sock                         # could not attach BPF object unexpected error: -524                          (trampoline)
 socket_cookie                            # prog_attach unexpected error: -524                                          (trampoline)
@@ -44,6 +45,7 @@ test_lsm                                 # failed to find kernel BTF type ID of 
 test_overhead                            # attach_fentry unexpected error: -524                                        (trampoline)
 test_profiler                            # unknown func bpf_probe_read_str#45                                          (overlapping)
 timer                                    # failed to auto-attach program 'test1': -524                                 (trampoline)
+timer_crash                              # trampoline
 timer_mim                                # failed to auto-attach program 'test1': -524                                 (trampoline)
 trace_ext                                # failed to auto-attach program 'test_pkt_md_access_new': -524                (trampoline)
 trace_printk                             # trace_printk__load unexpected error: -2 (errno 2)                           (?)
