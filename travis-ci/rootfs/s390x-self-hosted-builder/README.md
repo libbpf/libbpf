@@ -1,16 +1,25 @@
 # IBM Z self-hosted builder
 
 libbpf CI uses an IBM-provided z15 self-hosted builder. There are no IBM Z
-builds of GitHub Actions runner, and stable qemu-user has problems with .NET
+builds of GitHub (GH) Actions runner, and stable qemu-user has problems with .NET
 apps, so the builder runs the x86_64 runner version with qemu-user built from
 the master branch.
+
+We are currently supporting runners for the following repositories:
+* libbpf/libbpf
+* kernel-patches/bpf
+* kernel-patches/vmtest
+
+Below instructions are directly applicable to libbpf, and require minor
+modifications for kernel-patches repos. Currently, qemu-user-static Docker
+image is shared between all GitHub runners, but separate actions-runner-\*
+service / Docker image is created for each runner type.
 
 ## Configuring the builder.
 
 ### Install prerequisites.
 
 ```
-$ sudo dnf install docker        # RHEL
 $ sudo apt install -y docker.io  # Ubuntu
 ```
 
@@ -34,6 +43,10 @@ https://docs.github.com/en/rest/reference/actions#create-a-registration-token-fo
 for details.
 
 ### Autostart the x86_64 emulation support.
+
+This step is important, you would not be able to build docker container
+without having this service running. If container build fails, make sure
+service is running properly.
 
 ```
 $ sudo systemctl enable --now qemu-user-static
@@ -71,4 +84,24 @@ the following commands:
 $ sudo systemctl stop actions-runner-libbpf
 $ sudo docker rm -f actions-runner-libbpf
 $ sudo docker volume rm actions-runner-libbpf
+```
+
+## Troubleshooting
+
+In order to check if service is running, use the following command:
+
+```
+$ sudo systemctl status <service name>
+```
+
+In order to get logs for service:
+
+```
+$ journalctl -u <service name>
+```
+
+In order to check which containers are currently active:
+
+```
+$ sudo docker ps
 ```
