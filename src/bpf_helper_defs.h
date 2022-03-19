@@ -961,8 +961,8 @@ static long (*bpf_probe_write_user)(void *dst, const void *src, __u32 len) = (vo
  * Returns
  * 	The return value depends on the result of the test, and can be:
  *
- * 	* 0, if current task belongs to the cgroup2.
- * 	* 1, if current task does not belong to the cgroup2.
+ * 	* 1, if current task belongs to the cgroup2.
+ * 	* 0, if current task does not belong to the cgroup2.
  * 	* A negative error code, if an error occurred.
  */
 static long (*bpf_current_task_under_cgroup)(void *map, __u32 index) = (void *) 37;
@@ -4296,23 +4296,22 @@ static long (*bpf_xdp_store_bytes)(struct xdp_md *xdp_md, __u32 offset, void *bu
 static long (*bpf_copy_from_user_task)(void *dst, __u32 size, const void *user_ptr, struct task_struct *tsk, __u64 flags) = (void *) 191;
 
 /*
- * bpf_skb_set_delivery_time
+ * bpf_skb_set_tstamp
  *
- * 	Set a *dtime* (delivery time) to the __sk_buff->tstamp and also
- * 	change the __sk_buff->delivery_time_type to *dtime_type*.
+ * 	Change the __sk_buff->tstamp_type to *tstamp_type*
+ * 	and set *tstamp* to the __sk_buff->tstamp together.
  *
- * 	When setting a delivery time (non zero *dtime*) to
- * 	__sk_buff->tstamp, only BPF_SKB_DELIVERY_TIME_MONO *dtime_type*
- * 	is supported.  It is the only delivery_time_type that will be
- * 	kept after bpf_redirect_*().
- *
- * 	If there is no need to change the __sk_buff->delivery_time_type,
- * 	the delivery time can be directly written to __sk_buff->tstamp
+ * 	If there is no need to change the __sk_buff->tstamp_type,
+ * 	the tstamp value can be directly written to __sk_buff->tstamp
  * 	instead.
  *
- * 	*dtime* 0 and *dtime_type* BPF_SKB_DELIVERY_TIME_NONE
- * 	can be used to clear any delivery time stored in
- * 	__sk_buff->tstamp.
+ * 	BPF_SKB_TSTAMP_DELIVERY_MONO is the only tstamp that
+ * 	will be kept during bpf_redirect_*().  A non zero
+ * 	*tstamp* must be used with the BPF_SKB_TSTAMP_DELIVERY_MONO
+ * 	*tstamp_type*.
+ *
+ * 	A BPF_SKB_TSTAMP_UNSPEC *tstamp_type* can only be used
+ * 	with a zero *tstamp*.
  *
  * 	Only IPv4 and IPv6 skb->protocol are supported.
  *
@@ -4326,8 +4325,22 @@ static long (*bpf_copy_from_user_task)(void *dst, __u32 size, const void *user_p
  * Returns
  * 	0 on success.
  * 	**-EINVAL** for invalid input
- * 	**-EOPNOTSUPP** for unsupported delivery_time_type and protocol
+ * 	**-EOPNOTSUPP** for unsupported protocol
  */
-static long (*bpf_skb_set_delivery_time)(struct __sk_buff *skb, __u64 dtime, __u32 dtime_type) = (void *) 192;
+static long (*bpf_skb_set_tstamp)(struct __sk_buff *skb, __u64 tstamp, __u32 tstamp_type) = (void *) 192;
+
+/*
+ * bpf_ima_file_hash
+ *
+ * 	Returns a calculated IMA hash of the *file*.
+ * 	If the hash is larger than *size*, then only *size*
+ * 	bytes will be copied to *dst*
+ *
+ * Returns
+ * 	The **hash_algo** is returned on success,
+ * 	**-EOPNOTSUP** if the hash calculation failed or **-EINVAL** if
+ * 	invalid arguments are passed.
+ */
+static long (*bpf_ima_file_hash)(struct file *file, void *dst, __u32 size) = (void *) 193;
 
 
