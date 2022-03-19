@@ -25,6 +25,7 @@ ksyms_module_libbpf                      # JIT does not support calling kernel f
 ksyms_module_lskel                       # test_ksyms_module_lskel__open_and_load unexpected error: -9                 (?)
 modify_return                            # modify_return attach failed: -524                                           (trampoline)
 module_attach                            # skel_attach skeleton attach failed: -524                                    (trampoline)
+kprobe_multi_test                        # relies on fentry
 netcnt                                   # failed to load BPF skeleton 'netcnt_prog': -7                               (?)
 probe_user                               # check_kprobe_res wrong kprobe res from probe read                           (?)
 recursion                                # skel_attach unexpected error: -524                                          (trampoline)
@@ -56,3 +57,8 @@ vmlinux                                  # failed to auto-attach program 'handle
 xdp_adjust_tail                          # case-128 err 0 errno 28 retval 1 size 128 expect-size 3520                  (?)
 xdp_bonding                              # failed to auto-attach program 'trace_on_entry': -524                        (trampoline)
 xdp_bpf2bpf                              # failed to auto-attach program 'trace_on_entry': -524                        (trampoline)
+map_kptr                                 # failed to open_and_load program: -524 (trampoline)
+bpf_cookie                               # failed to open_and_load program: -524 (trampoline)
+xdp_do_redirect                          # prog_run_max_size unexpected error: -22 (errno 22)
+send_signal                              # intermittently fails to receive signal
+select_reuseport                         # intermittently fails on new s390x setup
