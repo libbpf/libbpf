@@ -1752,8 +1752,8 @@ static long (*bpf_skb_get_xfrm_state)(struct __sk_buff *skb, __u32 index, struct
  * 		# sysctl kernel.perf_event_max_stack=<new value>
  *
  * Returns
- * 	A non-negative value equal to or less than *size* on success,
- * 	or a negative error in case of failure.
+ * 	The non-negative copied *buf* length equal to or less than
+ * 	*size* on success, or a negative error in case of failure.
  */
 static long (*bpf_get_stack)(void *ctx, void *buf, __u32 size, __u64 flags) = (void *) 67;
 
@@ -3305,8 +3305,8 @@ static struct udp6_sock *(*bpf_skc_to_udp6_sock)(void *sk) = (void *) 140;
  * 		# sysctl kernel.perf_event_max_stack=<new value>
  *
  * Returns
- * 	A non-negative value equal to or less than *size* on success,
- * 	or a negative error in case of failure.
+ * 	The non-negative copied *buf* length equal to or less than
+ * 	*size* on success, or a negative error in case of failure.
  */
 static long (*bpf_get_task_stack)(struct task_struct *task, void *buf, __u32 size, __u64 flags) = (void *) 141;
 
