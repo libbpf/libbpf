@@ -26,7 +26,7 @@ rm -rf elfutils
 git clone git://sourceware.org/git/elfutils.git
 (
 cd elfutils
-git checkout 983e86fd89e8bf02f2d27ba5dce5bf078af4ceda
+git checkout 83251d4091241acddbdcf16f814e3bc6ef3df49a
 git log --oneline -1
 
 # ASan isn't compatible with -Wl,--no-undefined: https://github.com/google/sanitizers/issues/380
