@@ -52,7 +52,6 @@ trace_ext                                # failed to auto-attach program 'test_p
 trace_printk                             # trace_printk__load unexpected error: -2 (errno 2)                           (?)
 trace_vprintk                            # trace_vprintk__open_and_load unexpected error: -9                           (?)
 trampoline_count                         # prog 'prog1': failed to attach: ERROR: strerror_r(-524)=22                  (trampoline)
-usdt                                     # libbpf doesn't support USDT on s390x yet
 verif_stats                              # trace_vprintk__open_and_load unexpected error: -9                           (?)
 vmlinux                                  # failed to auto-attach program 'handle__fentry': -524                        (trampoline)
 xdp_adjust_tail                          # case-128 err 0 errno 28 retval 1 size 128 expect-size 3520                  (?)
