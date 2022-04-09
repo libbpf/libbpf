@@ -36,6 +36,11 @@ find -name Makefile.am | xargs sed -i 's/,--no-undefined//'
 # https://clang.llvm.org/docs/AddressSanitizer.html#usage
 sed -i 's/^\(ZDEFS_LDFLAGS=\).*/\1/' configure.ac
 
+if [[ "$SANITIZER" == undefined ]]; then
+    # That's basicaly what --enable-sanitize-undefined does to turn off unaligned access
+    # elfutils heavily relies on on i386/x86_64 but without changing compiler flags along the way
+    sed -i 's/\(check_undefined_val\)=[0-9]/\1=1/' configure.ac
+fi
 
 autoreconf -i -f
 if ! ./configure --enable-maintainer-mode --disable-debuginfod --disable-libdebuginfod \
