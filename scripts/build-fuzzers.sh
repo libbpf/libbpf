@@ -17,6 +17,16 @@ mkdir -p "$OUT"
 
 export LIB_FUZZING_ENGINE=${LIB_FUZZING_ENGINE:--fsanitize=fuzzer}
 
+# The alignment check is turned off by default on OSS-Fuzz/CFLite so it should be
+# turned on explicitly there. It was borrowed from
+# https://github.com/google/oss-fuzz/pull/7092
+if [[ "$SANITIZER" == undefined ]]; then
+    additional_ubsan_checks=alignment
+    UBSAN_FLAGS="-fsanitize=$additional_ubsan_checks -fno-sanitize-recover=$additional_ubsan_checks"
+    CFLAGS+=" $UBSAN_FLAGS"
+    CXXFLAGS+=" $UBSAN_FLAGS"
+fi
+
 # Ideally libbelf should be built using release tarballs available
 # at https://sourceware.org/elfutils/ftp/. Unfortunately sometimes they
 # fail to compile (for example, elfutils-0.185 fails to compile with LDFLAGS enabled
