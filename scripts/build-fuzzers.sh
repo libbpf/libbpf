@@ -17,6 +17,14 @@ mkdir -p "$OUT"
 
 export LIB_FUZZING_ENGINE=${LIB_FUZZING_ENGINE:--fsanitize=fuzzer}
 
+# libelf is compiled with _FORTIFY_SOURCE by default and it
+# isn't compatible with MSan. It was borrowed
+# from https://github.com/google/oss-fuzz/pull/7422
+if [[ "$SANITIZER" == memory ]]; then
+    CFLAGS+=" -U_FORTIFY_SOURCE"
+    CXXFLAGS+=" -U_FORTIFY_SOURCE"
+fi
+
 # The alignment check is turned off by default on OSS-Fuzz/CFLite so it should be
 # turned on explicitly there. It was borrowed from
 # https://github.com/google/oss-fuzz/pull/7092
