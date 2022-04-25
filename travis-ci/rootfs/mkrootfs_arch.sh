@@ -80,6 +80,7 @@ packages=(
 	# selftests test_progs dependencies.
 	binutils
 	elfutils
+	ethtool
 	glibc
 	iproute2
 	# selftests test_verifier dependencies.
