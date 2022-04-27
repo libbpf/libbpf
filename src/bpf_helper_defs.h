@@ -4343,4 +4343,19 @@ static long (*bpf_skb_set_tstamp)(struct __sk_buff *skb, __u64 tstamp, __u32 tst
  */
 static long (*bpf_ima_file_hash)(struct file *file, void *dst, __u32 size) = (void *) 193;
 
+/*
+ * bpf_kptr_xchg
+ *
+ * 	Exchange kptr at pointer *map_value* with *ptr*, and return the
+ * 	old value. *ptr* can be NULL, otherwise it must be a referenced
+ * 	pointer which will be released when this helper is called.
+ *
+ * Returns
+ * 	The old value of kptr (which can be NULL). The returned pointer
+ * 	if not NULL, is a reference which must be released using its
+ * 	corresponding release function, or moved into a BPF map before
+ * 	program exit.
+ */
+static void *(*bpf_kptr_xchg)(void *map_value, void *ptr) = (void *) 194;
+
 
