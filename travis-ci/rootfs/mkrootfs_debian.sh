@@ -16,7 +16,7 @@ trap 'rm -r "$root"' EXIT
 
 # Install packages.
 packages=binutils,busybox,elfutils,ethtool,iproute2,libcap2,libelf1,strace,zlib1g
-debootstrap --include="$packages" --variant=minbase bullseye "$root"
+debootstrap --include="$packages" --variant=minbase bookworm "$root"
 
 # Remove the init scripts (tests use their own). Also remove various
 # unnecessary files in order to save space.
