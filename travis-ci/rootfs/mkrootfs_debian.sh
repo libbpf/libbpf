@@ -2,6 +2,11 @@
 # This script builds a Debian root filesystem image for testing libbpf in a
 # virtual machine. Requires debootstrap >= 1.0.95 and zstd.
 
+# Use e.g. ./mkrootfs_debian.sh --arch=s390x to generate a rootfs for a
+# foreign architecture. Requires configured binfmt_misc, e.g. using
+# Debian/Ubuntu's qemu-user-binfmt package or
+# https://github.com/multiarch/qemu-user-static.
+
 set -e -u -x -o pipefail
 
 # Check whether we are root now in order to avoid confusing errors later.
@@ -16,7 +21,7 @@ trap 'rm -r "$root"' EXIT
 
 # Install packages.
 packages=binutils,busybox,elfutils,ethtool,iproute2,libcap2,libelf1,strace,zlib1g
-debootstrap --include="$packages" --variant=minbase bookworm "$root"
+debootstrap --include="$packages" --variant=minbase "$@" bookworm "$root"
 
 # Remove the init scripts (tests use their own). Also remove various
 # unnecessary files in order to save space.
