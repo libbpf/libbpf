@@ -21,9 +21,9 @@ endif
 TOPDIR = ..
 
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
-ALL_CFLAGS := $(INCLUDES)
+ALL_CFLAGS := -fPIC $(INCLUDES)
 
-SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
+SHARED_CFLAGS += -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall -std=gnu89
 ALL_CFLAGS += $(CFLAGS) -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
