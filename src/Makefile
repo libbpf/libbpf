@@ -18,6 +18,15 @@ ifneq ($(LIBBPF_MAJMIN_VERSION), $(LIBBPF_MAP_VERSION))
 $(error Libbpf release ($(LIBBPF_VERSION)) and map ($(LIBBPF_MAP_VERSION)) versions are out of sync!)
 endif
 
+define allow-override
+  $(if $(or $(findstring environment,$(origin $(1))),\
+            $(findstring command line,$(origin $(1)))),,\
+    $(eval $(1) = $(2)))
+endef
+
+$(call allow-override,CC,$(CROSS_COMPILE)cc)
+$(call allow-override,LD,$(CROSS_COMPILE)ld)
+
 TOPDIR = ..
 
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
@@ -26,8 +35,9 @@ ALL_CFLAGS := $(INCLUDES)
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall -std=gnu89
-ALL_CFLAGS += $(CFLAGS) -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64
-ALL_LDFLAGS += $(LDFLAGS)
+ALL_CFLAGS += $(CFLAGS) -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
+ALL_LDFLAGS += $(LDFLAGS) $(EXTRA_LDFLAGS)
+
 ifdef NO_PKG_CONFIG
 	ALL_LDFLAGS += -lelf -lz
 else
