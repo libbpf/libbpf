@@ -4358,4 +4358,16 @@ static long (*bpf_ima_file_hash)(struct file *file, void *dst, __u32 size) = (vo
  */
 static void *(*bpf_kptr_xchg)(void *map_value, void *ptr) = (void *) 194;
 
+/*
+ * bpf_map_lookup_percpu_elem
+ *
+ * 	Perform a lookup in *percpu map* for an entry associated to
+ * 	*key* on *cpu*.
+ *
+ * Returns
+ * 	Map value associated to *key* on *cpu*, or **NULL** if no entry
+ * 	was found or *cpu* is invalid.
+ */
+static void *(*bpf_map_lookup_percpu_elem)(void *map, const void *key, __u32 cpu) = (void *) 195;
+
 
