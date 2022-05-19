@@ -20,7 +20,19 @@ root=$(mktemp -d -p "$PWD")
 trap 'rm -r "$root"' EXIT
 
 # Install packages.
-packages=binutils,busybox,elfutils,ethtool,iproute2,libcap2,libelf1,strace,zlib1g
+packages=(
+	binutils
+	busybox
+	elfutils
+	ethtool
+	iproute2
+	iptables
+	libcap2
+	libelf1
+	strace
+	zlib1g
+)
+packages=$(IFS=, && echo "${packages[*]}")
 debootstrap --include="$packages" --variant=minbase "$@" bookworm "$root"
 
 # Remove the init scripts (tests use their own). Also remove various
