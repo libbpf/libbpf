@@ -43,11 +43,6 @@ rm -rf \
 	"$root"/var/cache/apt/archives/* \
 	"$root"/var/lib/apt/lists/*
 
-# Save some more space by removing coreutils - the tests use busybox. Before
-# doing that, delete the buggy postrm script, which uses the rm command.
-rm -f "$root/var/lib/dpkg/info/coreutils.postrm"
-chroot "$root" dpkg --remove --force-remove-essential coreutils
-
 # Apply common tweaks.
 "$(dirname "$0")"/mkrootfs_tweak.sh "$root"
 
