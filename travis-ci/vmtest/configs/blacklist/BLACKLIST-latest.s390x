@@ -62,3 +62,4 @@ bpf_cookie                               # failed to open_and_load program: -524
 xdp_do_redirect                          # prog_run_max_size unexpected error: -22 (errno 22)
 send_signal                              # intermittently fails to receive signal
 select_reuseport                         # intermittently fails on new s390x setup
+xdp_synproxy                             # JIT does not support calling kernel function                                (kfunc)
