@@ -61,7 +61,6 @@ LIBBPF_0.0.1 {
 		bpf_prog_detach2;
 		bpf_prog_get_fd_by_id;
 		bpf_prog_get_next_id;
-		bpf_prog_load;
 		bpf_prog_load_xattr;
 		bpf_prog_query;
 		bpf_prog_test_run;
