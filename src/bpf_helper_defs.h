@@ -38,6 +38,8 @@ struct inode;
 struct socket;
 struct file;
 struct bpf_timer;
+struct mptcp_sock;
+struct bpf_dynptr;
 
 /*
  * bpf_map_lookup_elem
@@ -4369,5 +4371,114 @@ static void *(*bpf_kptr_xchg)(void *map_value, void *ptr) = (void *) 194;
  * 	was found or *cpu* is invalid.
  */
 static void *(*bpf_map_lookup_percpu_elem)(void *map, const void *key, __u32 cpu) = (void *) 195;
+
+/*
+ * bpf_skc_to_mptcp_sock
+ *
+ * 	Dynamically cast a *sk* pointer to a *mptcp_sock* pointer.
+ *
+ * Returns
+ * 	*sk* if casting is valid, or **NULL** otherwise.
+ */
+static struct mptcp_sock *(*bpf_skc_to_mptcp_sock)(void *sk) = (void *) 196;
+
+/*
+ * bpf_dynptr_from_mem
+ *
+ * 	Get a dynptr to local memory *data*.
+ *
+ * 	*data* must be a ptr to a map value.
+ * 	The maximum *size* supported is DYNPTR_MAX_SIZE.
+ * 	*flags* is currently unused.
+ *
+ * Returns
+ * 	0 on success, -E2BIG if the size exceeds DYNPTR_MAX_SIZE,
+ * 	-EINVAL if flags is not 0.
+ */
+static long (*bpf_dynptr_from_mem)(void *data, __u32 size, __u64 flags, struct bpf_dynptr *ptr) = (void *) 197;
+
+/*
+ * bpf_ringbuf_reserve_dynptr
+ *
+ * 	Reserve *size* bytes of payload in a ring buffer *ringbuf*
+ * 	through the dynptr interface. *flags* must be 0.
+ *
+ * 	Please note that a corresponding bpf_ringbuf_submit_dynptr or
+ * 	bpf_ringbuf_discard_dynptr must be called on *ptr*, even if the
+ * 	reservation fails. This is enforced by the verifier.
+ *
+ * Returns
+ * 	0 on success, or a negative error in case of failure.
+ */
+static long (*bpf_ringbuf_reserve_dynptr)(void *ringbuf, __u32 size, __u64 flags, struct bpf_dynptr *ptr) = (void *) 198;
+
+/*
+ * bpf_ringbuf_submit_dynptr
+ *
+ * 	Submit reserved ring buffer sample, pointed to by *data*,
+ * 	through the dynptr interface. This is a no-op if the dynptr is
+ * 	invalid/null.
+ *
+ * 	For more information on *flags*, please see
+ * 	'bpf_ringbuf_submit'.
+ *
+ * Returns
+ * 	Nothing. Always succeeds.
+ */
+static void (*bpf_ringbuf_submit_dynptr)(struct bpf_dynptr *ptr, __u64 flags) = (void *) 199;
+
+/*
+ * bpf_ringbuf_discard_dynptr
+ *
+ * 	Discard reserved ring buffer sample through the dynptr
+ * 	interface. This is a no-op if the dynptr is invalid/null.
+ *
+ * 	For more information on *flags*, please see
+ * 	'bpf_ringbuf_discard'.
+ *
+ * Returns
+ * 	Nothing. Always succeeds.
+ */
+static void (*bpf_ringbuf_discard_dynptr)(struct bpf_dynptr *ptr, __u64 flags) = (void *) 200;
+
+/*
+ * bpf_dynptr_read
+ *
+ * 	Read *len* bytes from *src* into *dst*, starting from *offset*
+ * 	into *src*.
+ *
+ * Returns
+ * 	0 on success, -E2BIG if *offset* + *len* exceeds the length
+ * 	of *src*'s data, -EINVAL if *src* is an invalid dynptr.
+ */
+static long (*bpf_dynptr_read)(void *dst, __u32 len, struct bpf_dynptr *src, __u32 offset) = (void *) 201;
+
+/*
+ * bpf_dynptr_write
+ *
+ * 	Write *len* bytes from *src* into *dst*, starting from *offset*
+ * 	into *dst*.
+ *
+ * Returns
+ * 	0 on success, -E2BIG if *offset* + *len* exceeds the length
+ * 	of *dst*'s data, -EINVAL if *dst* is an invalid dynptr or if *dst*
+ * 	is a read-only dynptr.
+ */
+static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len) = (void *) 202;
+
+/*
+ * bpf_dynptr_data
+ *
+ * 	Get a pointer to the underlying dynptr data.
+ *
+ * 	*len* must be a statically known value. The returned data slice
+ * 	is invalidated whenever the dynptr is invalidated.
+ *
+ * Returns
+ * 	Pointer to the underlying dynptr data, NULL if the dynptr is
+ * 	read-only, if the dynptr is invalid, or if the offset and length
+ * 	is out of bounds.
+ */
+static void *(*bpf_dynptr_data)(struct bpf_dynptr *ptr, __u32 offset, __u32 len) = (void *) 203;
 
 
