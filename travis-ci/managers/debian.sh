@@ -7,7 +7,8 @@ ENV_VARS="${ENV_VARS:-}"
 DOCKER_RUN="${DOCKER_RUN:-docker run}"
 REPO_ROOT="${REPO_ROOT:-$PWD}"
 ADDITIONAL_DEPS=(clang pkg-config gcc-10)
-CFLAGS="-g -O2 -Werror -Wall"
+EXTRA_CFLAGS=""
+EXTRA_LDFLAGS=""
 
 function info() {
     echo -e "\033[33;1m$1\033[0m"
@@ -55,17 +56,17 @@ for phase in "${PHASES[@]}"; do
             elif [[ "$phase" = *"GCC10"* ]]; then
                 ENV_VARS="-e CC=gcc-10 -e CXX=g++-10"
                 CC="gcc-10"
-                CFLAGS="${CFLAGS} -Wno-stringop-truncation"
             else
-                CFLAGS="${CFLAGS} -Wno-stringop-truncation"
+                EXTRA_CFLAGS="${EXTRA_CFLAGS} -Wno-stringop-truncation"
             fi
             if [[ "$phase" = *"ASAN"* ]]; then
-                CFLAGS="${CFLAGS} -fsanitize=address,undefined"
+                EXTRA_CFLAGS="${EXTRA_CFLAGS} -fsanitize=address,undefined"
+                EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -fsanitize=address,undefined"
             fi
             docker_exec mkdir build install
             docker_exec ${CC} --version
             info "build"
-            docker_exec make -j$((4*$(nproc))) CFLAGS="${CFLAGS}" -C ./src -B OBJDIR=../build
+	    docker_exec make -j$((4*$(nproc))) EXTRA_CFLAGS="${EXTRA_CFLAGS}" EXTRA_LDFLAGS="${EXTRA_LDFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
             docker_exec ldd build/libbpf.so
             if ! docker_exec ldd build/libbpf.so | grep -q libelf; then
@@ -75,7 +76,7 @@ for phase in "${PHASES[@]}"; do
             info "install"
             docker_exec make -j$((4*$(nproc))) -C src OBJDIR=../build DESTDIR=../install install
             info "link binary"
-            docker_exec bash -c "CFLAGS=\"${CFLAGS}\" ./travis-ci/managers/test_compile.sh"
+            docker_exec bash -c "EXTRA_CFLAGS=\"${EXTRA_CFLAGS}\" EXTRA_LDFLAGS=\"${EXTRA_LDFLAGS}\" ./travis-ci/managers/test_compile.sh"
             ;;
         CLEANUP)
             info "Cleanup phase"
