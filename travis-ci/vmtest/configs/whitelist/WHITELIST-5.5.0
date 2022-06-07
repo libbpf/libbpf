@@ -10,7 +10,6 @@ core_reloc
 core_retro
 cpu_mask
 endian
-fexit_stress
 get_branch_snapshot
 get_stackid_cannot_attach
 global_data
