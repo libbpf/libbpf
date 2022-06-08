@@ -63,3 +63,4 @@ xdp_do_redirect                          # prog_run_max_size unexpected error: -
 send_signal                              # intermittently fails to receive signal
 select_reuseport                         # intermittently fails on new s390x setup
 xdp_synproxy                             # JIT does not support calling kernel function                                (kfunc)
+unpriv_bpf_disabled                      # fentry
