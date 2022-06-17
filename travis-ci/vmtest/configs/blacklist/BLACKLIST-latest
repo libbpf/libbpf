@@ -3,3 +3,4 @@ get_stack_raw_tp    # spams with kernel warnings until next bpf -> bpf-next merg
 stacktrace_build_id_nmi
 stacktrace_build_id
 task_fd_query_rawtp
+varlen
