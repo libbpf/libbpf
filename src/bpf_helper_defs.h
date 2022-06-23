@@ -40,6 +40,8 @@ struct file;
 struct bpf_timer;
 struct mptcp_sock;
 struct bpf_dynptr;
+struct iphdr;
+struct ipv6hdr;
 
 /*
  * bpf_map_lookup_elem
@@ -2463,10 +2465,11 @@ static struct bpf_sock *(*bpf_skc_lookup_tcp)(void *ctx, struct bpf_sock_tuple *
  *
  * 	*iph* points to the start of the IPv4 or IPv6 header, while
  * 	*iph_len* contains **sizeof**\ (**struct iphdr**) or
- * 	**sizeof**\ (**struct ip6hdr**).
+ * 	**sizeof**\ (**struct ipv6hdr**).
  *
  * 	*th* points to the start of the TCP header, while *th_len*
- * 	contains **sizeof**\ (**struct tcphdr**).
+ * 	contains the length of the TCP header (at least
+ * 	**sizeof**\ (**struct tcphdr**)).
  *
  * Returns
  * 	0 if *iph* and *th* are a valid SYN cookie ACK, or a negative
@@ -2689,10 +2692,11 @@ static long (*bpf_send_signal)(__u32 sig) = (void *) 109;
  *
  * 	*iph* points to the start of the IPv4 or IPv6 header, while
  * 	*iph_len* contains **sizeof**\ (**struct iphdr**) or
- * 	**sizeof**\ (**struct ip6hdr**).
+ * 	**sizeof**\ (**struct ipv6hdr**).
  *
  * 	*th* points to the start of the TCP header, while *th_len*
- * 	contains the length of the TCP header.
+ * 	contains the length of the TCP header with options (at least
+ * 	**sizeof**\ (**struct tcphdr**)).
  *
  * Returns
  * 	On success, lower 32 bits hold the generated SYN cookie in
@@ -4480,5 +4484,95 @@ static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src,
  * 	is out of bounds.
  */
 static void *(*bpf_dynptr_data)(struct bpf_dynptr *ptr, __u32 offset, __u32 len) = (void *) 203;
+
+/*
+ * bpf_tcp_raw_gen_syncookie_ipv4
+ *
+ * 	Try to issue a SYN cookie for the packet with corresponding
+ * 	IPv4/TCP headers, *iph* and *th*, without depending on a
+ * 	listening socket.
+ *
+ * 	*iph* points to the IPv4 header.
+ *
+ * 	*th* points to the start of the TCP header, while *th_len*
+ * 	contains the length of the TCP header (at least
+ * 	**sizeof**\ (**struct tcphdr**)).
+ *
+ * Returns
+ * 	On success, lower 32 bits hold the generated SYN cookie in
+ * 	followed by 16 bits which hold the MSS value for that cookie,
+ * 	and the top 16 bits are unused.
+ *
+ * 	On failure, the returned value is one of the following:
+ *
+ * 	**-EINVAL** if *th_len* is invalid.
+ */
+static __s64 (*bpf_tcp_raw_gen_syncookie_ipv4)(struct iphdr *iph, struct tcphdr *th, __u32 th_len) = (void *) 204;
+
+/*
+ * bpf_tcp_raw_gen_syncookie_ipv6
+ *
+ * 	Try to issue a SYN cookie for the packet with corresponding
+ * 	IPv6/TCP headers, *iph* and *th*, without depending on a
+ * 	listening socket.
+ *
+ * 	*iph* points to the IPv6 header.
+ *
+ * 	*th* points to the start of the TCP header, while *th_len*
+ * 	contains the length of the TCP header (at least
+ * 	**sizeof**\ (**struct tcphdr**)).
+ *
+ * Returns
+ * 	On success, lower 32 bits hold the generated SYN cookie in
+ * 	followed by 16 bits which hold the MSS value for that cookie,
+ * 	and the top 16 bits are unused.
+ *
+ * 	On failure, the returned value is one of the following:
+ *
+ * 	**-EINVAL** if *th_len* is invalid.
+ *
+ * 	**-EPROTONOSUPPORT** if CONFIG_IPV6 is not builtin.
+ */
+static __s64 (*bpf_tcp_raw_gen_syncookie_ipv6)(struct ipv6hdr *iph, struct tcphdr *th, __u32 th_len) = (void *) 205;
+
+/*
+ * bpf_tcp_raw_check_syncookie_ipv4
+ *
+ * 	Check whether *iph* and *th* contain a valid SYN cookie ACK
+ * 	without depending on a listening socket.
+ *
+ * 	*iph* points to the IPv4 header.
+ *
+ * 	*th* points to the TCP header.
+ *
+ * Returns
+ * 	0 if *iph* and *th* are a valid SYN cookie ACK.
+ *
+ * 	On failure, the returned value is one of the following:
+ *
+ * 	**-EACCES** if the SYN cookie is not valid.
+ */
+static long (*bpf_tcp_raw_check_syncookie_ipv4)(struct iphdr *iph, struct tcphdr *th) = (void *) 206;
+
+/*
+ * bpf_tcp_raw_check_syncookie_ipv6
+ *
+ * 	Check whether *iph* and *th* contain a valid SYN cookie ACK
+ * 	without depending on a listening socket.
+ *
+ * 	*iph* points to the IPv6 header.
+ *
+ * 	*th* points to the TCP header.
+ *
+ * Returns
+ * 	0 if *iph* and *th* are a valid SYN cookie ACK.
+ *
+ * 	On failure, the returned value is one of the following:
+ *
+ * 	**-EACCES** if the SYN cookie is not valid.
+ *
+ * 	**-EPROTONOSUPPORT** if CONFIG_IPV6 is not builtin.
+ */
+static long (*bpf_tcp_raw_check_syncookie_ipv6)(struct ipv6hdr *iph, struct tcphdr *th) = (void *) 207;
 
 
