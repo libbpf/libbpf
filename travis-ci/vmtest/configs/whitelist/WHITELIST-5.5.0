@@ -1,4 +1,4 @@
-attach_probe
+# attach_probe
 autoload
 bpf_verif_scale
 cgroup_attach_autodetach
