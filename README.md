@@ -146,7 +146,7 @@ Benefits of packaging from the mirror over packaging from kernel sources:
     gracefully degrading functionality. Thus libbpf is not tied to a specific
     kernel version and can/should be packaged and versioned independently.
   - Continuous integration testing via
-    [TravisCI](https://travis-ci.org/libbpf/libbpf).
+    [GitHub Actions](https://github.com/libbpf/libbpf/actions).
   - Static code analysis via [LGTM](https://lgtm.com/projects/g/libbpf/libbpf)
     and [Coverity](https://scan.coverity.com/projects/libbpf).
 
