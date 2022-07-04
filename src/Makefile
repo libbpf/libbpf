@@ -50,7 +50,7 @@ OBJDIR ?= .
 SHARED_OBJDIR := $(OBJDIR)/sharedobjs
 STATIC_OBJDIR := $(OBJDIR)/staticobjs
 OBJS := bpf.o btf.o libbpf.o libbpf_errno.o netlink.o \
-	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o xsk.o \
+	nlattr.o str_error.o libbpf_probes.o bpf_prog_linfo.o \
 	btf_dump.o hashmap.o ringbuf.o strset.o linker.o gen_loader.o \
 	relo_core.o usdt.o
 SHARED_OBJS := $(addprefix $(SHARED_OBJDIR)/,$(OBJS))
@@ -64,7 +64,7 @@ ifndef BUILD_STATIC_ONLY
 	VERSION_SCRIPT := libbpf.map
 endif
 
-HEADERS := bpf.h libbpf.h btf.h libbpf_common.h libbpf_legacy.h xsk.h \
+HEADERS := bpf.h libbpf.h btf.h libbpf_common.h libbpf_legacy.h \
 	   bpf_helpers.h bpf_helper_defs.h bpf_tracing.h \
 	   bpf_endian.h bpf_core_read.h skel_internal.h libbpf_version.h \
 	   usdt.bpf.h
