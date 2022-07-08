@@ -4750,6 +4750,37 @@ bool kernel_supports(const struct bpf_object *obj, enum kern_feature_id feat_id)
 	return READ_ONCE(feat->res) == FEAT_SUPPORTED;
 }
 
+static size_t adjust_ringbuf_sz(size_t sz)
+{
+	__u32 page_sz = sysconf(_SC_PAGE_SIZE);
+	__u32 mul;
+
+	/* if user forgot to set any size, make sure they see error */
+	if (sz == 0)
+		return 0;
+	/* Kernel expects BPF_MAP_TYPE_RINGBUF's max_entries to be
+	 * a power-of-2 multiple of kernel's page size. If user diligently
+	 * satisified these conditions, pass the size through.
+	 */
+	if ((sz % page_sz) == 0 && is_pow_of_2(sz / page_sz))
+		return sz;
+
+	/* Otherwise find closest (page_sz * power_of_2) product bigger than
+	 * user-set size to satisfy both user size request and kernel
+	 * requirements and substitute correct max_entries for map creation.
+	 */
+	for (mul = 1; mul <= UINT_MAX / page_sz; mul <<= 1) {
+		if (mul * page_sz > sz)
+			return mul * page_sz;
+	}
+
+	/* if it's impossible to satisfy the conditions (i.e., user size is
+	 * very close to UINT_MAX but is not a power-of-2 multiple of
+	 * page_size) then just return original size and let kernel reject it
+	 */
+	return sz;
+}
+
 static bool map_is_reuse_compat(const struct bpf_map *map, int map_fd)
 {
 	struct bpf_map_info map_info = {};
@@ -4771,7 +4802,7 @@ static bool map_is_reuse_compat(const struct bpf_map *map, int map_fd)
 	return (map_info.type == map->def.type &&
 		map_info.key_size == map->def.key_size &&
 		map_info.value_size == map->def.value_size &&
-		map_info.max_entries == map->def.max_entries &&
+		map_info.max_entries == (map_info.type == BPF_MAP_TYPE_RINGBUF ? adjust_ringbuf_sz(map->def.max_entries) : map->def.max_entries) &&
 		map_info.map_flags == map->def.map_flags &&
 		map_info.map_extra == map->map_extra);
 }
@@ -4853,37 +4884,6 @@ bpf_object__populate_internal_map(struct bpf_object *obj, struct bpf_map *map)
 }
 
 static void bpf_map__destroy(struct bpf_map *map);
-
-static size_t adjust_ringbuf_sz(size_t sz)
-{
-	__u32 page_sz = sysconf(_SC_PAGE_SIZE);
-	__u32 mul;
-
-	/* if user forgot to set any size, make sure they see error */
-	if (sz == 0)
-		return 0;
-	/* Kernel expects BPF_MAP_TYPE_RINGBUF's max_entries to be
-	 * a power-of-2 multiple of kernel's page size. If user diligently
-	 * satisified these conditions, pass the size through.
-	 */
-	if ((sz % page_sz) == 0 && is_pow_of_2(sz / page_sz))
-		return sz;
-
-	/* Otherwise find closest (page_sz * power_of_2) product bigger than
-	 * user-set size to satisfy both user size request and kernel
-	 * requirements and substitute correct max_entries for map creation.
-	 */
-	for (mul = 1; mul <= UINT_MAX / page_sz; mul <<= 1) {
-		if (mul * page_sz > sz)
-			return mul * page_sz;
-	}
-
-	/* if it's impossible to satisfy the conditions (i.e., user size is
-	 * very close to UINT_MAX but is not a power-of-2 multiple of
-	 * page_size) then just return original size and let kernel reject it
-	 */
-	return sz;
-}
 
 static int bpf_object__create_map(struct bpf_object *obj, struct bpf_map *map, bool is_inner)
 {
