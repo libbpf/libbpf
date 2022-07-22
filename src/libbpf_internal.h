@@ -148,7 +148,9 @@ extern void libbpf_print(enum libbpf_print_level level,
 
 #define __pr(level, fmt, ...)	\
 do {				\
+	int __saved_errno = errno;							\
 	libbpf_print(level, "libbpf: " fmt, ##__VA_ARGS__);	\
+	errno = __saved_errno;								\
 } while (0)
 
 #define pr_warn(fmt, ...)	__pr(LIBBPF_WARN, fmt, ##__VA_ARGS__)
