@@ -9995,6 +9995,10 @@ static const char *arch_specific_syscall_pfx(void)
 	return "mips";
 #elif defined(__riscv)
 	return "riscv";
+#elif defined(__powerpc__)
+	return "powerpc";
+#elif defined(__powerpc64__)
+	return "powerpc64";
 #else
 	return NULL;
 #endif
