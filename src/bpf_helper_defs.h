@@ -1005,7 +1005,8 @@ static long (*bpf_skb_change_tail)(struct __sk_buff *skb, __u32 len, __u64 flags
  * 	Pull in non-linear data in case the *skb* is non-linear and not
  * 	all of *len* are part of the linear section. Make *len* bytes
  * 	from *skb* readable and writable. If a zero value is passed for
- * 	*len*, then the whole length of the *skb* is pulled.
+ * 	*len*, then all bytes in the linear part of *skb* will be made
+ * 	readable and writable.
  *
  * 	This helper is only needed for reading and writing with direct
  * 	packet access.
@@ -4450,25 +4451,28 @@ static void (*bpf_ringbuf_discard_dynptr)(struct bpf_dynptr *ptr, __u64 flags) =
  *
  * 	Read *len* bytes from *src* into *dst*, starting from *offset*
  * 	into *src*.
+ * 	*flags* is currently unused.
  *
  * Returns
  * 	0 on success, -E2BIG if *offset* + *len* exceeds the length
- * 	of *src*'s data, -EINVAL if *src* is an invalid dynptr.
+ * 	of *src*'s data, -EINVAL if *src* is an invalid dynptr or if
+ * 	*flags* is not 0.
  */
-static long (*bpf_dynptr_read)(void *dst, __u32 len, struct bpf_dynptr *src, __u32 offset) = (void *) 201;
+static long (*bpf_dynptr_read)(void *dst, __u32 len, struct bpf_dynptr *src, __u32 offset, __u64 flags) = (void *) 201;
 
 /*
  * bpf_dynptr_write
  *
  * 	Write *len* bytes from *src* into *dst*, starting from *offset*
  * 	into *dst*.
+ * 	*flags* is currently unused.
  *
  * Returns
  * 	0 on success, -E2BIG if *offset* + *len* exceeds the length
  * 	of *dst*'s data, -EINVAL if *dst* is an invalid dynptr or if *dst*
- * 	is a read-only dynptr.
+ * 	is a read-only dynptr or if *flags* is not 0.
  */
-static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len) = (void *) 202;
+static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len, __u64 flags) = (void *) 202;
 
 /*
  * bpf_dynptr_data
