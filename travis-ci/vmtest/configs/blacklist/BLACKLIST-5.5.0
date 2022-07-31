@@ -71,6 +71,7 @@ sk_lookup		# v5.9+
 sk_storage_tracing	# missing bpf_sk_storage_get() helper
 skb_ctx			# ctx_{size, }_{in, out} in BPF_PROG_TEST_RUN is missing
 skb_helpers		# helpers added in 5.8+
+skeleton		# creates too big ARRAY map
 snprintf		# v5.13+
 snprintf_btf		# v5.10+
 sock_fields		# v5.10+
