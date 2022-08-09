@@ -41,12 +41,10 @@ runs:
     - name: Prepare to build BPF selftests
       shell: bash
       run: |
-        echo "::group::Prepare buidling selftest"
+        echo "::group::Prepare building selftest"
         cd .kernel
         cat tools/testing/selftests/bpf/config \
-            tools/testing/selftests/bpf/config.${{ inputs.arch }} \
-            ${{ github.workspace }}/travis-ci/vmtest/configs/config-latest \
-            ${{ github.workspace }}/travis-ci/vmtest/configs/config-latest.${{ inputs.arch }} 2> /dev/null > .config && :
+            tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
         make olddefconfig && make prepare
         cd -
         echo "::endgroup::"
