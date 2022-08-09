@@ -32,7 +32,7 @@ jobs:
           - name: gcc-10 ASan+UBSan
             target: RUN_GCC10_ASAN
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout
       - uses: ./.github/actions/setup
         name: Setup
@@ -53,7 +53,7 @@ jobs:
           - arch: s390x
           - arch: x86
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         name: Checkout
       - uses: ./.github/actions/setup
         name: Pre-Setup
