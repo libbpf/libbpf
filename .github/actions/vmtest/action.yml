@@ -16,7 +16,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # setup envinronment
+    # setup environment
     - name: Setup environment
       uses: libbpf/ci/setup-build-env@master
       with:

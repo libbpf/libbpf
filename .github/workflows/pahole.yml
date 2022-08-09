@@ -12,7 +12,7 @@ jobs:
     env:
       STAGING: tmp.master
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/setup
       - uses: ./.github/actions/vmtest
         with:
