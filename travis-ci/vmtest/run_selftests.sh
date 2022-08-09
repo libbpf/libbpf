@@ -22,13 +22,13 @@ test_progs() {
 		# "&& true" does not change the return code (it is not executed
 		# if the Python script fails), but it prevents exiting on a
 		# failure due to the "set -e".
-		./test_progs ${BLACKLIST:+-d$BLACKLIST} ${WHITELIST:+-a$WHITELIST} && true
+		./test_progs ${DENYLIST:+-d$DENYLIST} ${ALLOWLIST:+-a$ALLOWLIST} && true
 		echo "test_progs:$?" >> "${STATUS_FILE}"
 		foldable end test_progs
 	fi
 
 	foldable start test_progs-no_alu32 "Testing test_progs-no_alu32"
-	./test_progs-no_alu32 ${BLACKLIST:+-d$BLACKLIST} ${WHITELIST:+-a$WHITELIST} && true
+	./test_progs-no_alu32 ${DENYLIST:+-d$DENYLIST} ${ALLOWLIST:+-a$ALLOWLIST} && true
 	echo "test_progs-no_alu32:$?" >> "${STATUS_FILE}"
 	foldable end test_progs-no_alu32
 }
@@ -50,8 +50,8 @@ test_verifier() {
 foldable end vm_init
 
 configs_path=${PROJECT_NAME}/vmtest/configs
-BLACKLIST=$(read_lists "$configs_path/blacklist/BLACKLIST-${KERNEL}" "$configs_path/blacklist/BLACKLIST-${KERNEL}.${ARCH}")
-WHITELIST=$(read_lists "$configs_path/whitelist/WHITELIST-${KERNEL}" "$configs_path/whitelist/WHITELIST-${KERNEL}.${ARCH}")
+DENYLIST=$(read_lists "$configs_path/DENYLIST-${KERNEL}" "$configs_path/DENYLIST-${KERNEL}.${ARCH}")
+ALLOWLIST=$(read_lists "$configs_path/ALLOWLIST-${KERNEL}" "$configs_path/ALLOWLIST-${KERNEL}.${ARCH}")
 
 cd ${PROJECT_NAME}/selftests/bpf
 
