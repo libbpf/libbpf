@@ -26,7 +26,9 @@ test_progs() {
 		echo "test_progs:$?" >> "${STATUS_FILE}"
 		foldable end test_progs
 	fi
+}
 
+test_progs_noalu() {
 	foldable start test_progs-no_alu32 "Testing test_progs-no_alu32"
 	./test_progs-no_alu32 ${DENYLIST:+-d$DENYLIST} ${ALLOWLIST:+-a$ALLOWLIST} && true
 	echo "test_progs-no_alu32:$?" >> "${STATUS_FILE}"
@@ -56,6 +58,7 @@ ALLOWLIST=$(read_lists "$configs_path/ALLOWLIST-${KERNEL}" "$configs_path/ALLOWL
 cd ${PROJECT_NAME}/selftests/bpf
 
 test_progs
+test_progs_noalu
 
 if [[ "${KERNEL}" == 'latest' ]]; then
 	test_maps
