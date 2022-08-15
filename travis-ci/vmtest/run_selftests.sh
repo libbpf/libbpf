@@ -36,17 +36,21 @@ test_progs_noalu() {
 }
 
 test_maps() {
-	foldable start test_maps "Testing test_maps"
-	./test_maps && true
-	echo "test_maps:$?" >> "${STATUS_FILE}"
-	foldable end test_maps
+	if [[ "${KERNEL}" == 'latest' ]]; then
+		foldable start test_maps "Testing test_maps"
+		./test_maps && true
+		echo "test_maps:$?" >> "${STATUS_FILE}"
+		foldable end test_maps
+	fi
 }
 
 test_verifier() {
-	foldable start test_verifier "Testing test_verifier"
-	./test_verifier && true
-	echo "test_verifier:$?" >> "${STATUS_FILE}"
-	foldable end test_verifier
+	if [[ "${KERNEL}" == 'latest' ]]; then
+		foldable start test_verifier "Testing test_verifier"
+		./test_verifier && true
+		echo "test_verifier:$?" >> "${STATUS_FILE}"
+		foldable end test_verifier
+	fi
 }
 
 foldable end vm_init
@@ -59,8 +63,5 @@ cd ${PROJECT_NAME}/selftests/bpf
 
 test_progs
 test_progs_noalu
-
-if [[ "${KERNEL}" == 'latest' ]]; then
-	test_maps
-	test_verifier
-fi
+test_maps
+test_verifier
