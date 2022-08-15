@@ -64,7 +64,13 @@ echo "ALLOWLIST: ${ALLOWLIST}"
 
 cd ${PROJECT_NAME}/selftests/bpf
 
-test_progs
-test_progs_noalu
-test_maps
-test_verifier
+if [ $# -eq 0 ]; then
+	test_progs
+	test_progs_noalu
+	test_maps
+	test_verifier
+else
+	for test_name in "$@"; do
+		"${test_name}"
+	done
+fi
