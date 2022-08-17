@@ -79,6 +79,7 @@ runs:
         kernel: ${{ inputs.kernel }}
         project-name: 'libbpf'
         arch: ${{ inputs.arch }}
+        image-output: '/tmp/root.img'
     # 5. run selftest in QEMU
     - name: Run selftests
       uses: libbpf/ci/run-qemu@master
