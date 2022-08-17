@@ -76,7 +76,7 @@ for phase in "${PHASES[@]}"; do
             info "install"
             docker_exec make -j$((4*$(nproc))) -C src OBJDIR=../build DESTDIR=../install install
             info "link binary"
-            docker_exec bash -c "EXTRA_CFLAGS=\"${EXTRA_CFLAGS}\" EXTRA_LDFLAGS=\"${EXTRA_LDFLAGS}\" ./travis-ci/managers/test_compile.sh"
+            docker_exec bash -c "EXTRA_CFLAGS=\"${EXTRA_CFLAGS}\" EXTRA_LDFLAGS=\"${EXTRA_LDFLAGS}\" ./ci/managers/test_compile.sh"
             ;;
         CLEANUP)
             info "Cleanup phase"
