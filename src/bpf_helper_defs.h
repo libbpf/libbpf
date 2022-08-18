@@ -1239,10 +1239,12 @@ static long (*bpf_setsockopt)(void *bpf_socket, int level, int optname, void *op
  * 	There are two supported modes at this time:
  *
  * 	* **BPF_ADJ_ROOM_MAC**: Adjust room at the mac layer
- * 	  (room space is added or removed below the layer 2 header).
+ * 	  (room space is added or removed between the layer 2 and
+ * 	  layer 3 headers).
  *
  * 	* **BPF_ADJ_ROOM_NET**: Adjust room at the network layer
- * 	  (room space is added or removed below the layer 3 header).
+ * 	  (room space is added or removed between the layer 3 and
+ * 	  layer 4 headers).
  *
  * 	The following flags are supported at this time:
  *
