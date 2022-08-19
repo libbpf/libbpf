@@ -13,6 +13,9 @@ their counterpart files at
 BPF/libbpf usage and questions
 ==============================
 
+Libbpf documentation can be found [here](https://libbpf.readthedocs.io/en/latest/api.html).
+It's an ongoing effort and has ways to go, but please take a look and consider contributing as well.
+
 Please check out [libbpf-bootstrap](https://github.com/libbpf/libbpf-bootstrap)
 and [the companion blog post](https://nakryiko.com/posts/libbpf-bootstrap/) for
 the examples of building BPF applications with libbpf.
