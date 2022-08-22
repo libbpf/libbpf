@@ -1,17 +1,26 @@
-This is a mirror of [bpf-next Linux source
-tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next)'s
-`tools/lib/bpf` directory plus its supporting header files.
+<img src="https://user-images.githubusercontent.com/508075/185997470-2f427d3d-f040-4eef-afc5-ae4f766615b2.png" width="40%" >
 
-All the gory details of syncing can be found in `scripts/sync-kernel.sh`
-script.
+libbpf
+[![Github Actions Builds & Tests](https://github.com/libbpf/libbpf/actions/workflows/test.yml/badge.svg)](https://github.com/libbpf/libbpf/actions/workflows/test.yml)
+[![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
+[![Coverity](https://img.shields.io/coverity/scan/18195.svg)](https://scan.coverity.com/projects/libbpf)
+[![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/libbpf.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#libbpf)
+======
 
-Some header files in this repo (`include/linux/*.h`) are reduced versions of
-their counterpart files at
-[bpf-next](https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/)'s
-`tools/include/linux/*.h` to make compilation successful.
+**This is the official home of the libbpf library.**
 
-BPF/libbpf usage and questions
-==============================
+*Please use this Github repository for building and packaging libbpf
+and when using it in your projects through Git submodule.*
+
+Libbpf *authoritative source code* is developed as part of [bpf-next Linux source
+tree](https://kernel.googlesource.com/pub/scm/linux/kernel/git/bpf/bpf-next) under
+`tools/lib/bpf` subdirectory and is periodically synced to Github. As such, all the
+libbpf changes should be sent to [BPF mailing list](http://vger.kernel.org/vger-lists.html#bpf),
+please don't open PRs here unless you are changing Github-specific parts of libbpf
+(e.g., Github-specific Makefile).
+
+Libbpf and general BPF usage questions
+======================================
 
 Libbpf documentation can be found [here](https://libbpf.readthedocs.io/en/latest/api.html).
 It's an ongoing effort and has ways to go, but please take a look and consider contributing as well.
@@ -39,12 +48,8 @@ to help you with whatever issue you have. This repository's PRs and issues
 should be opened only for dealing with issues pertaining to specific way this
 libbpf mirror repo is set up and organized.
 
-Build
-[![Github Actions Builds & Tests](https://github.com/libbpf/libbpf/actions/workflows/test.yml/badge.svg)](https://github.com/libbpf/libbpf/actions/workflows/test.yml)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
-[![Coverity](https://img.shields.io/coverity/scan/18195.svg)](https://scan.coverity.com/projects/libbpf)
-[![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/libbpf.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#libbpf)
-=====
+Building libbpf
+===============
 libelf is an internal dependency of libbpf and thus it is required to link
 against and must be installed on the system for applications to work.
 pkg-config is used by default to find libelf, and the program called can be
@@ -158,6 +163,18 @@ Package dependencies of libbpf, package names may vary across distros:
   - libelf
 
 [![libbpf distro packaging status](https://repology.org/badge/vertical-allrepos/libbpf.svg)](https://repology.org/project/libbpf/versions)
+
+
+bpf-next to Github sync
+=======================
+
+All the gory details of syncing can be found in `scripts/sync-kernel.sh`
+script.
+
+Some header files in this repo (`include/linux/*.h`) are reduced versions of
+their counterpart files at
+[bpf-next](https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git/)'s
+`tools/include/linux/*.h` to make compilation successful.
 
 License
 =======
