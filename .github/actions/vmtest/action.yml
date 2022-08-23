@@ -41,24 +41,26 @@ runs:
     - name: Prepare to build BPF selftests
       shell: bash
       run: |
-        echo "::group::Prepare building selftest"
+        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+        foldable start "Prepare building selftest"
         cd .kernel
         cat tools/testing/selftests/bpf/config \
             tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
         make olddefconfig && make prepare
         cd -
-        echo "::endgroup::"
+        foldable end
     # 2. if kernel == LATEST, build kernel image from tree
     - name: Build kernel image
       if: ${{ inputs.kernel == 'LATEST' }}
       shell: bash
       run: |
-        echo "::group::Build Kernel Image"
+        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+        foldable start "Build Kernel Image"
         cd .kernel
         make -j $((4*$(nproc))) all > /dev/null
         cp vmlinux ${{ github.workspace }}
         cd -
-        echo "::endgroup::"
+        foldable end
     # else, just download prebuilt kernel image
     - name: Download prebuilt kernel
       if: ${{ inputs.kernel != 'LATEST' }}
