@@ -1,4 +1,7 @@
-<img src="https://user-images.githubusercontent.com/508075/185997470-2f427d3d-f040-4eef-afc5-ae4f766615b2.png" width="40%" >
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/libbpf-logo-sideways-darkbg.png" width="40%">
+  <img src="assets/libbpf-logo-sideways.png" width="40%">
+</picture>
 
 libbpf
 [![Github Actions Builds & Tests](https://github.com/libbpf/libbpf/actions/workflows/test.yml/badge.svg)](https://github.com/libbpf/libbpf/actions/workflows/test.yml)
