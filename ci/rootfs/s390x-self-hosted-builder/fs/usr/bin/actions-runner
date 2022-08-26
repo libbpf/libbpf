@@ -7,7 +7,7 @@
 #
 # - repo=<owner>/<name>
 # - access_token=<ghp_***>
-#
+# - runner_name=<hostname>
 
 set -e -u
 
@@ -34,6 +34,7 @@ registration_token=$(jq --raw-output .token "$token_file")
     --url "https://github.com/$repo" \
     --token "$registration_token" \
     --labels z15 \
+    --name "$runner_name" \
     --ephemeral
 
 # Run one job.
