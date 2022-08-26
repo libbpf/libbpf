@@ -15,7 +15,7 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Run coverity
         run: |
-          source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+          source "${GITHUB_WORKSPACE}"/ci/vmtest/helpers.sh
           foldable start "Setup CI env"
           source /tmp/ci_setup
           export COVERITY_SCAN_NOTIFICATION_EMAIL="${AUTHOR_EMAIL}"
