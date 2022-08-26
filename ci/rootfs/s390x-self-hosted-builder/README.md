@@ -36,6 +36,7 @@ $ sudo systemctl daemon-reload
 $ sudo tee /etc/actions-runner-libbpf
 repo=<owner>/<name>
 access_token=<ghp_***>
+runner_name=<hostname>
 ```
 
 Access token should have the repo scope, consult
