@@ -87,6 +87,7 @@ runs:
     - name: Run selftests
       uses: libbpf/ci/run-qemu@master
       with:
+        arch: ${{ inputs.arch }}
         img: '/tmp/root.img'
         vmlinuz: 'vmlinuz'
-        arch: ${{ inputs.arch }}
+        kernel-root: '.kernel'
