@@ -85,6 +85,9 @@ runs:
         image-output: '/tmp/root.img'
     # 5. run selftest in QEMU
     - name: Run selftests
+      env:
+        KERNEL: ${{ inputs.kernel }}
+        REPO_ROOT: ${{ github.workspace }}
       uses: libbpf/ci/run-qemu@master
       with:
         img: '/tmp/root.img'
