@@ -111,6 +111,7 @@
 #define __PT_PARM3_REG rdx
 #define __PT_PARM4_REG rcx
 #define __PT_PARM5_REG r8
+#define __PT_PARM6_REG r9
 #define __PT_RET_REG rsp
 #define __PT_FP_REG rbp
 #define __PT_RC_REG rax
@@ -274,6 +275,9 @@ struct pt_regs;
 #define PT_REGS_PARM3(x) (__PT_REGS_CAST(x)->__PT_PARM3_REG)
 #define PT_REGS_PARM4(x) (__PT_REGS_CAST(x)->__PT_PARM4_REG)
 #define PT_REGS_PARM5(x) (__PT_REGS_CAST(x)->__PT_PARM5_REG)
+#ifdef __PT_PARM6_REG
+#define PT_REGS_PARM6(x) (__PT_REGS_CAST(x)->__PT_PARM6_REG)
+#endif
 #define PT_REGS_RET(x) (__PT_REGS_CAST(x)->__PT_RET_REG)
 #define PT_REGS_FP(x) (__PT_REGS_CAST(x)->__PT_FP_REG)
 #define PT_REGS_RC(x) (__PT_REGS_CAST(x)->__PT_RC_REG)
