@@ -32,6 +32,7 @@ TOPDIR = ..
 INCLUDES := -I. -I$(TOPDIR)/include -I$(TOPDIR)/include/uapi
 ALL_CFLAGS := $(INCLUDES)
 
+STATIC_CFLAGS += -fPIC -shared
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall -std=gnu89
@@ -127,7 +128,7 @@ $(STATIC_OBJDIR) $(SHARED_OBJDIR):
 
 $(STATIC_OBJDIR)/%.o: %.c | $(STATIC_OBJDIR)
 	$(call msg,CC,$@)
-	$(Q)$(CC) $(ALL_CFLAGS) $(CPPFLAGS) -c $< -o $@
+	$(Q)$(CC) $(ALL_CFLAGS) $(STATIC_CFLAGS) $(CPPFLAGS) -c $< -o $@
 
 $(SHARED_OBJDIR)/%.o: %.c | $(SHARED_OBJDIR)
 	$(call msg,CC,$@)
