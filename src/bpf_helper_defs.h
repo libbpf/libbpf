@@ -3426,7 +3426,7 @@ static long (*bpf_load_hdr_opt)(struct bpf_sock_ops *skops, void *searchby_res, 
  *
  * 	**-EEXIST** if the option already exists.
  *
- * 	**-EFAULT** on failrue to parse the existing header options.
+ * 	**-EFAULT** on failure to parse the existing header options.
  *
  * 	**-EPERM** if the helper cannot be used under the current
  * 	*skops*\ **->op**.
@@ -3686,7 +3686,7 @@ static long (*bpf_redirect_peer)(__u32 ifindex, __u64 flags) = (void *) 155;
  * 	a *map* with *task* as the **key**.  From this
  * 	perspective,  the usage is not much different from
  * 	**bpf_map_lookup_elem**\ (*map*, **&**\ *task*) except this
- * 	helper enforces the key must be an task_struct and the map must also
+ * 	helper enforces the key must be a task_struct and the map must also
  * 	be a **BPF_MAP_TYPE_TASK_STORAGE**.
  *
  * 	Underneath, the value is stored locally at *task* instead of
@@ -3764,7 +3764,7 @@ static __u64 (*bpf_ktime_get_coarse_ns)(void) = (void *) 160;
 /*
  * bpf_ima_inode_hash
  *
- * 	Returns the stored IMA hash of the *inode* (if it's avaialable).
+ * 	Returns the stored IMA hash of the *inode* (if it's available).
  * 	If the hash is larger than *size*, then only *size*
  * 	bytes will be copied to *dst*
  *
@@ -3796,12 +3796,12 @@ static struct socket *(*bpf_sock_from_file)(struct file *file) = (void *) 162;
  *
  * 	The argument *len_diff* can be used for querying with a planned
  * 	size change. This allows to check MTU prior to changing packet
- * 	ctx. Providing an *len_diff* adjustment that is larger than the
+ * 	ctx. Providing a *len_diff* adjustment that is larger than the
  * 	actual packet size (resulting in negative packet size) will in
- * 	principle not exceed the MTU, why it is not considered a
- * 	failure.  Other BPF-helpers are needed for performing the
- * 	planned size change, why the responsability for catch a negative
- * 	packet size belong in those helpers.
+ * 	principle not exceed the MTU, which is why it is not considered
+ * 	a failure.  Other BPF helpers are needed for performing the
+ * 	planned size change; therefore the responsibility for catching
+ * 	a negative packet size belongs in those helpers.
  *
  * 	Specifying *ifindex* zero means the MTU check is performed
  * 	against the current net device.  This is practical if this isn't
@@ -4208,13 +4208,13 @@ static long (*bpf_strncmp)(const char *s1, __u32 s1_sz, const char *s2) = (void 
 /*
  * bpf_get_func_arg
  *
- * 	Get **n**-th argument (zero based) of the traced function (for tracing programs)
+ * 	Get **n**-th argument register (zero based) of the traced function (for tracing programs)
  * 	returned in **value**.
  *
  *
  * Returns
  * 	0 on success.
- * 	**-EINVAL** if n >= arguments count of traced function.
+ * 	**-EINVAL** if n >= argument register count of traced function.
  */
 static long (*bpf_get_func_arg)(void *ctx, __u32 n, __u64 *value) = (void *) 183;
 
@@ -4234,32 +4234,45 @@ static long (*bpf_get_func_ret)(void *ctx, __u64 *value) = (void *) 184;
 /*
  * bpf_get_func_arg_cnt
  *
- * 	Get number of arguments of the traced function (for tracing programs).
+ * 	Get number of registers of the traced function (for tracing programs) where
+ * 	function arguments are stored in these registers.
  *
  *
  * Returns
- * 	The number of arguments of the traced function.
+ * 	The number of argument registers of the traced function.
  */
 static long (*bpf_get_func_arg_cnt)(void *ctx) = (void *) 185;
 
 /*
  * bpf_get_retval
  *
- * 	Get the syscall's return value that will be returned to userspace.
+ * 	Get the BPF program's return value that will be returned to the upper layers.
  *
- * 	This helper is currently supported by cgroup programs only.
+ * 	This helper is currently supported by cgroup programs and only by the hooks
+ * 	where BPF program's return value is returned to the userspace via errno.
  *
  * Returns
- * 	The syscall's return value.
+ * 	The BPF program's return value.
  */
 static int (*bpf_get_retval)(void) = (void *) 186;
 
 /*
  * bpf_set_retval
  *
- * 	Set the syscall's return value that will be returned to userspace.
+ * 	Set the BPF program's return value that will be returned to the upper layers.
  *
- * 	This helper is currently supported by cgroup programs only.
+ * 	This helper is currently supported by cgroup programs and only by the hooks
+ * 	where BPF program's return value is returned to the userspace via errno.
+ *
+ * 	Note that there is the following corner case where the program exports an error
+ * 	via bpf_set_retval but signals success via 'return 1':
+ *
+ * 		bpf_set_retval(-EPERM);
+ * 		return 1;
+ *
+ * 	In this case, the BPF program's return value will use helper's -EPERM. This
+ * 	still holds true for cgroup/bind{4,6} which supports extra 'return 3' success case.
+ *
  *
  * Returns
  * 	0 on success, or a negative error in case of failure.
