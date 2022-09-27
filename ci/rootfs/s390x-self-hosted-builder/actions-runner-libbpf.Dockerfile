@@ -24,7 +24,9 @@ RUN apt-get update && apt-get -y install \
         rsync \
         software-properties-common \
         sudo \
-        tree
+        tree \
+        iproute2 \
+        iputils-ping
 
 # amd64 dependencies.
 COPY --from=ld-prefix / /usr/x86_64-linux-gnu/
