@@ -34,6 +34,8 @@ registration_token=$(jq --raw-output .token "$token_file")
     --url "https://github.com/$repo" \
     --token "$registration_token" \
     --labels z15 \
+    --replace \
+    --unattended \
     --name "$runner_name" \
     --ephemeral
 
