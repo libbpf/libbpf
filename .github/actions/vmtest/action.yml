@@ -36,7 +36,7 @@ runs:
     - name: Patch kernel source
       uses: libbpf/ci/patch-kernel@master
       with:
-        patches-root: '${{ github.workspace }}/travis-ci/diffs'
+        patches-root: '${{ github.workspace }}/ci/diffs'
         repo-root: '.kernel'
     - name: Prepare to build BPF selftests
       shell: bash
