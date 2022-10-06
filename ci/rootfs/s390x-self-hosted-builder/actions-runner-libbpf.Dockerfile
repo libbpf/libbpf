@@ -25,6 +25,7 @@ RUN apt-get update && apt-get -y install \
         software-properties-common \
         sudo \
         tree \
+        zstd \
         iproute2 \
         iputils-ping
 
