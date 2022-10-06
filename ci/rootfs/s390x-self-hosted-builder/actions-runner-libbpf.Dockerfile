@@ -16,6 +16,7 @@ RUN apt-get update && apt-get -y install \
         cmake \
         cpu-checker \
         curl \
+        wget \
         flex \
         git \
         jq \
