@@ -33,6 +33,9 @@ fi
 /bin/mount bpffs /sys/fs/bpf -t bpf
 /bin/mount debugfs /sys/kernel/debug -t debugfs
 
+# Symlink /dev/fd to /proc/self/fd so process substitution work.
+[[ -a /dev/fd ]] || ln -s /proc/self/fd /dev/fd
+
 echo 'Listing currently mounted file systems'
 /bin/mount
 EOF
