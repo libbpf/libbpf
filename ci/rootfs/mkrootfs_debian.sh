@@ -88,6 +88,6 @@ rm -rf \
 "$(dirname "$0")"/mkrootfs_tweak.sh "$root"
 
 # Save the result.
-name="libbpf-vmtest-rootfs-$(date +%Y.%m.%d).tar.zst"
+name="libbpf-vmtest-rootfs-$(date +%Y.%m.%d)-${arch}.tar.zst"
 rm -f "$name"
 tar -C "$root" -c . | zstd -T0 -19 -o "$name"
