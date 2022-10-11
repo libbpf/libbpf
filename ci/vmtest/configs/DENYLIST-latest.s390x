@@ -1,4 +1,5 @@
 # TEMPORARY until bpf-next -> bpf merge
+deny_namespace                           # failed to attach: ERROR: strerror_r(-524)=22                                (trampoline)
 lru_bug                                  # prog 'printk': failed to auto-attach: -524
 
 # TEMPORARY
