@@ -8,6 +8,7 @@ libbpf
 [![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
 [![Coverity](https://img.shields.io/coverity/scan/18195.svg)](https://scan.coverity.com/projects/libbpf)
 [![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/libbpf.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#libbpf)
+[![Read the Docs](https://readthedocs.org/projects/libbpf/badge/?version=latest)](https://libbpf.readthedocs.io/en/latest/)
 ======
 
 **This is the official home of the libbpf library.**
