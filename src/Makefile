@@ -77,7 +77,8 @@ INSTALL = install
 
 DESTDIR ?=
 
-ifeq ($(filter-out %64 %64be %64eb %64le %64el s390x, $(shell uname -m)),)
+HOSTARCH = $(firstword $(subst -, ,$(shell $(CC) -dumpmachine)))
+ifeq ($(filter-out %64 %64be %64eb %64le %64el s390x, $(HOSTARCH)),)
 	LIBSUBDIR := lib64
 else
 	LIBSUBDIR := lib
