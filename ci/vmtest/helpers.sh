@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 # $1 - start or end
 # $2 - fold identifier, no spaces
 # $3 - fold section description

@@ -104,7 +104,7 @@ cherry_pick_commits()
 	local libbpf_conflict_cnt
 	local desc
 
-	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} ${LIBBPF_PATHS[@]})
+	new_commits=$(git rev-list --no-merges --topo-order --reverse ${baseline_tag}..${tip_tag} "${LIBBPF_PATHS[@]}")
 	for new_commit in ${new_commits}; do
 		desc="$(commit_desc ${new_commit})"
 		signature="$(commit_signature ${new_commit} "${LIBBPF_PATHS[@]}")"
@@ -138,7 +138,7 @@ cherry_pick_commits()
 		echo "Picking '${desc}'..."
 		if ! git cherry-pick ${new_commit} &>/dev/null; then
 			echo "Warning! Cherry-picking '${desc} failed, checking if it's non-libbpf files causing problems..."
-			libbpf_conflict_cnt=$(git diff --name-only --diff-filter=U -- ${LIBBPF_PATHS[@]} | wc -l)
+			libbpf_conflict_cnt=$(git diff --name-only --diff-filter=U -- "${LIBBPF_PATHS[@]}" | wc -l)
 			conflict_cnt=$(git diff --name-only | wc -l)
 			prompt_resolution=1
 
@@ -316,10 +316,10 @@ cd_to ${LINUX_REPO}
 git checkout -b ${VIEW_TAG} ${TIP_COMMIT}
 FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --tree-filter "${LIBBPF_TREE_FILTER}" ${VIEW_TAG}^..${VIEW_TAG}
 FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f --subdirectory-filter __libbpf ${VIEW_TAG}^..${VIEW_TAG}
-git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LINUX_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/linux-view.ls
+git ls-files -- "${LIBBPF_VIEW_PATHS[@]}" | grep -v -E "${LINUX_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/linux-view.ls
 
 cd_to ${LIBBPF_REPO}
-git ls-files -- ${LIBBPF_VIEW_PATHS[@]} | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
+git ls-files -- "${LIBBPF_VIEW_PATHS[@]}" | grep -v -E "${LIBBPF_VIEW_EXCLUDE_REGEX}" > ${TMP_DIR}/github-view.ls
 
 echo "Comparing list of files..."
 diff -u ${TMP_DIR}/linux-view.ls ${TMP_DIR}/github-view.ls
