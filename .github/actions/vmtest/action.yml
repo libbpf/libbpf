@@ -77,11 +77,14 @@ runs:
     # 4. prepare rootfs
     - name: prepare rootfs
       uses: libbpf/ci/prepare-rootfs@master
+      env:
+        KBUILD_OUTPUT: '.kernel'
       with:
         project-name: 'libbpf'
         arch: ${{ inputs.arch }}
         kernel: ${{ inputs.kernel }}
         kernel-root: '.kernel'
+        kbuild-output: ${{ env.KBUILD_OUTPUT }}
         image-output: '/tmp/root.img'
     # 5. run selftest in QEMU
     - name: Run selftests
