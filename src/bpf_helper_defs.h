@@ -29,6 +29,7 @@ struct tcp_request_sock;
 struct udp6_sock;
 struct unix_sock;
 struct task_struct;
+struct cgroup;
 struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
@@ -4661,5 +4662,51 @@ static __u64 (*bpf_ktime_get_tai_ns)(void) = (void *) 208;
  * 	within a struct bpf_dynptr.
  */
 static long (*bpf_user_ringbuf_drain)(void *map, void *callback_fn, void *ctx, __u64 flags) = (void *) 209;
+
+/*
+ * bpf_cgrp_storage_get
+ *
+ * 	Get a bpf_local_storage from the *cgroup*.
+ *
+ * 	Logically, it could be thought of as getting the value from
+ * 	a *map* with *cgroup* as the **key**.  From this
+ * 	perspective,  the usage is not much different from
+ * 	**bpf_map_lookup_elem**\ (*map*, **&**\ *cgroup*) except this
+ * 	helper enforces the key must be a cgroup struct and the map must also
+ * 	be a **BPF_MAP_TYPE_CGRP_STORAGE**.
+ *
+ * 	In reality, the local-storage value is embedded directly inside of the
+ * 	*cgroup* object itself, rather than being located in the
+ * 	**BPF_MAP_TYPE_CGRP_STORAGE** map. When the local-storage value is
+ * 	queried for some *map* on a *cgroup* object, the kernel will perform an
+ * 	O(n) iteration over all of the live local-storage values for that
+ * 	*cgroup* object until the local-storage value for the *map* is found.
+ *
+ * 	An optional *flags* (**BPF_LOCAL_STORAGE_GET_F_CREATE**) can be
+ * 	used such that a new bpf_local_storage will be
+ * 	created if one does not exist.  *value* can be used
+ * 	together with **BPF_LOCAL_STORAGE_GET_F_CREATE** to specify
+ * 	the initial value of a bpf_local_storage.  If *value* is
+ * 	**NULL**, the new bpf_local_storage will be zero initialized.
+ *
+ * Returns
+ * 	A bpf_local_storage pointer is returned on success.
+ *
+ * 	**NULL** if not found or there was an error in adding
+ * 	a new bpf_local_storage.
+ */
+static void *(*bpf_cgrp_storage_get)(void *map, struct cgroup *cgroup, void *value, __u64 flags) = (void *) 210;
+
+/*
+ * bpf_cgrp_storage_delete
+ *
+ * 	Delete a bpf_local_storage from a *cgroup*.
+ *
+ * Returns
+ * 	0 on success.
+ *
+ * 	**-ENOENT** if the bpf_local_storage cannot be found.
+ */
+static long (*bpf_cgrp_storage_delete)(void *map, struct cgroup *cgroup) = (void *) 211;
 
 
