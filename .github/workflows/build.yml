@@ -23,14 +23,24 @@ jobs:
             target: RUN
           - name: ASan+UBSan
             target: RUN_ASAN
-          - name: clang
-            target: RUN_CLANG
           - name: clang ASan+UBSan
             target: RUN_CLANG_ASAN
-          - name: gcc-10
-            target: RUN_GCC10
           - name: gcc-10 ASan+UBSan
             target: RUN_GCC10_ASAN
+          - name: clang
+            target: RUN_CLANG
+          - name: clang-14
+            target: RUN_CLANG14
+          - name: clang-15
+            target: RUN_CLANG15
+          - name: clang-16
+            target: RUN_CLANG16
+          - name: gcc-10
+            target: RUN_GCC10
+          - name: gcc-11
+            target: RUN_GCC11
+          - name: gcc-12
+            target: RUN_GCC12
     steps:
       - uses: actions/checkout@v3
         name: Checkout
