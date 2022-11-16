@@ -42,6 +42,7 @@ PATH_MAP=(									\
 	[tools/include/uapi/linux/bpf_common.h]=include/uapi/linux/bpf_common.h	\
 	[tools/include/uapi/linux/bpf.h]=include/uapi/linux/bpf.h		\
 	[tools/include/uapi/linux/btf.h]=include/uapi/linux/btf.h		\
+	[tools/include/uapi/linux/fcntl.h]=include/uapi/linux/fcntl.h		\
 	[tools/include/uapi/linux/if_link.h]=include/uapi/linux/if_link.h	\
 	[tools/include/uapi/linux/if_xdp.h]=include/uapi/linux/if_xdp.h		\
 	[tools/include/uapi/linux/netlink.h]=include/uapi/linux/netlink.h	\
