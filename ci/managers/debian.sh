@@ -6,7 +6,7 @@ CONT_NAME="${CONT_NAME:-libbpf-debian-$DEBIAN_RELEASE}"
 ENV_VARS="${ENV_VARS:-}"
 DOCKER_RUN="${DOCKER_RUN:-docker run}"
 REPO_ROOT="${REPO_ROOT:-$PWD}"
-ADDITIONAL_DEPS=(clang pkg-config gcc-10)
+ADDITIONAL_DEPS=(clang pkgconf gcc-10)
 EXTRA_CFLAGS=""
 EXTRA_LDFLAGS=""
 
@@ -43,8 +43,7 @@ for phase in "${PHASES[@]}"; do
             docker_exec bash -c "echo deb-src http://deb.debian.org/debian $DEBIAN_RELEASE main >>/etc/apt/sources.list"
             docker_exec apt-get -y update
             docker_exec apt-get -y install aptitude
-            docker_exec aptitude -y build-dep libelf-dev
-            docker_exec aptitude -y install libelf-dev
+            docker_exec aptitude -y install make libz-dev libelf-dev
             docker_exec aptitude -y install "${ADDITIONAL_DEPS[@]}"
             echo -e "::endgroup::"
             ;;
@@ -56,8 +55,6 @@ for phase in "${PHASES[@]}"; do
             elif [[ "$phase" = *"GCC10"* ]]; then
                 ENV_VARS="-e CC=gcc-10 -e CXX=g++-10"
                 CC="gcc-10"
-            else
-                EXTRA_CFLAGS="${EXTRA_CFLAGS} -Wno-stringop-truncation"
             fi
             if [[ "$phase" = *"ASAN"* ]]; then
                 EXTRA_CFLAGS="${EXTRA_CFLAGS} -fsanitize=address,undefined"
