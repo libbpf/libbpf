@@ -28,7 +28,7 @@ jobs:
             runs_on: ubuntu-latest
             arch: 'x86_64'
           - kernel: 'LATEST'
-            runs_on: z15
+            runs_on: s390x
             arch: 's390x'
     steps:
       - uses: actions/checkout@v3
