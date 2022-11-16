@@ -5,8 +5,8 @@
 
 libbpf
 [![Github Actions Builds & Tests](https://github.com/libbpf/libbpf/actions/workflows/test.yml/badge.svg)](https://github.com/libbpf/libbpf/actions/workflows/test.yml)
-[![Total alerts](https://img.shields.io/lgtm/alerts/g/libbpf/libbpf.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/libbpf/libbpf/alerts/)
 [![Coverity](https://img.shields.io/coverity/scan/18195.svg)](https://scan.coverity.com/projects/libbpf)
+[![CodeQL](https://github.com/libbpf/libbpf/workflows/CodeQL/badge.svg?branch=master)](https://github.com/libbpf/libbpf/actions?query=workflow%3ACodeQL+branch%3Amaster)
 [![OSS-Fuzz Status](https://oss-fuzz-build-logs.storage.googleapis.com/badges/libbpf.svg)](https://oss-fuzz-build-logs.storage.googleapis.com/index.html#libbpf)
 [![Read the Docs](https://readthedocs.org/projects/libbpf/badge/?version=latest)](https://libbpf.readthedocs.io/en/latest/)
 ======
