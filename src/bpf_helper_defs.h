@@ -29,7 +29,6 @@ struct tcp_request_sock;
 struct udp6_sock;
 struct unix_sock;
 struct task_struct;
-struct cgroup;
 struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
@@ -43,6 +42,7 @@ struct mptcp_sock;
 struct bpf_dynptr;
 struct iphdr;
 struct ipv6hdr;
+struct cgroup;
 
 /*
  * bpf_map_lookup_elem
