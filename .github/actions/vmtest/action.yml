@@ -36,29 +36,31 @@ runs:
     - name: Patch kernel source
       uses: libbpf/ci/patch-kernel@master
       with:
-        patches-root: '${{ github.workspace }}/travis-ci/diffs'
+        patches-root: '${{ github.workspace }}/ci/diffs'
         repo-root: '.kernel'
     - name: Prepare to build BPF selftests
       shell: bash
       run: |
-        echo "::group::Prepare building selftest"
+        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+        foldable start "Prepare building selftest"
         cd .kernel
         cat tools/testing/selftests/bpf/config \
             tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
         make olddefconfig && make prepare
         cd -
-        echo "::endgroup::"
+        foldable end
     # 2. if kernel == LATEST, build kernel image from tree
     - name: Build kernel image
       if: ${{ inputs.kernel == 'LATEST' }}
       shell: bash
       run: |
-        echo "::group::Build Kernel Image"
+        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+        foldable start "Build Kernel Image"
         cd .kernel
         make -j $((4*$(nproc))) all > /dev/null
         cp vmlinux ${{ github.workspace }}
         cd -
-        echo "::endgroup::"
+        foldable end
     # else, just download prebuilt kernel image
     - name: Download prebuilt kernel
       if: ${{ inputs.kernel != 'LATEST' }}
@@ -75,15 +77,23 @@ runs:
     # 4. prepare rootfs
     - name: prepare rootfs
       uses: libbpf/ci/prepare-rootfs@master
+      env:
+        KBUILD_OUTPUT: '.kernel'
       with:
-        kernel: ${{ inputs.kernel }}
         project-name: 'libbpf'
         arch: ${{ inputs.arch }}
+        kernel: ${{ inputs.kernel }}
+        kernel-root: '.kernel'
+        kbuild-output: ${{ env.KBUILD_OUTPUT }}
         image-output: '/tmp/root.img'
     # 5. run selftest in QEMU
     - name: Run selftests
+      env:
+        KERNEL: ${{ inputs.kernel }}
+        REPO_ROOT: ${{ github.workspace }}
       uses: libbpf/ci/run-qemu@master
       with:
+        arch: ${{ inputs.arch }}
         img: '/tmp/root.img'
         vmlinuz: 'vmlinuz'
-        arch: ${{ inputs.arch }}
+        kernel-root: '.kernel'

@@ -6,7 +6,7 @@ runs:
     - id: variables
       run: |
         export REPO_ROOT=$GITHUB_WORKSPACE
-        export CI_ROOT=$REPO_ROOT/travis-ci
+        export CI_ROOT=$REPO_ROOT/ci
         # this is somewhat ugly, but that is the easiest way to share this code with
         # arch specific docker
         echo 'echo ::group::Env setup' > /tmp/ci_setup
@@ -16,7 +16,7 @@ runs:
         echo export PROJECT_NAME='libbpf' >> /tmp/ci_setup
         echo export AUTHOR_EMAIL="$(git log -1 --pretty=\"%aE\")" >> /tmp/ci_setup
         echo export REPO_ROOT=$GITHUB_WORKSPACE >> /tmp/ci_setup
-        echo export CI_ROOT=$REPO_ROOT/travis-ci >> /tmp/ci_setup
+        echo export CI_ROOT=$REPO_ROOT/ci >> /tmp/ci_setup
         echo export VMTEST_ROOT=$CI_ROOT/vmtest >> /tmp/ci_setup
         echo 'echo ::endgroup::' >> /tmp/ci_setup
       shell: bash

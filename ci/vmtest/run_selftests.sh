@@ -28,7 +28,7 @@ test_progs() {
 	fi
 }
 
-test_progs_noalu() {
+test_progs_no_alu32() {
 	foldable start test_progs-no_alu32 "Testing test_progs-no_alu32"
 	./test_progs-no_alu32 ${DENYLIST:+-d$DENYLIST} ${ALLOWLIST:+-a$ALLOWLIST} && true
 	echo "test_progs-no_alu32:$?" >> "${STATUS_FILE}"
@@ -55,9 +55,20 @@ test_verifier() {
 
 foldable end vm_init
 
-configs_path=${PROJECT_NAME}/vmtest/configs
-DENYLIST=$(read_lists "$configs_path/DENYLIST-${KERNEL}" "$configs_path/DENYLIST-${KERNEL}.${ARCH}")
-ALLOWLIST=$(read_lists "$configs_path/ALLOWLIST-${KERNEL}" "$configs_path/ALLOWLIST-${KERNEL}.${ARCH}")
+configs_path=/${PROJECT_NAME}/selftests/bpf
+local_configs_path=${PROJECT_NAME}/vmtest/configs
+DENYLIST=$(read_lists \
+	"$configs_path/DENYLIST" \
+	"$configs_path/DENYLIST.${ARCH}" \
+	"$local_configs_path/DENYLIST-${KERNEL}" \
+	"$local_configs_path/DENYLIST-${KERNEL}.${ARCH}" \
+)
+ALLOWLIST=$(read_lists \
+	"$configs_path/ALLOWLIST" \
+	"$configs_path/ALLOWLIST.${ARCH}" \
+	"$local_configs_path/ALLOWLIST-${KERNEL}" \
+	"$local_configs_path/ALLOWLIST-${KERNEL}.${ARCH}" \
+)
 
 echo "DENYLIST: ${DENYLIST}"
 echo "ALLOWLIST: ${ALLOWLIST}"
@@ -66,7 +77,7 @@ cd ${PROJECT_NAME}/selftests/bpf
 
 if [ $# -eq 0 ]; then
 	test_progs
-	test_progs_noalu
+	test_progs_no_alu32
 	test_maps
 	test_verifier
 else

@@ -6,7 +6,7 @@ CONT_NAME="${CONT_NAME:-libbpf-debian-$DEBIAN_RELEASE}"
 ENV_VARS="${ENV_VARS:-}"
 DOCKER_RUN="${DOCKER_RUN:-docker run}"
 REPO_ROOT="${REPO_ROOT:-$PWD}"
-ADDITIONAL_DEPS=(clang pkg-config gcc-10)
+ADDITIONAL_DEPS=(pkgconf)
 EXTRA_CFLAGS=""
 EXTRA_LDFLAGS=""
 
@@ -43,30 +43,35 @@ for phase in "${PHASES[@]}"; do
             docker_exec bash -c "echo deb-src http://deb.debian.org/debian $DEBIAN_RELEASE main >>/etc/apt/sources.list"
             docker_exec apt-get -y update
             docker_exec apt-get -y install aptitude
-            docker_exec aptitude -y build-dep libelf-dev
-            docker_exec aptitude -y install libelf-dev
+            docker_exec aptitude -y install make libz-dev libelf-dev
             docker_exec aptitude -y install "${ADDITIONAL_DEPS[@]}"
             echo -e "::endgroup::"
             ;;
-        RUN|RUN_CLANG|RUN_GCC10|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC10_ASAN)
+        RUN|RUN_CLANG|RUN_CLANG14|RUN_CLANG15|RUN_CLANG16|RUN_GCC10|RUN_GCC11|RUN_GCC12|RUN_ASAN|RUN_CLANG_ASAN|RUN_GCC10_ASAN)
             CC="cc"
-            if [[ "$phase" = *"CLANG"* ]]; then
+            if [[ "$phase" =~ "RUN_CLANG(\d+)(_ASAN)?" ]]; then
+                ENV_VARS="-e CC=clang-${BASH_REMATCH[1]} -e CXX=clang++-${BASH_REMATCH[1]}"
+                CC="clang-${BASH_REMATCH[1]}"
+            elif [[ "$phase" = *"CLANG"* ]]; then
                 ENV_VARS="-e CC=clang -e CXX=clang++"
                 CC="clang"
-            elif [[ "$phase" = *"GCC10"* ]]; then
-                ENV_VARS="-e CC=gcc-10 -e CXX=g++-10"
-                CC="gcc-10"
-            else
-                EXTRA_CFLAGS="${EXTRA_CFLAGS} -Wno-stringop-truncation"
+            elif [[ "$phase" =~ "RUN_GCC(\d+)(_ASAN)?" ]]; then
+                ENV_VARS="-e CC=gcc-${BASH_REMATCH[1]} -e CXX=g++-${BASH_REMATCH[1]}"
+                CC="gcc-${BASH_REMATCH[1]}"
             fi
             if [[ "$phase" = *"ASAN"* ]]; then
                 EXTRA_CFLAGS="${EXTRA_CFLAGS} -fsanitize=address,undefined"
                 EXTRA_LDFLAGS="${EXTRA_LDFLAGS} -fsanitize=address,undefined"
             fi
+            if [[ "$CC" != "cc" ]]; then
+                docker_exec aptitude -y install "$CC"
+            else
+                docker_exec aptitude -y install gcc
+            fi
             docker_exec mkdir build install
             docker_exec ${CC} --version
             info "build"
-	    docker_exec make -j$((4*$(nproc))) EXTRA_CFLAGS="${EXTRA_CFLAGS}" EXTRA_LDFLAGS="${EXTRA_LDFLAGS}" -C ./src -B OBJDIR=../build
+            docker_exec make -j$((4*$(nproc))) EXTRA_CFLAGS="${EXTRA_CFLAGS}" EXTRA_LDFLAGS="${EXTRA_LDFLAGS}" -C ./src -B OBJDIR=../build
             info "ldd build/libbpf.so:"
             docker_exec ldd build/libbpf.so
             if ! docker_exec ldd build/libbpf.so | grep -q libelf; then
