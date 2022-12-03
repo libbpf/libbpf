@@ -29,6 +29,7 @@ struct tcp_request_sock;
 struct udp6_sock;
 struct unix_sock;
 struct task_struct;
+struct cgroup;
 struct __sk_buff;
 struct sk_msg_md;
 struct xdp_md;
@@ -42,7 +43,6 @@ struct mptcp_sock;
 struct bpf_dynptr;
 struct iphdr;
 struct ipv6hdr;
-struct cgroup;
 
 /*
  * bpf_map_lookup_elem
@@ -1210,14 +1210,19 @@ static long (*bpf_set_hash)(struct __sk_buff *skb, __u32 hash) = (void *) 48;
  * 	* **SOL_SOCKET**, which supports the following *optname*\ s:
  * 	  **SO_RCVBUF**, **SO_SNDBUF**, **SO_MAX_PACING_RATE**,
  * 	  **SO_PRIORITY**, **SO_RCVLOWAT**, **SO_MARK**,
- * 	  **SO_BINDTODEVICE**, **SO_KEEPALIVE**.
+ * 	  **SO_BINDTODEVICE**, **SO_KEEPALIVE**, **SO_REUSEADDR**,
+ * 	  **SO_REUSEPORT**, **SO_BINDTOIFINDEX**, **SO_TXREHASH**.
  * 	* **IPPROTO_TCP**, which supports the following *optname*\ s:
  * 	  **TCP_CONGESTION**, **TCP_BPF_IW**,
  * 	  **TCP_BPF_SNDCWND_CLAMP**, **TCP_SAVE_SYN**,
  * 	  **TCP_KEEPIDLE**, **TCP_KEEPINTVL**, **TCP_KEEPCNT**,
- * 	  **TCP_SYNCNT**, **TCP_USER_TIMEOUT**, **TCP_NOTSENT_LOWAT**.
+ * 	  **TCP_SYNCNT**, **TCP_USER_TIMEOUT**, **TCP_NOTSENT_LOWAT**,
+ * 	  **TCP_NODELAY**, **TCP_MAXSEG**, **TCP_WINDOW_CLAMP**,
+ * 	  **TCP_THIN_LINEAR_TIMEOUTS**, **TCP_BPF_DELACK_MAX**,
+ * 	  **TCP_BPF_RTO_MIN**.
  * 	* **IPPROTO_IP**, which supports *optname* **IP_TOS**.
- * 	* **IPPROTO_IPV6**, which supports *optname* **IPV6_TCLASS**.
+ * 	* **IPPROTO_IPV6**, which supports the following *optname*\ s:
+ * 	  **IPV6_TCLASS**, **IPV6_AUTOFLOWLABEL**.
  *
  * Returns
  * 	0 on success, or a negative error in case of failure.
@@ -1307,7 +1312,7 @@ static long (*bpf_skb_adjust_room)(struct __sk_buff *skb, __s32 len_diff, __u32 
  * 	**XDP_REDIRECT** on success, or the value of the two lower bits
  * 	of the *flags* argument on error.
  */
-static long (*bpf_redirect_map)(void *map, __u32 key, __u64 flags) = (void *) 51;
+static long (*bpf_redirect_map)(void *map, __u64 key, __u64 flags) = (void *) 51;
 
 /*
  * bpf_sk_redirect_map
@@ -1466,12 +1471,10 @@ static long (*bpf_perf_prog_read_value)(struct bpf_perf_event_data *ctx, struct 
  * 	  and **BPF_CGROUP_INET6_CONNECT**.
  *
  * 	This helper actually implements a subset of **getsockopt()**.
- * 	It supports the following *level*\ s:
- *
- * 	* **IPPROTO_TCP**, which supports *optname*
- * 	  **TCP_CONGESTION**.
- * 	* **IPPROTO_IP**, which supports *optname* **IP_TOS**.
- * 	* **IPPROTO_IPV6**, which supports *optname* **IPV6_TCLASS**.
+ * 	It supports the same set of *optname*\ s that is supported by
+ * 	the **bpf_setsockopt**\ () helper.  The exceptions are
+ * 	**TCP_BPF_*** is **bpf_setsockopt**\ () only and
+ * 	**TCP_SAVED_SYN** is **bpf_getsockopt**\ () only.
  *
  * Returns
  * 	0 on success, or a negative error in case of failure.
