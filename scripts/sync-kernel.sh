@@ -86,7 +86,9 @@ commit_desc()
 # $2 - paths filter
 commit_signature()
 {
-	git show --pretty='("%s")|%aI|%b' --shortstat $1 -- ${2-.} | tr '\n' '|'
+	local ref=$1
+	shift
+	git show --pretty='("%s")|%aI|%b' --shortstat $ref -- "${@-.}" | tr '\n' '|'
 }
 
 # Cherry-pick commits touching libbpf-related files
