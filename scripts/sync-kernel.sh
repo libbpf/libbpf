@@ -285,7 +285,7 @@ cd_to ${LIBBPF_REPO}
 helpers_changes=$(git status --porcelain src/bpf_helper_defs.h | wc -l)
 if ((${helpers_changes} == 1)); then
 	git add src/bpf_helper_defs.h
-	git commit -m "sync: auto-generate latest BPF helpers
+	git commit -s -m "sync: auto-generate latest BPF helpers
 
 Latest changes to BPF helper definitions.
 " -- src/bpf_helper_defs.h
@@ -307,7 +307,7 @@ Baseline bpf-next commit:   ${BASELINE_COMMIT}\n\
 Checkpoint bpf-next commit: ${TIP_COMMIT}\n\
 Baseline bpf commit:        ${BPF_BASELINE_COMMIT}\n\
 Checkpoint bpf commit:      ${BPF_TIP_COMMIT}/" |				      \
-git commit --file=-
+git commit -s --file=-
 
 echo "SUCCESS! ${COMMIT_CNT} commits synced."
 
