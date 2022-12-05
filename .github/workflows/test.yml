@@ -19,13 +19,13 @@ jobs:
       matrix:
         include:
           - kernel: 'LATEST'
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-20.04
             arch: 'x86_64'
           - kernel: '5.5.0'
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-20.04
             arch: 'x86_64'
           - kernel: '4.9.0'
-            runs_on: ubuntu-latest
+            runs_on: ubuntu-20.04
             arch: 'x86_64'
           - kernel: 'LATEST'
             runs_on: s390x
