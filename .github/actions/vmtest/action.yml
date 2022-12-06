@@ -94,6 +94,7 @@ runs:
       uses: libbpf/ci/run-qemu@master
       with:
         arch: ${{ inputs.arch }}
+        kernel-test: 'test_progs,test_progs_no_alu32,test_verifier'
         img: '/tmp/root.img'
         vmlinuz: 'vmlinuz'
         kernel-root: '.kernel'
