@@ -78,7 +78,7 @@ cd ${PROJECT_NAME}/selftests/bpf
 if [ $# -eq 0 ]; then
 	test_progs
 	test_progs_no_alu32
-	test_maps
+	# test_maps
 	test_verifier
 else
 	for test_name in "$@"; do
