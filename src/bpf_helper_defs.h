@@ -4488,7 +4488,7 @@ static void (*bpf_ringbuf_discard_dynptr)(struct bpf_dynptr *ptr, __u64 flags) =
  * 	of *src*'s data, -EINVAL if *src* is an invalid dynptr or if
  * 	*flags* is not 0.
  */
-static long (*bpf_dynptr_read)(void *dst, __u32 len, struct bpf_dynptr *src, __u32 offset, __u64 flags) = (void *) 201;
+static long (*bpf_dynptr_read)(void *dst, __u32 len, const struct bpf_dynptr *src, __u32 offset, __u64 flags) = (void *) 201;
 
 /*
  * bpf_dynptr_write
@@ -4502,7 +4502,7 @@ static long (*bpf_dynptr_read)(void *dst, __u32 len, struct bpf_dynptr *src, __u
  * 	of *dst*'s data, -EINVAL if *dst* is an invalid dynptr or if *dst*
  * 	is a read-only dynptr or if *flags* is not 0.
  */
-static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len, __u64 flags) = (void *) 202;
+static long (*bpf_dynptr_write)(const struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len, __u64 flags) = (void *) 202;
 
 /*
  * bpf_dynptr_data
@@ -4517,7 +4517,7 @@ static long (*bpf_dynptr_write)(struct bpf_dynptr *dst, __u32 offset, void *src,
  * 	read-only, if the dynptr is invalid, or if the offset and length
  * 	is out of bounds.
  */
-static void *(*bpf_dynptr_data)(struct bpf_dynptr *ptr, __u32 offset, __u32 len) = (void *) 203;
+static void *(*bpf_dynptr_data)(const struct bpf_dynptr *ptr, __u32 offset, __u32 len) = (void *) 203;
 
 /*
  * bpf_tcp_raw_gen_syncookie_ipv4
@@ -4630,7 +4630,7 @@ static __u64 (*bpf_ktime_get_tai_ns)(void) = (void *) 208;
  * 	Drain samples from the specified user ring buffer, and invoke
  * 	the provided callback for each such sample:
  *
- * 	long (\*callback_fn)(struct bpf_dynptr \*dynptr, void \*ctx);
+ * 	long (\*callback_fn)(const struct bpf_dynptr \*dynptr, void \*ctx);
  *
  * 	If **callback_fn** returns 0, the helper will continue to try
  * 	and drain the next sample, up to a maximum of
