@@ -537,6 +537,9 @@ static long (*bpf_skb_get_tunnel_key)(struct __sk_buff *skb, struct bpf_tunnel_k
  * 		sending the packet. This flag was added for GRE
  * 		encapsulation, but might be used with other protocols
  * 		as well in the future.
+ * 	**BPF_F_NO_TUNNEL_KEY**
+ * 		Add a flag to tunnel metadata indicating that no tunnel
+ * 		key should be set in the resulting tunnel header.
  *
  * 	Here is a typical usage on the transmit path:
  *
