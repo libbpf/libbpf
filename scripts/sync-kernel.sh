@@ -260,7 +260,7 @@ if ((${COMMIT_CNT} <= 0)); then
 fi
 
 # Exclude baseline commit and generate nice cover letter with summary
-git format-patch ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --cover-letter -o ${TMP_DIR}/patches
+git format-patch --no-signature ${SQUASH_BASE_TAG}..${SQUASH_TIP_TAG} --cover-letter -o ${TMP_DIR}/patches
 
 # Now is time to re-apply libbpf-related linux patches to libbpf repo
 cd_to ${LIBBPF_REPO}
