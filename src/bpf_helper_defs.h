@@ -53,7 +53,8 @@ struct ipv6hdr;
  * 	Map value associated to *key*, or **NULL** if no entry was
  * 	found.
  */
-static void *(*bpf_map_lookup_elem)(void *map, const void *key) = (void *) 1;
+static void *(*bpf_map_lookup_elem)(void *map, const void *key) =
+ (void *(*)(void *, const void*)) 1;
 
 /*
  * bpf_map_update_elem
@@ -75,7 +76,8 @@ static void *(*bpf_map_lookup_elem)(void *map, const void *key) = (void *) 1;
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_map_update_elem)(void *map, const void *key, const void *value, __u64 flags) = (void *) 2;
+static long (*bpf_map_update_elem)(void *map, const void *key, const void *value, __u64 flags) =
+ (long(*)(void *, const void*, const void*, __u64)) 2;
 
 /*
  * bpf_map_delete_elem
@@ -85,7 +87,8 @@ static long (*bpf_map_update_elem)(void *map, const void *key, const void *value
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_map_delete_elem)(void *map, const void *key) = (void *) 3;
+static long (*bpf_map_delete_elem)(void *map, const void *key) =
+ (long(*)(void *, const void*)) 3;
 
 /*
  * bpf_probe_read
@@ -99,7 +102,8 @@ static long (*bpf_map_delete_elem)(void *map, const void *key) = (void *) 3;
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_probe_read)(void *dst, __u32 size, const void *unsafe_ptr) = (void *) 4;
+static long (*bpf_probe_read)(void *dst, __u32 size, const void *unsafe_ptr) =
+ (long(*)(void *, __u32, const void*)) 4;
 
 /*
  * bpf_ktime_get_ns
@@ -111,7 +115,8 @@ static long (*bpf_probe_read)(void *dst, __u32 size, const void *unsafe_ptr) = (
  * Returns
  * 	Current *ktime*.
  */
-static __u64 (*bpf_ktime_get_ns)(void) = (void *) 5;
+static __u64 (*bpf_ktime_get_ns)(void) =
+ (__u64(*)(void )) 5;
 
 /*
  * bpf_trace_printk
@@ -174,7 +179,8 @@ static __u64 (*bpf_ktime_get_ns)(void) = (void *) 5;
  * 	The number of bytes written to the buffer, or a negative error
  * 	in case of failure.
  */
-static long (*bpf_trace_printk)(const char *fmt, __u32 fmt_size, ...) = (void *) 6;
+static long (*bpf_trace_printk)(const char *fmt, __u32 fmt_size, ...) =
+ (long(*)(const char *, __u32, ...)) 6;
 
 /*
  * bpf_get_prandom_u32
@@ -190,7 +196,7 @@ static long (*bpf_trace_printk)(const char *fmt, __u32 fmt_size, ...) = (void *)
  * Returns
  * 	A random 32-bit unsigned value.
  */
-static __u32 (*bpf_get_prandom_u32)(void) = (void *) 7;
+static __u32 (*bpf_get_prandom_u32)(void) = (__u32(*)(void)) 7;
 
 /*
  * bpf_get_smp_processor_id
@@ -203,7 +209,7 @@ static __u32 (*bpf_get_prandom_u32)(void) = (void *) 7;
  * Returns
  * 	The SMP id of the processor running the program.
  */
-static __u32 (*bpf_get_smp_processor_id)(void) = (void *) 8;
+static __u32 (*bpf_get_smp_processor_id)(void) = (__u32(*)(void)) 8;
 
 /*
  * bpf_skb_store_bytes
@@ -224,7 +230,8 @@ static __u32 (*bpf_get_smp_processor_id)(void) = (void *) 8;
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_skb_store_bytes)(struct __sk_buff *skb, __u32 offset, const void *from, __u32 len, __u64 flags) = (void *) 9;
+static long (*bpf_skb_store_bytes)(struct __sk_buff *skb, __u32 offset, const void *from, __u32 len, __u64 flags) =
+ (long(*)(struct __sk_buff *, __u32, const void *, __u32, __u64)) 9;
 
 /*
  * bpf_l3_csum_replace
@@ -253,7 +260,8 @@ static long (*bpf_skb_store_bytes)(struct __sk_buff *skb, __u32 offset, const vo
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_l3_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 from, __u64 to, __u64 size) = (void *) 10;
+static long (*bpf_l3_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 from, __u64 to, __u64 size) =
+ (long(*)(struct __sk_buff *, __u32, __u64, __u64, __u64)) 10;
 
 /*
  * bpf_l4_csum_replace
@@ -289,7 +297,8 @@ static long (*bpf_l3_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 fr
  * Returns
  * 	0 on success, or a negative error in case of failure.
  */
-static long (*bpf_l4_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 from, __u64 to, __u64 flags) = (void *) 11;
+static long (*bpf_l4_csum_replace)(struct __sk_buff *skb, __u32 offset, __u64 from, __u64 to, __u64 flags) =
+ (long(*)(struct __sk_buff *, __u32, __u64, __u64, __u64)) 11;
 
 /*
  * bpf_tail_call
