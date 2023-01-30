@@ -8,7 +8,7 @@ source ${THISDIR}/helpers.sh
 
 foldable start prepare_selftests "Building selftests"
 
-LLVM_VER=16
+LLVM_VER=17
 LIBBPF_PATH="${REPO_ROOT}"
 
 PREPARE_SELFTESTS_SCRIPT=${THISDIR}/prepare_selftests-${KERNEL}.sh
