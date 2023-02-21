@@ -1835,6 +1835,11 @@ static long (*bpf_skb_load_bytes_relative)(const void *skb, __u32 offset, void *
  * 	**BPF_FIB_LOOKUP_OUTPUT**
  * 		Perform lookup from an egress perspective (default is
  * 		ingress).
+ * 	**BPF_FIB_LOOKUP_SKIP_NEIGH**
+ * 		Skip the neighbour table lookup. *params*->dmac
+ * 		and *params*->smac will not be set as output. A common
+ * 		use case is to call **bpf_redirect_neigh**\ () after
+ * 		doing **bpf_fib_lookup**\ ().
  *
  * 	*ctx* is either **struct xdp_md** for XDP programs or
  * 	**struct sk_buff** tc cls_act programs.
