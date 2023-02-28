@@ -173,7 +173,7 @@ bpf-next to Github sync
 =======================
 
 All the gory details of syncing can be found in `scripts/sync-kernel.sh`
-script.
+script. See [SYNC.md](SYNC.md) for instruction.
 
 Some header files in this repo (`include/linux/*.h`) are reduced versions of
 their counterpart files at
