@@ -4028,6 +4028,12 @@ static long (*bpf_timer_set_callback)(struct bpf_timer *timer, void *callback_fn
  * 	different maps if key/value layout matches across maps.
  * 	Every bpf_timer_set_callback() can have different callback_fn.
  *
+ * 	*flags* can be one of:
+ *
+ * 	**BPF_F_TIMER_ABS**
+ * 		Start the timer in absolute expire value instead of the
+ * 		default relative one.
+ *
  *
  * Returns
  * 	0 on success.
@@ -4508,12 +4514,23 @@ static long (*bpf_dynptr_read)(void *dst, __u32 len, const struct bpf_dynptr *sr
  *
  * 	Write *len* bytes from *src* into *dst*, starting from *offset*
  * 	into *dst*.
- * 	*flags* is currently unused.
+ *
+ * 	*flags* must be 0 except for skb-type dynptrs.
+ *
+ * 	For skb-type dynptrs:
+ * 	    *  All data slices of the dynptr are automatically
+ * 	       invalidated after **bpf_dynptr_write**\ (). This is
+ * 	       because writing may pull the skb and change the
+ * 	       underlying packet buffer.
+ *
+ * 	    *  For *flags*, please see the flags accepted by
+ * 	       **bpf_skb_store_bytes**\ ().
  *
  * Returns
  * 	0 on success, -E2BIG if *offset* + *len* exceeds the length
  * 	of *dst*'s data, -EINVAL if *dst* is an invalid dynptr or if *dst*
- * 	is a read-only dynptr or if *flags* is not 0.
+ * 	is a read-only dynptr or if *flags* is not correct. For skb-type dynptrs,
+ * 	other errors correspond to errors returned by **bpf_skb_store_bytes**\ ().
  */
 static long (*bpf_dynptr_write)(const struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len, __u64 flags) = (void *) 202;
 
@@ -4524,6 +4541,9 @@ static long (*bpf_dynptr_write)(const struct bpf_dynptr *dst, __u32 offset, void
  *
  * 	*len* must be a statically known value. The returned data slice
  * 	is invalidated whenever the dynptr is invalidated.
+ *
+ * 	skb and xdp type dynptrs may not use bpf_dynptr_data. They should
+ * 	instead use bpf_dynptr_slice and bpf_dynptr_slice_rdwr.
  *
  * Returns
  * 	Pointer to the underlying dynptr data, NULL if the dynptr is
