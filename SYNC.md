@@ -152,6 +152,20 @@ sure that each such commit has `Signed-off-by: Your Full Name <your@email.com>`,
 just like you'd do that for Linux upstream patch. Libbpf closely follows kernel
 conventions and styling, so please help maintaining that.
 
+Including new sources
+---------------------
+
+If entirely new source files (typically `*.c`) were added to the library in the
+kernel repository, it may be necessary to add these to the build system
+manually (you may notice linker errors otherwise), because the script cannot
+handle such changes automatically. To that end, edit `src/Makefile` as
+necessary. Commit
+[c2495832ced4](https://github.com/libbpf/libbpf/commit/c2495832ced4239bcd376b9954db38a6addd89ca)
+is an example of how to go about doing that.
+
+Similarly, if new public API header files were added, the `Makefile` will need
+to be adjusted as well.
+
 Updating allow/deny lists
 -------------------------
 
