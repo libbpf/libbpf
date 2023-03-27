@@ -18,7 +18,7 @@ runs:
   steps:
     # setup environment
     - name: Setup environment
-      uses: libbpf/ci/setup-build-env@master
+      uses: libbpf/ci/setup-build-env@main
       with:
         pahole: ${{ inputs.pahole }}
     # 1. download CHECKPOINT kernel source
@@ -28,13 +28,13 @@ runs:
         cat CHECKPOINT-COMMIT
         echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
     - name: Get kernel source at checkpoint
-      uses: libbpf/ci/get-linux-source@master
+      uses: libbpf/ci/get-linux-source@main
       with:
         repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
         rev: ${{ env.CHECKPOINT }}
         dest: '${{ github.workspace }}/.kernel'
     - name: Patch kernel source
-      uses: libbpf/ci/patch-kernel@master
+      uses: libbpf/ci/patch-kernel@main
       with:
         patches-root: '${{ github.workspace }}/ci/diffs'
         repo-root: '.kernel'
@@ -64,7 +64,7 @@ runs:
     # else, just download prebuilt kernel image
     - name: Download prebuilt kernel
       if: ${{ inputs.kernel != 'LATEST' }}
-      uses: libbpf/ci/download-vmlinux@master
+      uses: libbpf/ci/download-vmlinux@main
       with:
         kernel: ${{ inputs.kernel }}
         arch: ${{ inputs.arch }}
@@ -76,7 +76,7 @@ runs:
         kernel: ${{ inputs.kernel }}
     # 4. prepare rootfs
     - name: prepare rootfs
-      uses: libbpf/ci/prepare-rootfs@master
+      uses: libbpf/ci/prepare-rootfs@main
       env:
         KBUILD_OUTPUT: '.kernel'
       with:
@@ -91,7 +91,7 @@ runs:
       env:
         KERNEL: ${{ inputs.kernel }}
         REPO_ROOT: ${{ github.workspace }}
-      uses: libbpf/ci/run-qemu@master
+      uses: libbpf/ci/run-qemu@main
       with:
         arch: ${{ inputs.arch }}
         img: '/tmp/root.img'
