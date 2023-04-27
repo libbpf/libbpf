@@ -89,3 +89,22 @@ jobs:
             apt-get update -y
             apt-get install -y tzdata build-essential sudo
           run: source ${GITHUB_WORKSPACE}/ci_setup && $CI_ROOT/managers/ubuntu.sh
+
+  zig-build:
+      runs-on: ubuntu-latest
+      name: Ubuntu Focal zig-Build
+      strategy:
+        fail-fast: false
+      steps:
+        - uses: actions/checkout@v3
+          name: Checkout
+        - uses: goto-bus-stop/setup-zig@v2
+          name: Zig downloading
+          with:
+            version: master
+        - name: Install dependences
+          run: |
+              sudo apt update
+              sudo apt-get install -y aptitude qemu-kvm zstd binutils-dev elfutils libcap-dev libelf-dev libdw-dev libguestfs-tools
+        - name: Zig Summary Build
+          run: zig build -fsummary
