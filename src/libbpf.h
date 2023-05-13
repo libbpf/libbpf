@@ -726,7 +726,7 @@ LIBBPF_API int bpf_link__update_map(struct bpf_link *link, const struct bpf_map 
 struct bpf_iter_attach_opts {
 	size_t sz; /* size of this struct for forward/backward compatibility */
 	union bpf_iter_link_info *link_info;
-	__u32 link_info_len;
+	size_t link_info_len;
 };
 #define bpf_iter_attach_opts__last_field link_info_len
 
