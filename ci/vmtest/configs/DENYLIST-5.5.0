@@ -78,6 +78,8 @@ sock_fields		# v5.10+
 socket_cookie		# v5.12+
 sockmap_basic		# uses new socket fields, 5.8+
 sockmap_listen		# no listen socket supportin SOCKMAP
+sockopt/getsockopt: ignore >PAGE_SIZE optlen
+sockopt/setsockopt: ignore >PAGE_SIZE optlen
 sockopt_sk
 sockopt_qos_to_cc	# v5.15+
 stacktrace_build_id	# v5.9+
