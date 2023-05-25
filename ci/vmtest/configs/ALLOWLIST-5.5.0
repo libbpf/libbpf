@@ -35,8 +35,6 @@ signal_pending
 skeleton
 sockmap_ktls
 sockopt
-sockopt_inherit
-sockopt_multi
 spinlock
 stacktrace_map
 stacktrace_map_raw_tp
