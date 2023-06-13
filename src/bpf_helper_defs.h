@@ -1832,6 +1832,10 @@ static long (*bpf_skb_load_bytes_relative)(const void *skb, __u32 offset, void *
  * 	**BPF_FIB_LOOKUP_DIRECT**
  * 		Do a direct table lookup vs full lookup using FIB
  * 		rules.
+ * 	**BPF_FIB_LOOKUP_TBID**
+ * 		Used with BPF_FIB_LOOKUP_DIRECT.
+ * 		Use the routing table ID present in *params*->tbid
+ * 		for the fib lookup.
  * 	**BPF_FIB_LOOKUP_OUTPUT**
  * 		Perform lookup from an egress perspective (default is
  * 		ingress).
