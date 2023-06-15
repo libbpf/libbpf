@@ -55,6 +55,13 @@ test_verifier() {
 
 foldable end vm_init
 
+foldable start kernel_config "Kconfig"
+
+zcat /proc/config.gz
+
+foldable end kernel_config
+
+
 configs_path=/${PROJECT_NAME}/selftests/bpf
 local_configs_path=${PROJECT_NAME}/vmtest/configs
 DENYLIST=$(read_lists \
