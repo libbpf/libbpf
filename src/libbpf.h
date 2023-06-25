@@ -1433,9 +1433,10 @@ LIBBPF_API int libbpf_probe_bpf_helper(enum bpf_prog_type prog_type,
 				       enum bpf_func_id helper_id, const void *opts);
 
 /**
- * @brief **libbpf_num_possible_cpus()** is a helper function to get the
- * number of possible CPUs that the host kernel supports and expects.
- * @return number of possible CPUs; or error code on failure
+ * @brief **libbpf_num_possible_cpus()**, and **libbpf_num_present_cpus()**
+ * are helper functions to get the number of possible, and present CPUs respectivelly.
+ * See for more information: https://www.kernel.org/doc/html/latest/admin-guide/cputopology.html
+ * @return number of CPUs; or error code on failure
  *
  * Example usage:
  *
@@ -1447,6 +1448,7 @@ LIBBPF_API int libbpf_probe_bpf_helper(enum bpf_prog_type prog_type,
  *     bpf_map_lookup_elem(per_cpu_map_fd, key, values);
  */
 LIBBPF_API int libbpf_num_possible_cpus(void);
+LIBBPF_API int libbpf_num_present_cpus(void);
 
 struct bpf_map_skeleton {
 	const char *name;

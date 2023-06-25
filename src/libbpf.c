@@ -12615,14 +12615,26 @@ int parse_cpu_mask_file(const char *fcpu, bool **mask, int *mask_sz)
 	return parse_cpu_mask_str(buf, mask, mask_sz);
 }
 
-int libbpf_num_possible_cpus(void)
+typedef enum {POSSIBLE=0, PRESENT, NUM_TYPES } CPU_TOPOLOGY_SYSFS_TYPE;
+
+static const char *cpu_topology_sysfs_path_by_type(const CPU_TOPOLOGY_SYSFS_TYPE type) {
+	const static char *possible_sysfs_path = "/sys/devices/system/cpu/possible";
+	const static char *present_sysfs_path = "/sys/devices/system/cpu/present";
+	switch(type) {
+		case POSSIBLE: return possible_sysfs_path;
+		case PRESENT: return present_sysfs_path;
+		default: return possible_sysfs_path;
+	}
+}
+
+int libbpf_num_cpus_by_topology_sysfs_type(const CPU_TOPOLOGY_SYSFS_TYPE type)
 {
-	static const char *fcpu = "/sys/devices/system/cpu/possible";
-	static int cpus;
+	const char *fcpu = cpu_topology_sysfs_path_by_type(type);
+	static int cpus[NUM_TYPES];
 	int err, n, i, tmp_cpus;
 	bool *mask;
 
-	tmp_cpus = READ_ONCE(cpus);
+	tmp_cpus = READ_ONCE(cpus[type]);
 	if (tmp_cpus > 0)
 		return tmp_cpus;
 
@@ -12637,8 +12649,18 @@ int libbpf_num_possible_cpus(void)
 	}
 	free(mask);
 
-	WRITE_ONCE(cpus, tmp_cpus);
+	WRITE_ONCE(cpus[type], tmp_cpus);
 	return tmp_cpus;
+}
+
+int libbpf_num_possible_cpus(void)
+{
+	return libbpf_num_cpus_by_topology_sysfs_type(POSSIBLE);
+}
+
+int libbpf_num_present_cpus(void)
+{
+	return libbpf_num_cpus_by_topology_sysfs_type(PRESENT);
 }
 
 static int populate_skeleton_maps(const struct bpf_object *obj,
