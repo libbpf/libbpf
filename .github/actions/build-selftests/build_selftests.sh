@@ -40,6 +40,7 @@ else
 fi
 
 cd ${REPO_ROOT}/${REPO_PATH}
+make headers
 make \
 	CLANG=clang-${LLVM_VERSION} \
 	LLC=llc-${LLVM_VERSION} \
