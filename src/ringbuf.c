@@ -297,12 +297,19 @@ int ring_buffer__consume(struct ring_buffer *rb)
 int ring_buffer__consume_ring(struct ring_buffer *rb, uint32_t ring_id)
 {
 	struct ring *ring;
+	int64_t res;
 
 	if (ring_id >= rb->ring_cnt)
 		return libbpf_err(-EINVAL);
 
 	ring = &rb->rings[ring_id];
-	return ringbuf_process_ring(ring);
+	res = ringbuf_process_ring(ring);
+	if (res < 0)
+		return libbpf_err(res);
+
+	if (res > INT_MAX)
+		return INT_MAX;
+	return res;
 }
 
 /* Poll for available data and consume records, if any are available.
