@@ -3033,9 +3033,6 @@ static __u64 (*bpf_get_current_ancestor_cgroup_id)(int ancestor_level) = (void *
  *
  * 	**-EOPNOTSUPP** if the operation is not supported, for example
  * 	a call from outside of TC ingress.
- *
- * 	**-ESOCKTNOSUPPORT** if the socket type is not supported
- * 	(reuseport).
  */
 static long (*bpf_sk_assign)(void *ctx, void *sk, __u64 flags) = (void *) 124;
 
@@ -4065,9 +4062,14 @@ static long (*bpf_timer_cancel)(struct bpf_timer *timer) = (void *) 172;
  *
  * 	Get address of the traced function (for tracing and kprobe programs).
  *
+ * 	When called for kprobe program attached as uprobe it returns
+ * 	probe address for both entry and return uprobe.
+ *
+ *
  * Returns
- * 	Address of the traced function.
+ * 	Address of the traced function for kprobe.
  * 	0 for kprobes placed within the function (not at the entry).
+ * 	Address of the probe for uprobe and return uprobe.
  */
 static __u64 (*bpf_get_func_ip)(void *ctx) = (void *) 173;
 
