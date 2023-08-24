@@ -41,7 +41,7 @@ fi
 # due to https://bugs.gentoo.org/794601) so let's just point the script to
 # commits referring to versions of libelf that actually can be built
 rm -rf elfutils
-git clone git://sourceware.org/git/elfutils.git
+git clone https://sourceware.org/git/elfutils.git
 (
 cd elfutils
 git checkout 67a187d4c1790058fc7fd218317851cb68bb087c
