@@ -35,7 +35,10 @@ ALL_CFLAGS := $(INCLUDES)
 SHARED_CFLAGS += -fPIC -fvisibility=hidden -DSHARED
 
 CFLAGS ?= -g -O2 -Werror -Wall -std=gnu89
-ALL_CFLAGS += $(CFLAGS) -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64 $(EXTRA_CFLAGS)
+ALL_CFLAGS += $(CFLAGS) 						\
+	      -D_LARGEFILE64_SOURCE -D_FILE_OFFSET_BITS=64		\
+	      -Wno-unknown-warning-option -Wno-format-overflow		\
+	      $(EXTRA_CFLAGS)
 ALL_LDFLAGS += $(LDFLAGS) $(EXTRA_LDFLAGS)
 
 ifdef NO_PKG_CONFIG
