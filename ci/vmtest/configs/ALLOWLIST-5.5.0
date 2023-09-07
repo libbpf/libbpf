@@ -32,7 +32,6 @@ raw_tp_writable_test_run
 rdonly_maps
 section_names
 signal_pending
-skeleton
 sockmap_ktls
 sockopt
 spinlock
