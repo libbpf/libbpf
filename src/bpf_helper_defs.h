@@ -350,7 +350,9 @@ static long (*bpf_tail_call)(void *ctx, void *prog_array_map, __u32 index) = (vo
  * 	direct packet access.
  *
  * Returns
- * 	0 on success, or a negative error in case of failure.
+ * 	0 on success, or a negative error in case of failure. Positive
+ * 	error indicates a potential drop or congestion in the target
+ * 	device. The particular positive error codes are not defined.
  */
 static long (*bpf_clone_redirect)(struct __sk_buff *skb, __u32 ifindex, __u64 flags) = (void *) 13;
 
