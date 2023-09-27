@@ -1,31 +1,25 @@
-name: 'build-selftests'
+name: 'build selftests'
 description: 'Build BPF selftests'
 inputs:
-  repo-path:
-    description: 'where is the source code'
-    required: true
   kernel:
-    description: 'kernel version or LATEST'
-    required: true
+    description: 'kernel version'
     default: 'LATEST'
-  vmlinux:
-    description: 'where is vmlinux file'
+  toolchain:
+    description: 'what toolchain to use'
+    default: 'gcc'
+  kbuild-output:
+    description: 'relative or absolute path to use for storing build artifacts'
     required: true
-    default: '${{ github.workspace }}/vmlinux'
-
+  max-make-jobs:
+    description: 'Maximum number of jobs to use when running make (e.g argument to -j). Default: 4*nproc'
+    default: ''
 runs:
   using: "composite"
   steps:
-    - shell: bash
+    - name: build selftests
+      shell: bash
       run: |
-        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
-        foldable start "Setup Env"
-        sudo apt-get install -y qemu-kvm zstd binutils-dev elfutils libcap-dev libelf-dev libdw-dev python3-docutils
-        foldable end
-    - shell: bash
-      run: |
-        export KERNEL=${{ inputs.kernel }}
-        export REPO_ROOT="${{ github.workspace }}"
-        export REPO_PATH="${{ inputs.repo-path }}"
-        export VMLINUX_BTF="${{ inputs.vmlinux }}"
-        ${{ github.action_path }}/build_selftests.sh
+        kbuild_output="$(realpath ${{ inputs.kbuild-output }})"
+        ${GITHUB_ACTION_PATH}/build_selftests.sh "${{ inputs.kernel }}" "${{ inputs.toolchain }}" "${kbuild_output}"
+      env:
+        MAX_MAKE_JOBS: ${{ inputs.max-make-jobs }}

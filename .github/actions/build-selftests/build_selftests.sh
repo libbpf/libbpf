@@ -4,29 +4,20 @@ set -euo pipefail
 
 THISDIR="$(cd $(dirname $0) && pwd)"
 
-source ${THISDIR}/helpers.sh
+source "${THISDIR}"/../helpers.sh
 
-foldable start prepare_selftests "Building selftests"
+KERNEL="$1"
+TOOLCHAIN="$2"
+export KBUILD_OUTPUT="$3"
 
-LIBBPF_PATH="${REPO_ROOT}"
-
-llvm_default_version() {
-	echo "16"
-}
-
-llvm_latest_version() {
-	echo "17"
-}
-
-LLVM_VERSION=$(llvm_default_version)
-if [[ "${LLVM_VERSION}" == $(llvm_latest_version) ]]; then
-	REPO_DISTRO_SUFFIX=""
-else
-	REPO_DISTRO_SUFFIX="-${LLVM_VERSION}"
+LLVM_VER="$(llvm_version $TOOLCHAIN)" && :
+if [ $? -eq 0 ]; then
+	export LLVM="-$LLVM_VER"
 fi
 
-echo "deb https://apt.llvm.org/focal/ llvm-toolchain-focal${REPO_DISTRO_SUFFIX} main" \
-	| sudo tee /etc/apt/sources.list.d/llvm.list
+foldable start build_selftests "Building selftests with $TOOLCHAIN"
+
+LIBBPF_PATH="${REPO_ROOT}"
 
 PREPARE_SELFTESTS_SCRIPT=${THISDIR}/prepare_selftests-${KERNEL}.sh
 if [ -f "${PREPARE_SELFTESTS_SCRIPT}" ]; then
@@ -40,21 +31,18 @@ else
 fi
 
 cd ${REPO_ROOT}/${REPO_PATH}
-make headers
 make \
-	CLANG=clang-${LLVM_VERSION} \
-	LLC=llc-${LLVM_VERSION} \
-	LLVM_STRIP=llvm-strip-${LLVM_VERSION} \
-	VMLINUX_BTF="${VMLINUX_BTF}" \
-	VMLINUX_H=${VMLINUX_H} \
+	CLANG=clang-${LLVM_VER} \
+	LLC=llc-${LLVM_VER} \
+	LLVM_STRIP=llvm-strip-${LLVM_VER} \
+	VMLINUX_BTF="${KBUILD_OUTPUT}/vmlinux" \
+	VMLINUX_H="${VMLINUX_H}" \
 	-C "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
-	-j $((4*$(nproc))) > /dev/null
+	-j $(kernel_build_make_jobs)
 cd -
-mkdir ${LIBBPF_PATH}/selftests
+mkdir "${LIBBPF_PATH}"/selftests
 cp -R "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
-	${LIBBPF_PATH}/selftests
-cd ${LIBBPF_PATH}
-rm selftests/bpf/.gitignore
-git add selftests
+  "${LIBBPF_PATH}"/selftests
+cd "${LIBBPF_PATH}"
 
-foldable end prepare_selftests
+foldable end build_selftests
