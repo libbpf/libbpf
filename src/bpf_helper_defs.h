@@ -1206,8 +1206,8 @@ static long (*bpf_set_hash)(struct __sk_buff *skb, __u32 hash) = (void *) 48;
  * 	*bpf_socket* should be one of the following:
  *
  * 	* **struct bpf_sock_ops** for **BPF_PROG_TYPE_SOCK_OPS**.
- * 	* **struct bpf_sock_addr** for **BPF_CGROUP_INET4_CONNECT**
- * 	  and **BPF_CGROUP_INET6_CONNECT**.
+ * 	* **struct bpf_sock_addr** for **BPF_CGROUP_INET4_CONNECT**,
+ * 	  **BPF_CGROUP_INET6_CONNECT** and **BPF_CGROUP_UNIX_CONNECT**.
  *
  * 	This helper actually implements a subset of **setsockopt()**.
  * 	It supports the following *level*\ s:
@@ -1477,8 +1477,8 @@ static long (*bpf_perf_prog_read_value)(struct bpf_perf_event_data *ctx, struct 
  * 	*bpf_socket* should be one of the following:
  *
  * 	* **struct bpf_sock_ops** for **BPF_PROG_TYPE_SOCK_OPS**.
- * 	* **struct bpf_sock_addr** for **BPF_CGROUP_INET4_CONNECT**
- * 	  and **BPF_CGROUP_INET6_CONNECT**.
+ * 	* **struct bpf_sock_addr** for **BPF_CGROUP_INET4_CONNECT**,
+ * 	  **BPF_CGROUP_INET6_CONNECT** and **BPF_CGROUP_UNIX_CONNECT**.
  *
  * 	This helper actually implements a subset of **getsockopt()**.
  * 	It supports the same set of *optname*\ s that is supported by
@@ -1846,6 +1846,11 @@ static long (*bpf_skb_load_bytes_relative)(const void *skb, __u32 offset, void *
  * 		and *params*->smac will not be set as output. A common
  * 		use case is to call **bpf_redirect_neigh**\ () after
  * 		doing **bpf_fib_lookup**\ ().
+ * 	**BPF_FIB_LOOKUP_SRC**
+ * 		Derive and set source IP addr in *params*->ipv{4,6}_src
+ * 		for the nexthop. If the src addr cannot be derived,
+ * 		**BPF_FIB_LKUP_RET_NO_SRC_ADDR** is returned. In this
+ * 		case, *params*->dmac and *params*->smac are not set either.
  *
  * 	*ctx* is either **struct xdp_md** for XDP programs or
  * 	**struct sk_buff** tc cls_act programs.
@@ -4036,6 +4041,8 @@ static long (*bpf_timer_set_callback)(struct bpf_timer *timer, void *callback_fn
  * 	**BPF_F_TIMER_ABS**
  * 		Start the timer in absolute expire value instead of the
  * 		default relative one.
+ * 	**BPF_F_TIMER_CPU_PIN**
+ * 		Timer will be pinned to the CPU of the caller.
  *
  *
  * Returns
