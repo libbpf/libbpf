@@ -11114,7 +11114,7 @@ static int attach_uprobe_multi(const struct bpf_program *prog, long cookie, stru
 
 	*link = NULL;
 
-	n = sscanf(prog->sec_name, "%m[^/]/%m[^:]:%m[^\n]",
+	n = sscanf(prog->sec_name, "%m[^/]/%m[^:]:%ms",
 		   &probe_type, &binary_path, &func_name);
 	switch (n) {
 	case 1:
@@ -11624,14 +11624,14 @@ err_out:
 static int attach_uprobe(const struct bpf_program *prog, long cookie, struct bpf_link **link)
 {
 	DECLARE_LIBBPF_OPTS(bpf_uprobe_opts, opts);
-	char *probe_type = NULL, *binary_path = NULL, *func_name = NULL, *func_off;
-	int n, c, ret = -EINVAL;
+	char *probe_type = NULL, *binary_path = NULL, *func_name = NULL;
+	int n, ret = -EINVAL;
 	long offset = 0;
 
 	*link = NULL;
 
-	n = sscanf(prog->sec_name, "%m[^/]/%m[^:]:%m[^\n]",
-		   &probe_type, &binary_path, &func_name);
+	n = sscanf(prog->sec_name, "%m[^/]/%m[^:]:%m[a-zA-Z0-9_.@]+%li",
+		   &probe_type, &binary_path, &func_name, &offset);
 	switch (n) {
 	case 1:
 		/* handle SEC("u[ret]probe") - format is valid, but auto-attach is impossible. */
@@ -11642,17 +11642,7 @@ static int attach_uprobe(const struct bpf_program *prog, long cookie, struct bpf
 			prog->name, prog->sec_name);
 		break;
 	case 3:
-		/* check if user specifies `+offset`, if yes, this should be
-		 * the last part of the string, make sure sscanf read to EOL
-		 */
-		func_off = strrchr(func_name, '+');
-		if (func_off) {
-			n = sscanf(func_off, "+%li%n", &offset, &c);
-			if (n == 1 && *(func_off + c) == '\0')
-				func_off[0] = '\0';
-			else
-				offset = 0;
-		}
+	case 4:
 		opts.retprobe = strcmp(probe_type, "uretprobe") == 0 ||
 				strcmp(probe_type, "uretprobe.s") == 0;
 		if (opts.retprobe && offset != 0) {
