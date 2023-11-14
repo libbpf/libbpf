@@ -141,15 +141,14 @@ static int elf_sym_iter_new(struct elf_sym_iter *iter,
 	iter->versyms = elf_getdata(scn, 0);
 
 	scn = elf_find_next_scn_by_type(elf, SHT_GNU_verdef, NULL);
-	if (!scn)
-		return 0;
-
-	iter->verdefs = elf_getdata(scn, 0);
-	if (!iter->verdefs || !gelf_getshdr(scn, &sh)) {
-		pr_warn("elf: failed to get verdef ELF section in '%s'\n", binary_path);
-		return -EINVAL;
+	if (!scn) {
+		pr_debug("elf: failed to find verdef ELF sections in '%s'\n", binary_path);
+		return -ENOENT;
 	}
+	if (!gelf_getshdr(scn, &sh))
+		return -EINVAL;
 	iter->verdef_strtabidx = sh.sh_link;
+	iter->verdefs = elf_getdata(scn, 0);
 
 	return 0;
 }
@@ -199,9 +198,6 @@ static const char *elf_get_vername(struct elf_sym_iter *iter, int ver)
 	GElf_Verdaux verdaux;
 	GElf_Verdef verdef;
 	int offset;
-
-	if (!iter->verdefs)
-		return NULL;
 
 	offset = 0;
 	while (gelf_getverdef(iter->verdefs, offset, &verdef)) {
