@@ -1,0 +1,95 @@
+From cbd1fbfc3d3444d99218ec1a6ae7a4a8f556e1ed Mon Sep 17 00:00:00 2001
+From: Eduard Zingerman <eddyz87@gmail.com>
+Date: Fri, 17 Nov 2023 16:44:59 +0200
+Subject: [PATCH] selftests/bpf: give find_vma test more time to collect flags
+
+Lately libbpf CI runs for LATEST kernel yield an error for find_vma
+selftest as in [0]. Log shows the following checks failing:
+
+    serial_test_find_vma:PASS:find_vma__open_and_load 0 nsec
+    test_find_vma_pe:PASS:attach_perf_event 0 nsec
+    test_and_reset_skel:FAIL:found_vm_exec unexpected found_vm_exec: actual 0 != expected 1
+    test_and_reset_skel:FAIL:find_addr_ret unexpected find_addr_ret: actual -1 != expected 0
+    test_and_reset_skel:FAIL:find_zero_ret unexpected find_zero_ret:
+
+This happens when loop inside test_find_vma_pe() reaches one billion
+iterations with `skel->bss->found_vm_exec` and co not yet set.
+Try giving it more time by adding sched_yield() in the loop body.
+
+[0] https://github.com/libbpf/libbpf/actions/runs/6904382140/job/18784917164?pr=753
+
+Signed-off-by: Eduard Zingerman <eddyz87@gmail.com>
+---
+ .../selftests/bpf/prog_tests/find_vma.c       | 38 ++++++++++++++++---
+ 1 file changed, 32 insertions(+), 6 deletions(-)
+
+diff --git a/tools/testing/selftests/bpf/prog_tests/find_vma.c b/tools/testing/selftests/bpf/prog_tests/find_vma.c
+index 5165b38f0e59..3a049cdf4d12 100644
+--- a/tools/testing/selftests/bpf/prog_tests/find_vma.c
++++ b/tools/testing/selftests/bpf/prog_tests/find_vma.c
+@@ -3,6 +3,7 @@
+ #include <test_progs.h>
+ #include <sys/types.h>
+ #include <unistd.h>
++#include <sched.h>
+ #include "find_vma.skel.h"
+ #include "find_vma_fail1.skel.h"
+ #include "find_vma_fail2.skel.h"
+@@ -46,12 +47,25 @@ static bool find_vma_pe_condition(struct find_vma *skel)
+ 		strcmp(skel->bss->d_iname, "test_progs") != 0;
+ }
+ 
++static int mono_time_ns(uint64_t *time_ns)
++{
++	struct timespec ts;
++	int err;
++
++	err = clock_gettime(CLOCK_MONOTONIC, &ts);
++	if (!ASSERT_OK(err, "clock_gettime"))
++		return err;
++
++	*time_ns = ts.tv_sec * 1000 * 1000 * 1000 + ts.tv_nsec;
++	return 0;
++}
++
+ static void test_find_vma_pe(struct find_vma *skel)
+ {
+ 	struct bpf_link *link = NULL;
+-	volatile int j = 0;
+-	int pfd, i;
+-	const int one_bn = 1000000000;
++	uint64_t start, cur;
++	bool check = true;
++	int pfd;
+ 
+ 	pfd = open_pe();
+ 	if (pfd < 0) {
+@@ -68,10 +82,22 @@ static void test_find_vma_pe(struct find_vma *skel)
+ 	if (!ASSERT_OK_PTR(link, "attach_perf_event"))
+ 		goto cleanup;
+ 
+-	for (i = 0; i < one_bn && find_vma_pe_condition(skel); ++i)
+-		++j;
++	if (mono_time_ns(&start))
++		goto cleanup;
++
++	for (;;) {
++		if (!find_vma_pe_condition(skel)) {
++			check = false;
++			break;
++		}
++		if (mono_time_ns(&cur))
++			goto cleanup;
++		if (cur - start > 1000 * 1000 * 1000)
++			break;
++		sched_yield();
++	}
+ 
+-	test_and_reset_skel(skel, -EBUSY /* in nmi, irq_work is busy */, i == one_bn);
++	test_and_reset_skel(skel, -EBUSY /* in nmi, irq_work is busy */, check);
+ cleanup:
+ 	bpf_link__destroy(link);
+ 	close(pfd);
+-- 
+2.42.1
+
