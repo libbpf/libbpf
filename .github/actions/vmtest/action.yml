@@ -46,6 +46,8 @@ runs:
         cd .kernel
         cat tools/testing/selftests/bpf/config \
             tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
+        # this file might or mihgt not exist depending on kernel version
+        cat tools/testing/selftests/bpf/config.vm >> .config || :
         make olddefconfig && make prepare
         cd -
         foldable end
