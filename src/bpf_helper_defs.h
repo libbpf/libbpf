@@ -3322,6 +3322,8 @@ static struct udp6_sock *(*bpf_skc_to_udp6_sock)(void *sk) = (void *) 140;
  * bpf_get_task_stack
  *
  * 	Return a user or a kernel stack in bpf program provided buffer.
+ * 	Note: the user stack will only be populated if the *task* is
+ * 	the current task; all other tasks will return -EOPNOTSUPP.
  * 	To achieve this, the helper needs *task*, which is a valid
  * 	pointer to **struct task_struct**. To store the stacktrace, the
  * 	bpf program provides *buf* with a nonnegative *size*.
@@ -3333,6 +3335,7 @@ static struct udp6_sock *(*bpf_skc_to_udp6_sock)(void *sk) = (void *) 140;
  *
  * 	**BPF_F_USER_STACK**
  * 		Collect a user space stack instead of a kernel stack.
+ * 		The *task* must be the current task.
  * 	**BPF_F_USER_BUILD_ID**
  * 		Collect buildid+offset instead of ips for user stack,
  * 		only valid if **BPF_F_USER_STACK** is also specified.
