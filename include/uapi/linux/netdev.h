@@ -44,13 +44,13 @@ enum netdev_xdp_act {
  *   timestamp via bpf_xdp_metadata_rx_timestamp().
  * @NETDEV_XDP_RX_METADATA_HASH: Device is capable of exposing receive packet
  *   hash via bpf_xdp_metadata_rx_hash().
+ * @NETDEV_XDP_RX_METADATA_VLAN_TAG: Device is capable of exposing receive
+ *   packet VLAN tag via bpf_xdp_metadata_rx_vlan_tag().
  */
 enum netdev_xdp_rx_metadata {
 	NETDEV_XDP_RX_METADATA_TIMESTAMP = 1,
 	NETDEV_XDP_RX_METADATA_HASH = 2,
-
-	/* private: */
-	NETDEV_XDP_RX_METADATA_MASK = 3,
+	NETDEV_XDP_RX_METADATA_VLAN_TAG = 4,
 };
 
 /**
