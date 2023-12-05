@@ -1,0 +1,29 @@
+From 61e8893a1e32ab57d15974427f41b75de608dbda Mon Sep 17 00:00:00 2001
+From: Andrii Nakryiko <andrii@kernel.org>
+Date: Mon, 4 Dec 2023 21:21:23 -0800
+Subject: [PATCH] bpf: patch out BPF_F_TEST_REG_INVARIANTS for old kernels
+
+CI-only patch to avoid setting BPF_F_TEST_REG_INVARIANTS flag for old
+kernels that don't support it.
+
+Signed-off-by: Andrii Nakryiko <andrii@kernel.org>
+---
+ tools/include/uapi/linux/bpf.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/include/uapi/linux/bpf.h b/tools/include/uapi/linux/bpf.h
+index e88746ba7d21..8344c9ce60e0 100644
+--- a/tools/include/uapi/linux/bpf.h
++++ b/tools/include/uapi/linux/bpf.h
+@@ -1201,7 +1201,7 @@ enum bpf_perf_event_type {
+ #define BPF_F_XDP_DEV_BOUND_ONLY	(1U << 6)
+ 
+ /* The verifier internal test flag. Behavior is undefined */
+-#define BPF_F_TEST_REG_INVARIANTS	(1U << 7)
++#define BPF_F_TEST_REG_INVARIANTS	(0)
+ 
+ /* link_create.kprobe_multi.flags used in LINK_CREATE command for
+  * BPF_TRACE_KPROBE_MULTI attach type to create return probe.
+-- 
+2.34.1
+
