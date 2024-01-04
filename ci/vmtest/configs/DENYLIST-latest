@@ -7,3 +7,6 @@ find_vma # test consistently fails on latest kernel, see https://github.com/libb
 bpf_cookie/perf_event
 send_signal/send_signal_nmi
 send_signal/send_signal_nmi_thread
+
+lwt_reroute # crashes kernel, fix pending upstream
+tc_links_ingress # fails, same fix is pending upstream
