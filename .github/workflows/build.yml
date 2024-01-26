@@ -75,7 +75,7 @@ jobs:
         if: matrix.arch != 'x86'
         with:
           distro:
-            ubuntu20.04
+            ubuntu22.04
           arch:
             ${{ matrix.arch }}
           setup:
