@@ -3695,9 +3695,9 @@ static void *(*bpf_this_cpu_ptr)(const void *percpu_ptr) = (void *) 154;
  * 	going through the CPU's backlog queue.
  *
  * 	The *flags* argument is reserved and must be 0. The helper is
- * 	currently only supported for tc BPF program types at the ingress
- * 	hook and for veth device types. The peer device must reside in a
- * 	different network namespace.
+ * 	currently only supported for tc BPF program types at the
+ * 	ingress hook and for veth and netkit target device types. The
+ * 	peer device must reside in a different network namespace.
  *
  * Returns
  * 	The helper returns **TC_ACT_REDIRECT** on success or
