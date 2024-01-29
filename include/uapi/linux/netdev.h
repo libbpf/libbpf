@@ -63,9 +63,6 @@ enum netdev_xdp_rx_metadata {
 enum netdev_xsk_flags {
 	NETDEV_XSK_FLAGS_TX_TIMESTAMP = 1,
 	NETDEV_XSK_FLAGS_TX_CHECKSUM = 2,
-
-	/* private: */
-	NETDEV_XSK_FLAGS_MASK = 3,
 };
 
 enum netdev_queue_type {
