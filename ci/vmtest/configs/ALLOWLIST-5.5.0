@@ -45,9 +45,6 @@ tcp_rtt
 test_global_funcs/arg_tag_ctx*
 tp_attach_query
 usdt/urand_pid_attach
-verifier_global_subprogs/arg_tag_ctx_raw_tp
-verifier_global_subprogs/arg_tag_ctx_kprobe
-verifier_global_subprogs/arg_tag_ctx_perf
 xdp
 xdp_noinline
 xdp_perf
