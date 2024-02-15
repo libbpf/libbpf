@@ -37,6 +37,7 @@ runs:
       uses: libbpf/ci/setup-build-env@main
       with:
         pahole: ${{ inputs.pahole }}
+        arch: ${{ inputs.arch }}
     # 1. download CHECKPOINT kernel source
     - name: Get checkpoint commit
       shell: bash
