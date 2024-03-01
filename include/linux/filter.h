@@ -39,6 +39,7 @@
 
 #define BPF_CALL_REL(DST)					\
 	((struct bpf_insn) {					\
+		.code = BPF_JMP | BPF_CALL,			\
 		.dst_reg = 0,					\
 		.src_reg = BPF_PSEUDO_CALL,			\
 		.off = 0,					\
