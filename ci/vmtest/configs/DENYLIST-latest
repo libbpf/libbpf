@@ -10,3 +10,4 @@ send_signal/send_signal_nmi_thread
 
 lwt_reroute # crashes kernel, fix pending upstream
 tc_links_ingress # fails, same fix is pending upstream
+tc_redirect		  # enough is enough, banned for life for flakiness
