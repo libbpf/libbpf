@@ -42,7 +42,7 @@ jobs:
           - name: gcc-12
             target: RUN_GCC12
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout
       - uses: ./.github/actions/setup
         name: Setup
@@ -63,7 +63,7 @@ jobs:
           - arch: s390x
           - arch: x86
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         name: Checkout
       - uses: ./.github/actions/setup
         name: Pre-Setup
