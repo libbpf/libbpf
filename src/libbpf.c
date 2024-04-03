@@ -8047,7 +8047,7 @@ static int bpf_program_unpin_instance(struct bpf_program *prog, const char *path
 }
 
 __attribute__((alias("bpf_program_pin_instance")))
-int bpf_object__pin_instance(struct bpf_program *prog, const char *path, int instance);
+int bpf_program__pin_instance(struct bpf_program *prog, const char *path, int instance);
 
 __attribute__((alias("bpf_program_unpin_instance")))
 int bpf_program__unpin_instance(struct bpf_program *prog, const char *path, int instance);
