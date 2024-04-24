@@ -1851,6 +1851,10 @@ static long (* const bpf_skb_load_bytes_relative)(const void *skb, __u32 offset,
  * 		for the nexthop. If the src addr cannot be derived,
  * 		**BPF_FIB_LKUP_RET_NO_SRC_ADDR** is returned. In this
  * 		case, *params*->dmac and *params*->smac are not set either.
+ * 	**BPF_FIB_LOOKUP_MARK**
+ * 		Use the mark present in *params*->mark for the fib lookup.
+ * 		This option should not be used with BPF_FIB_LOOKUP_DIRECT,
+ * 		as it only has meaning for full lookups.
  *
  * 	*ctx* is either **struct xdp_md** for XDP programs or
  * 	**struct sk_buff** tc cls_act programs.
@@ -3798,7 +3802,7 @@ static __u64 (* const bpf_ktime_get_coarse_ns)(void) = (void *) 160;
  *
  * Returns
  * 	The **hash_algo** is returned on success,
- * 	**-EOPNOTSUP** if IMA is disabled or **-EINVAL** if
+ * 	**-EOPNOTSUPP** if IMA is disabled or **-EINVAL** if
  * 	invalid arguments are passed.
  */
 static long (* const bpf_ima_inode_hash)(struct inode *inode, void *dst, __u32 size) = (void *) 161;
@@ -4412,7 +4416,7 @@ static long (* const bpf_skb_set_tstamp)(struct __sk_buff *skb, __u64 tstamp, __
  *
  * Returns
  * 	The **hash_algo** is returned on success,
- * 	**-EOPNOTSUP** if the hash calculation failed or **-EINVAL** if
+ * 	**-EOPNOTSUPP** if the hash calculation failed or **-EINVAL** if
  * 	invalid arguments are passed.
  */
 static long (* const bpf_ima_file_hash)(struct file *file, void *dst, __u32 size) = (void *) 193;
