@@ -352,4 +352,10 @@ else
 	esac
 fi
 
+echo "Regenerating .mailmap..."
+cd_to "${LINUX_REPO}"
+git checkout "${TIP_SYM_REF}"
+cd_to "${LIBBPF_REPO}"
+"${LIBBPF_REPO}"/scripts/mailmap-update.sh "${LIBBPF_REPO}" "${LINUX_REPO}"
+
 cleanup
