@@ -41,7 +41,6 @@ task_fd_query_rawtp
 task_fd_query_tp
 tc_bpf
 tcp_estats
-tcp_rtt
 test_global_funcs/arg_tag_ctx*
 tp_attach_query
 usdt/urand_pid_attach
