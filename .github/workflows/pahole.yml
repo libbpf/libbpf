@@ -7,7 +7,7 @@ on:
 
 jobs:
   vmtest:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     name: Kernel LATEST + staging pahole
     env:
       STAGING: tmp.master
