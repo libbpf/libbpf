@@ -53,7 +53,7 @@ jobs:
 
   ubuntu:
     runs-on: ubuntu-latest
-    name: Ubuntu Focal Build (${{ matrix.arch }})
+    name: Ubuntu Build (${{ matrix.arch }})
     strategy:
       fail-fast: false
       matrix:
@@ -75,7 +75,7 @@ jobs:
         if: matrix.arch != 'x86'
         with:
           distro:
-            ubuntu20.04
+            ubuntu22.04
           arch:
             ${{ matrix.arch }}
           setup:
