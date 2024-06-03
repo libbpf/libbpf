@@ -33701,6 +33701,19 @@ struct bpf_iter_aux_info {
 	} task;
 };
 
+struct bpf_iter_bits {
+	__u64 __opaque[2];
+};
+
+struct bpf_iter_bits_kern {
+	union {
+		long unsigned int *bits;
+		long unsigned int bits_copy;
+	};
+	u32 nr_bits;
+	int bit;
+};
+
 struct bpf_iter_css {
 	__u64 __opaque[3];
 };
@@ -34233,6 +34246,7 @@ struct bpf_link_ops {
 	void (*show_fdinfo)(const struct bpf_link *, struct seq_file *);
 	int (*fill_link_info)(const struct bpf_link *, struct bpf_link_info *);
 	int (*update_map)(struct bpf_link *, struct bpf_map *, struct bpf_map *);
+	__poll_t (*poll)(struct file *, struct poll_table_struct *);
 };
 
 struct bpf_link_primer {
@@ -36633,9 +36647,9 @@ struct bpf_struct_ops {
 	int (*init)(struct btf *);
 	int (*check_member)(const struct btf_type *, const struct btf_member *, const struct bpf_prog *);
 	int (*init_member)(const struct btf_type *, const struct btf_member *, void *, const void *);
-	int (*reg)(void *);
-	void (*unreg)(void *);
-	int (*update)(void *, void *);
+	int (*reg)(void *, struct bpf_link *);
+	void (*unreg)(void *, struct bpf_link *);
+	int (*update)(void *, void *, struct bpf_link *);
 	int (*validate)(void *);
 	void *cfi_stubs;
 	struct module *owner;
@@ -36682,6 +36696,7 @@ struct bpf_struct_ops_desc {
 struct bpf_struct_ops_link {
 	struct bpf_link link;
 	struct bpf_map *map;
+	wait_queue_head_t wait_hup;
 };
 
 struct bpf_struct_ops_value;
@@ -45341,6 +45356,11 @@ struct dma_buf_sync {
 	__u64 flags;
 };
 
+struct dma_chan___2 {
+	int lock;
+	const char *device_id;
+};
+
 struct dma_device;
 
 struct dma_chan_dev;
@@ -45365,11 +45385,6 @@ struct dma_chan {
 	struct dma_router *router;
 	void *route_data;
 	void *private;
-};
-
-struct dma_chan___2 {
-	int lock;
-	const char *device_id;
 };
 
 struct dma_chan_dev {
@@ -53892,22 +53907,22 @@ struct getcpu_cache {
 	long unsigned int blob[16];
 };
 
-struct linux_dirent;
-
 struct getdents_callback {
-	struct dir_context ctx;
-	struct linux_dirent *current_dir;
-	int prev_reclen;
-	int count;
-	int error;
-};
-
-struct getdents_callback___2 {
 	struct dir_context ctx;
 	char *name;
 	u64 ino;
 	int found;
 	int sequence;
+};
+
+struct linux_dirent;
+
+struct getdents_callback___2 {
+	struct dir_context ctx;
+	struct linux_dirent *current_dir;
+	int prev_reclen;
+	int count;
+	int error;
 };
 
 struct linux_dirent64;
@@ -61651,13 +61666,6 @@ struct irq_glue {
 };
 
 struct irq_info {
-	struct hlist_node node;
-	int irq;
-	spinlock_t lock;
-	struct list_head *head;
-};
-
-struct irq_info___2 {
 	u8 bus;
 	u8 devfn;
 	struct {
@@ -61666,6 +61674,13 @@ struct irq_info___2 {
 	} __attribute__((packed)) irq[4];
 	u8 slot;
 	u8 rfu;
+};
+
+struct irq_info___2 {
+	struct hlist_node node;
+	int irq;
+	spinlock_t lock;
+	struct list_head *head;
 };
 
 struct irq_matrix {
@@ -61724,7 +61739,7 @@ struct irq_routing_table {
 	u32 miniport_data;
 	u8 rfu[11];
 	u8 checksum;
-	struct irq_info___2 slots[0];
+	struct irq_info slots[0];
 };
 
 struct irq_stack {
@@ -61790,7 +61805,7 @@ struct irt_routing_table {
 	u8 size;
 	u8 used;
 	u16 exclusive_irqs;
-	struct irq_info___2 slots[0];
+	struct irq_info slots[0];
 };
 
 struct isoch_data {
