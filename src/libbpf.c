@@ -2738,7 +2738,7 @@ static size_t adjust_ringbuf_sz(size_t sz)
 		return 0;
 	/* Kernel expects BPF_MAP_TYPE_RINGBUF's max_entries to be
 	 * a power-of-2 multiple of kernel's page size. If user diligently
-	 * satisified these conditions, pass the size through.
+	 * satisfied these conditions, pass the size through.
 	 */
 	if ((sz % page_sz) == 0 && is_pow_of_2(sz / page_sz))
 		return sz;
@@ -10554,7 +10554,7 @@ int bpf_link__update_program(struct bpf_link *link, struct bpf_program *prog)
 /* Release "ownership" of underlying BPF resource (typically, BPF program
  * attached to some BPF hook, e.g., tracepoint, kprobe, etc). Disconnected
  * link, when destructed through bpf_link__destroy() call won't attempt to
- * detach/unregisted that BPF resource. This is useful in situations where,
+ * detach/unregistered that BPF resource. This is useful in situations where,
  * say, attached BPF program has to outlive userspace program that attached it
  * in the system. Depending on type of BPF program, though, there might be
  * additional steps (like pinning BPF program in BPF FS) necessary to ensure
@@ -13040,7 +13040,7 @@ struct perf_buffer;
 
 struct perf_buffer_params {
 	struct perf_event_attr *attr;
-	/* if event_cb is specified, it takes precendence */
+	/* if event_cb is specified, it takes precedence */
 	perf_buffer_event_fn event_cb;
 	/* sample_cb and lost_cb are higher-level common-case callbacks */
 	perf_buffer_sample_fn sample_cb;
@@ -13744,7 +13744,7 @@ int bpf_object__open_skeleton(struct bpf_object_skeleton *s,
 	struct bpf_object *obj;
 	int err;
 
-	/* Attempt to preserve opts->object_name, unless overriden by user
+	/* Attempt to preserve opts->object_name, unless overridden by user
 	 * explicitly. Overwriting object name for skeletons is discouraged,
 	 * as it breaks global data maps, because they contain object name
 	 * prefix as their own map name prefix. When skeleton is generated,

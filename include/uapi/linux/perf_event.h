@@ -712,7 +712,7 @@ struct perf_event_mmap_page {
 	 * after reading this value.
 	 *
 	 * When the mapping is PROT_WRITE the @data_tail value should be
-	 * written by userspace to reflect the last read data, after issueing
+	 * written by userspace to reflect the last read data, after issuing
 	 * an smp_mb() to separate the data read from the ->data_tail store.
 	 * In this case the kernel will not over-write unread data.
 	 *
@@ -1320,7 +1320,7 @@ union perf_mem_data_src {
 #define PERF_MEM_OP_SHIFT	0
 
 /*
- * PERF_MEM_LVL_* namespace being depricated to some extent in the
+ * PERF_MEM_LVL_* namespace being deprecated to some extent in the
  * favour of newer composite PERF_MEM_{LVLNUM_,REMOTE_,SNOOPX_} fields.
  * Supporting this namespace inorder to not break defined ABIs.
  *

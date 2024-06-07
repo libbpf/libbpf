@@ -263,7 +263,7 @@ static void btf_dump_emit_type(struct btf_dump *d, __u32 id, __u32 cont_id);
  * dependent types, necessary for compilation. If some of the dependent types
  * were already emitted as part of previous btf_dump__dump_type() invocation
  * for another type, they won't be emitted again. This API allows callers to
- * filter out BTF types according to user-defined criterias and emitted only
+ * filter out BTF types according to user-defined criteria and emitted only
  * minimal subset of types, necessary to compile everything. Full struct/union
  * definitions will still be emitted, even if the only usage is through
  * pointer and could be satisfied with just a forward declaration.
