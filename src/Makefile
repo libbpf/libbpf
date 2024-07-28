@@ -119,13 +119,13 @@ $(OBJDIR)/libbpf.so.$(LIBBPF_VERSION): $(SHARED_OBJS)
 		  -Wl,-soname,libbpf.so.$(LIBBPF_MAJOR_VERSION) \
 		  $^ $(ALL_LDFLAGS) -o $@
 
-$(OBJDIR)/libbpf.pc: force
+$(OBJDIR)/libbpf.pc: force | $(OBJDIR)
 	$(Q)sed -e "s|@PREFIX@|$(PREFIX)|" \
 		-e "s|@LIBDIR@|$(LIBDIR_PC)|" \
 		-e "s|@VERSION@|$(LIBBPF_VERSION)|" \
 		< libbpf.pc.template > $@
 
-$(STATIC_OBJDIR) $(SHARED_OBJDIR):
+$(OBJDIR) $(STATIC_OBJDIR) $(SHARED_OBJDIR):
 	$(call msg,MKDIR,$@)
 	$(Q)mkdir -p $@
 
