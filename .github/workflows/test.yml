@@ -28,7 +28,7 @@ jobs:
             runs_on: ubuntu-20.04
             arch: 'x86_64'
           - kernel: 'LATEST'
-            runs_on: ["s390x", "docker-main"]
+            runs_on: ["s390x", "docker-noble-main"]
             arch: 's390x'
     steps:
       - uses: actions/checkout@v4
