@@ -11,11 +11,11 @@ foldable start prepare_selftests "Building selftests"
 LIBBPF_PATH="${REPO_ROOT}"
 
 llvm_default_version() {
-	echo "16"
+	echo "17"
 }
 
 llvm_latest_version() {
-	echo "17"
+	echo "19"
 }
 
 LLVM_VERSION=$(llvm_default_version)
