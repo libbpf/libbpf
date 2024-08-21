@@ -12,6 +12,9 @@ inputs:
     description: 'where is vmlinux file'
     required: true
     default: '${{ github.workspace }}/vmlinux'
+  llvm-version:
+    description: 'llvm version'
+    required: true
 
 runs:
   using: "composite"
@@ -28,4 +31,6 @@ runs:
         export REPO_ROOT="${{ github.workspace }}"
         export REPO_PATH="${{ inputs.repo-path }}"
         export VMLINUX_BTF="${{ inputs.vmlinux }}"
+        export LLVM_VERSION="${{ inputs.llvm-version }}"
+
         ${{ github.action_path }}/build_selftests.sh
