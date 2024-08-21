@@ -25,7 +25,11 @@ else
 	REPO_DISTRO_SUFFIX="-${LLVM_VERSION}"
 fi
 
-echo "deb https://apt.llvm.org/focal/ llvm-toolchain-focal${REPO_DISTRO_SUFFIX} main" \
+DISTRIB_CODENAME="noble"
+test -f /etc/lsb-release && . /etc/lsb-release
+echo "${DISTRIB_CODENAME}"
+
+echo "deb https://apt.llvm.org/${DISTRIB_CODENAME}/ llvm-toolchain-${DISTRIB_CODENAME}${REPO_DISTRO_SUFFIX} main" \
 	| sudo tee /etc/apt/sources.list.d/llvm.list
 
 PREPARE_SELFTESTS_SCRIPT=${THISDIR}/prepare_selftests-${KERNEL}.sh
