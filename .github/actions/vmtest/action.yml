@@ -13,6 +13,10 @@ inputs:
     description: 'pahole rev or master'
     required: true
     default: 'master'
+  llvm-version:
+    description: 'llvm version'
+    required: false
+    default: '17'
 runs:
   using: "composite"
   steps:
@@ -38,6 +42,7 @@ runs:
       with:
         pahole: ${{ inputs.pahole }}
         arch: ${{ inputs.arch }}
+        llvm-version: ${{ inputs.llvm-version }}
     # 1. download CHECKPOINT kernel source
     - name: Get checkpoint commit
       shell: bash
@@ -93,6 +98,7 @@ runs:
       with:
         repo-path: '.kernel'
         kernel: ${{ inputs.kernel }}
+        llvm-version: ${{ inputs.llvm-version }}
     # 4. prepare rootfs
     - name: prepare rootfs
       uses: libbpf/ci/prepare-rootfs@main
