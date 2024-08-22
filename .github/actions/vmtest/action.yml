@@ -20,22 +20,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    # Allow CI user to access /dev/kvm (via qemu) w/o group change/relogin
-    # by changing permissions set by udev.
-    - name: Set /dev/kvm permissions
-      shell: bash
-      run: |
-        if [ -e /dev/kvm ]; then
-          echo "/dev/kvm exists"
-          if [ $(id -u) != 0 ]; then
-            echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' \
-              | sudo tee /etc/udev/rules.d/99-kvm4all.rules > /dev/null
-            sudo udevadm control --reload-rules
-            sudo udevadm trigger --name-match=kvm
-          fi
-        else
-          echo "/dev/kvm does not exist"
-        fi
     # setup environment
     - name: Setup environment
       uses: libbpf/ci/setup-build-env@main
@@ -55,36 +39,26 @@ runs:
         repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
         rev: ${{ env.CHECKPOINT }}
         dest: '${{ github.workspace }}/.kernel'
-    - name: Patch kernel source
-      uses: libbpf/ci/patch-kernel@main
-      with:
-        patches-root: '${{ github.workspace }}/ci/diffs'
-        repo-root: '.kernel'
-    - name: Prepare to build BPF selftests
+    - name: Move linux source in place
       shell: bash
       run: |
-        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
-        foldable start "Prepare building selftest"
-        cd .kernel
-        cat tools/testing/selftests/bpf/config \
-            tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
-        # this file might or mihgt not exist depending on kernel version
-        cat tools/testing/selftests/bpf/config.vm >> .config || :
-        make olddefconfig && make prepare
-        cd -
-        foldable end
+        rm -rf .kernel/.git
+        cp -rf .kernel/. .
+        rm -rf .kernel
+    - uses: libbpf/ci/patch-kernel@main
+      with:
+        patches-root: '${{ github.workspace }}/ci/diffs'
+        repo-root: '${{ github.workspace }}'
     # 2. if kernel == LATEST, build kernel image from tree
     - name: Build kernel image
       if: ${{ inputs.kernel == 'LATEST' }}
-      shell: bash
-      run: |
-        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
-        foldable start "Build Kernel Image"
-        cd .kernel
-        make -j $((4*$(nproc))) all > /dev/null
-        cp vmlinux ${{ github.workspace }}
-        cd -
-        foldable end
+      uses: libbpf/ci/build-linux@main
+      with:
+        arch: ${{ inputs.arch }}
+        toolchain: ${{ inputs.toolchain }}
+        kbuild-output: ${{ env.KBUILD_OUTPUT }}
+        max-make-jobs: 32
+        llvm-version: ${{ inputs.llvm-version }}
     # else, just download prebuilt kernel image
     - name: Download prebuilt kernel
       if: ${{ inputs.kernel != 'LATEST' }}
@@ -93,32 +67,33 @@ runs:
         kernel: ${{ inputs.kernel }}
         arch: ${{ inputs.arch }}
     # 3. build selftests
-    - name: Build BPF selftests
-      uses: ./.github/actions/build-selftests
+    - name: Prepare to build BPF selftests
+      if: ${{ inputs.kernel != 'LATEST' }}
+      shell: bash
+      run: |
+        source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
+        foldable start "Prepare building selftest"
+        cat tools/testing/selftests/bpf/config \
+            tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
+        # this file might or mihgt not exist depending on kernel version
+        cat tools/testing/selftests/bpf/config.vm >> .config || :
+        make olddefconfig && make prepare
+        foldable end
+    - name: Build selftests
+      uses: libbpf/ci/build-selftests@main
       with:
-        repo-path: '.kernel'
-        kernel: ${{ inputs.kernel }}
-        llvm-version: ${{ inputs.llvm-version }}
-    # 4. prepare rootfs
-    - name: prepare rootfs
-      uses: libbpf/ci/prepare-rootfs@main
-      env:
-        KBUILD_OUTPUT: '.kernel'
-      with:
-        project-name: 'libbpf'
         arch: ${{ inputs.arch }}
-        kernel: ${{ inputs.kernel }}
-        kernel-root: '.kernel'
+        toolchain: ${{ inputs.toolchain }}
         kbuild-output: ${{ env.KBUILD_OUTPUT }}
-        image-output: '/tmp/root.img'
-    # 5. run selftest in QEMU
+        max-make-jobs: 32
+        llvm-version: ${{ inputs.llvm-version }}
+    # 4. run selftest in vmtest
     - name: Run selftests
       env:
         KERNEL: ${{ inputs.kernel }}
         REPO_ROOT: ${{ github.workspace }}
-      uses: libbpf/ci/run-qemu@main
+      uses: libbpf/ci/run-vmtest@main
       with:
         arch: ${{ inputs.arch }}
-        img: '/tmp/root.img'
-        vmlinuz: 'vmlinuz'
-        kernel-root: '.kernel'
+        vmlinuz: '${{ github.workspace }}/.kernel/vmlinuz'
+        kernel-root: '.'
