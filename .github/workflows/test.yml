@@ -13,7 +13,7 @@ concurrency:
 jobs:
   vmtest:
     runs-on: ${{ matrix.runs_on }}
-    name: Kernel ${{ matrix.kernel }} on ${{ matrix.runs_on }} + selftests
+    name: Kernel ${{ matrix.kernel }} on ${{ matrix.arch }} + selftests
     strategy:
       fail-fast: false
       matrix:
