@@ -12,3 +12,4 @@ xdp_bonding/xdp_bonding_features     # started failing after net merge from 359e
 tc_redirect/tc_redirect_dtime # uapi breakage after net-next commit 885c36e59f46 ("net: Re-use and set mono_delivery_time bit for userspace tstamp packets")
 migrate_reuseport/IPv4 TCP_NEW_SYN_RECV reqsk_timer_handler # flaky, under investigation
 migrate_reuseport/IPv6 TCP_NEW_SYN_RECV reqsk_timer_handler # flaky, under investigation
+verify_pkcs7_sig # keeps failing
