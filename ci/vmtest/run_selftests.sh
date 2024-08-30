@@ -67,12 +67,14 @@ local_configs_path=${PROJECT_NAME}/vmtest/configs
 DENYLIST=$(read_lists \
 	"$configs_path/DENYLIST" \
 	"$configs_path/DENYLIST.${ARCH}" \
+	"$local_configs_path/DENYLIST" \
 	"$local_configs_path/DENYLIST-${KERNEL}" \
 	"$local_configs_path/DENYLIST-${KERNEL}.${ARCH}" \
 )
 ALLOWLIST=$(read_lists \
 	"$configs_path/ALLOWLIST" \
 	"$configs_path/ALLOWLIST.${ARCH}" \
+	"$local_configs_path/ALLOWLIST" \
 	"$local_configs_path/ALLOWLIST-${KERNEL}" \
 	"$local_configs_path/ALLOWLIST-${KERNEL}.${ARCH}" \
 )
