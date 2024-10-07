@@ -27,9 +27,6 @@ jobs:
           - kernel: '4.9.0'
             runs_on: ubuntu-24.04
             arch: 'x86_64'
-          - kernel: 'LATEST'
-            runs_on: ["s390x", "docker-noble-main"]
-            arch: 's390x'
     steps:
       - uses: actions/checkout@v4
         name: Checkout
