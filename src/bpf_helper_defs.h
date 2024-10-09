@@ -1224,7 +1224,7 @@ static long (* const bpf_set_hash)(struct __sk_buff *skb, __u32 hash) = (void *)
  * 	  **TCP_SYNCNT**, **TCP_USER_TIMEOUT**, **TCP_NOTSENT_LOWAT**,
  * 	  **TCP_NODELAY**, **TCP_MAXSEG**, **TCP_WINDOW_CLAMP**,
  * 	  **TCP_THIN_LINEAR_TIMEOUTS**, **TCP_BPF_DELACK_MAX**,
- * 	  **TCP_BPF_RTO_MIN**.
+ * 	  **TCP_BPF_RTO_MIN**, **TCP_BPF_SOCK_OPS_CB_FLAGS**.
  * 	* **IPPROTO_IP**, which supports *optname* **IP_TOS**.
  * 	* **IPPROTO_IPV6**, which supports the following *optname*\ s:
  * 	  **IPV6_TCLASS**, **IPV6_AUTOFLOWLABEL**.
@@ -4424,9 +4424,10 @@ static long (* const bpf_ima_file_hash)(struct file *file, void *dst, __u32 size
 /*
  * bpf_kptr_xchg
  *
- * 	Exchange kptr at pointer *map_value* with *ptr*, and return the
- * 	old value. *ptr* can be NULL, otherwise it must be a referenced
- * 	pointer which will be released when this helper is called.
+ * 	Exchange kptr at pointer *dst* with *ptr*, and return the old value.
+ * 	*dst* can be map value or local kptr. *ptr* can be NULL, otherwise
+ * 	it must be a referenced pointer which will be released when this helper
+ * 	is called.
  *
  * Returns
  * 	The old value of kptr (which can be NULL). The returned pointer
@@ -4434,7 +4435,7 @@ static long (* const bpf_ima_file_hash)(struct file *file, void *dst, __u32 size
  * 	corresponding release function, or moved into a BPF map before
  * 	program exit.
  */
-static void *(* const bpf_kptr_xchg)(void *map_value, void *ptr) = (void *) 194;
+static void *(* const bpf_kptr_xchg)(void *dst, void *ptr) = (void *) 194;
 
 /*
  * bpf_map_lookup_percpu_elem
