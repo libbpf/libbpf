@@ -44,6 +44,14 @@ struct bpf_dynptr;
 struct iphdr;
 struct ipv6hdr;
 
+#ifndef __bpf_fastcall
+#if __has_attribute(bpf_fastcall)
+#define __bpf_fastcall __attribute__((bpf_fastcall))
+#else
+#define __bpf_fastcall
+#endif
+#endif
+
 /*
  * bpf_map_lookup_elem
  *
@@ -203,7 +211,7 @@ static __u32 (* const bpf_get_prandom_u32)(void) = (void *) 7;
  * Returns
  * 	The SMP id of the processor running the program.
  */
-static __u32 (* const bpf_get_smp_processor_id)(void) = (void *) 8;
+static __bpf_fastcall __u32 (* const bpf_get_smp_processor_id)(void) = (void *) 8;
 
 /*
  * bpf_skb_store_bytes
@@ -1510,10 +1518,6 @@ static long (* const bpf_getsockopt)(void *bpf_socket, int level, int optname, v
  * 	with the **CONFIG_BPF_KPROBE_OVERRIDE** configuration
  * 	option, and in this case it only works on functions tagged with
  * 	**ALLOW_ERROR_INJECTION** in the kernel code.
- *
- * 	Also, the helper is only available for the architectures having
- * 	the CONFIG_FUNCTION_ERROR_INJECTION option. As of this writing,
- * 	x86 architecture is the only one to support this feature.
  *
  * Returns
  * 	0
@@ -4220,7 +4224,7 @@ static long (* const bpf_find_vma)(struct task_struct *task, __u64 addr, void *c
  * 	Currently, the **flags** must be 0. Currently, nr_loops is
  * 	limited to 1 << 23 (~8 million) loops.
  *
- * 	long (\*callback_fn)(u32 index, void \*ctx);
+ * 	long (\*callback_fn)(u64 index, void \*ctx);
  *
  * 	where **index** is the current index in the loop. The index
  * 	is zero-indexed.
