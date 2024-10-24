@@ -70,7 +70,7 @@ jobs:
       - run: source /tmp/ci_setup && sudo -E $CI_ROOT/managers/ubuntu.sh
         if: matrix.arch == 'x86'
         name: Setup
-      - uses: uraimo/run-on-arch-action@v2.7.1
+      - uses: uraimo/run-on-arch-action@v2.8.1
         name: Build in docker
         if: matrix.arch != 'x86'
         with:
