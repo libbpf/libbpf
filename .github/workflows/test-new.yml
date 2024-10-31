@@ -24,17 +24,12 @@ jobs:
             - {"test": "test_verifier", "continue_on_error": false, "timeout_minutes": 360}
         kernel: ['LATEST', '5.5.0', '4.9.0']
     name: Kernel ${{ matrix.kernel }} on ${{ matrix.arch }} + selftests
-    uses: libbpf/ci/.github/workflows/kernel-build-test.yml@v1
+    uses: theihor/libbpf-ci/.github/workflows/kernel-build.yml@reusable-workflows-checkout
     with:
       arch: ${{ matrix.arch }}
-      build_release: false
-      build_runs_on: ${{ toJSON(matrix.build_runs_on) }}
       download_sources: true
       kernel: ${{ matrix.kernel }}
       llvm-version: ${{ matrix.toolchain.version }}
       runs_on: ${{ toJSON(matrix.runs_on) }}
-      run_tests: true
-      tests: ${{ toJSON(matrix.tests) }}
       toolchain: ${{ matrix.toolchain.name }}
       toolchain_full: ${{ matrix.toolchain.fullname }}
-
