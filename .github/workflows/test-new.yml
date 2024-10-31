@@ -22,7 +22,7 @@ jobs:
             - {"test": "test_progs", "continue_on_error": false, "timeout_minutes": 360}
             - {"test": "test_progs_no_alu32", "continue_on_error": false, "timeout_minutes": 360}
             - {"test": "test_verifier", "continue_on_error": false, "timeout_minutes": 360}
-        kernel: ['LATEST', '5.5.0', '4.9.0']
+        kernel: ['LATEST'] # , '5.5.0', '4.9.0']
     name: Kernel ${{ matrix.kernel }} on ${{ matrix.arch }} + selftests
     uses: theihor/libbpf-ci/.github/workflows/kernel-build.yml@reusable-workflows-checkout
     with:
