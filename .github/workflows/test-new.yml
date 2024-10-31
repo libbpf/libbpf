@@ -27,13 +27,14 @@ jobs:
     uses: libbpf/ci/.github/workflows/kernel-build-test.yml@v1
     with:
       arch: ${{ matrix.arch }}
-      toolchain_full: ${{ matrix.toolchain.fullname }}
-      toolchain: ${{ matrix.toolchain.name }}
-      runs_on: ${{ toJSON(matrix.runs_on) }}
-      build_runs_on: ${{ toJSON(matrix.build_runs_on) }}
-      llvm-version: ${{ matrix.toolchain.version }}
-      kernel: ${{ matrix.kernel }}
-      tests: ${{ toJSON(matrix.tests) }}
-      download_sources: true
       build_release: false
+      build_runs_on: ${{ toJSON(matrix.build_runs_on) }}
+      download_sources: true
+      kernel: ${{ matrix.kernel }}
+      llvm-version: ${{ matrix.toolchain.version }}
+      runs_on: ${{ toJSON(matrix.runs_on) }}
+      run_tests: true
+      tests: ${{ toJSON(matrix.tests) }}
+      toolchain: ${{ matrix.toolchain.name }}
+      toolchain_full: ${{ matrix.toolchain.fullname }}
 
