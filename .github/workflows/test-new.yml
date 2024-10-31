@@ -1,0 +1,39 @@
+name: libbpf-ci-new
+
+on:
+  pull_request:
+
+concurrency:
+  group: ci-test-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  vmtest:
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ["x86_64"]
+        build_runs_on: ["ubuntu-24.04"]
+        runs_on: ["ubuntu-24.04"]
+        toolchain:
+          - {"name": "llvm", "fullname": "llvm-17", "version": 17}
+        tests:
+          - include:
+            - {"test": "test_progs", "continue_on_error": false, "timeout_minutes": 360}
+            - {"test": "test_progs_no_alu32", "continue_on_error": false, "timeout_minutes": 360}
+            - {"test": "test_verifier", "continue_on_error": false, "timeout_minutes": 360}
+        kernel: ['LATEST', '5.5.0', '4.9.0']
+    name: Kernel ${{ matrix.kernel }} on ${{ matrix.arch }} + selftests
+    uses: libbpf/ci/.github/workflows/kernel-build-test.yml@v1
+    with:
+      arch: ${{ matrix.arch }}
+      toolchain_full: ${{ matrix.toolchain.fullname }}
+      toolchain: ${{ matrix.toolchain.name }}
+      runs_on: ${{ toJSON(matrix.runs_on) }}
+      build_runs_on: ${{ toJSON(matrix.build_runs_on) }}
+      llvm-version: ${{ matrix.toolchain.version }}
+      kernel: ${{ matrix.kernel }}
+      tests: ${{ toJSON(matrix.tests) }}
+      download_sources: true
+      build_release: false
+
