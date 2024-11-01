@@ -28,6 +28,8 @@ jobs:
         name: Setup
       - uses: ./.github/actions/vmtest
         name: vmtest
+        continue-on-error: false
+        timeout-minutes: 180
         with:
           kernel: ${{ matrix.kernel }}
           arch: ${{ matrix.arch }}
