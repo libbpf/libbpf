@@ -99,26 +99,14 @@ runs:
         repo-path: '.kernel'
         kernel: ${{ inputs.kernel }}
         llvm-version: ${{ inputs.llvm-version }}
-    # 4. prepare rootfs
-    - name: prepare rootfs
-      uses: libbpf/ci/prepare-rootfs@main
-      env:
-        KBUILD_OUTPUT: '.kernel'
-      with:
-        project-name: 'libbpf'
-        arch: ${{ inputs.arch }}
-        kernel: ${{ inputs.kernel }}
-        kernel-root: '.kernel'
-        kbuild-output: ${{ env.KBUILD_OUTPUT }}
-        image-output: '/tmp/root.img'
-    # 5. run selftest in QEMU
+    # 4. Run selftest via vmtest tool (https://github.com/danobi/vmtest)
     - name: Run selftests
       env:
         KERNEL: ${{ inputs.kernel }}
-        REPO_ROOT: ${{ github.workspace }}
-      uses: libbpf/ci/run-qemu@main
+      uses: theihor/libbpf-ci/run-vmtest@run-vmtest-v2
       with:
         arch: ${{ inputs.arch }}
-        img: '/tmp/root.img'
-        vmlinuz: 'vmlinuz'
-        kernel-root: '.kernel'
+        kbuild-output: ${{ github.workspace }}/.kernel
+        kernel-root: ${{ github.workspace }}/.kernel
+        img: '' # this is a required action input currently, but actually is not used
+        vmlinuz: ${{ github.workspace }}/vmlinux
