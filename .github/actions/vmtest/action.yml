@@ -99,14 +99,47 @@ runs:
         repo-path: '.kernel'
         kernel: ${{ inputs.kernel }}
         llvm-version: ${{ inputs.llvm-version }}
+
+    - name: Prepare to run selftests
+      env:
+        ALLOWLIST_FILE: /tmp/allowlist
+        DENYLIST_FILE: /tmp/denylist
+        KERNEL: ${{ inputs.kernel }}
+        SELFTESTS_BPF: ${{ github.workspace }}/selftests/bpf
+        VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
+      shell: bash
+      run: |
+        cat "${SELFTESTS_BPF}/ALLOWLIST"                    \
+            "${SELFTESTS_BPF}/ALLOWLIST.${ARCH}"            \
+            "${VMTEST_CONFIGS}/ALLOWLIST"                   \
+            "${VMTEST_CONFIGS}/ALLOWLIST-${KERNEL}"         \
+            "${VMTEST_CONFIGS}/ALLOWLIST-${KERNEL}.${ARCH}" \
+          2> /dev/null > "${ALLOWLIST_FILE}" || true
+
+        cat "${SELFTESTS_BPF}/DENYLIST"                     \
+            "${SELFTESTS_BPF}/DENYLIST.${ARCH}"             \
+            "${VMTEST_CONFIGS}/DENYLIST"                    \
+            "${VMTEST_CONFIGS}/DENYLIST-${KERNEL}"          \
+            "${VMTEST_CONFIGS}/DENYLIST-${KERNEL}.${ARCH}"  \
+          2> /dev/null > "${DENYLIST_FILE}" || true
+
+        if [[ "${{ inputs.kernel }}" == "4.9.0" ]]; then
+          echo "KERNEL_TEST=test_progs_no_alu32" >> $GITHUB_ENV
+        elif [[ "${{ inputs.kernel }}" == "5.5.0" ]]; then
+          echo "KERNEL_TEST=test_progs test_progs_no_alu32" >> $GITHUB_ENV
+        fi
+
     # 4. Run selftest via vmtest tool (https://github.com/danobi/vmtest)
     - name: Run selftests
       env:
+        ALLOWLIST_FILE: /tmp/allowlist
+        DENYLIST_FILE: /tmp/denylist
         KERNEL: ${{ inputs.kernel }}
+        VMLINUX: ${{ github.workspace }}/vmlinux
       uses: theihor/libbpf-ci/run-vmtest@run-vmtest-v2
       with:
         arch: ${{ inputs.arch }}
         kbuild-output: ${{ github.workspace }}/.kernel
         kernel-root: ${{ github.workspace }}/.kernel
-        img: '' # this is a required action input currently, but actually is not used
-        vmlinuz: ${{ github.workspace }}/vmlinux
+        kernel-test: ${{ env.KERNEL_TEST }}
+        vmlinuz: ${{ inputs.arch }}/vmlinuz-${{ inputs.kernel }}
