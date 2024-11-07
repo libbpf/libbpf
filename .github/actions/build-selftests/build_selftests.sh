@@ -8,8 +8,6 @@ source ${THISDIR}/helpers.sh
 
 foldable start prepare_selftests "Building selftests"
 
-LIBBPF_PATH="${REPO_ROOT}"
-
 llvm_latest_version() {
 	echo "19"
 }
@@ -50,11 +48,9 @@ make \
 	-C "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
 	-j $((4*$(nproc))) > /dev/null
 cd -
-mkdir ${LIBBPF_PATH}/selftests
+
+mkdir ${GITHUB_WORKSPACE}/selftests
 cp -R "${REPO_ROOT}/${REPO_PATH}/tools/testing/selftests/bpf" \
-	${LIBBPF_PATH}/selftests
-cd ${LIBBPF_PATH}
-rm selftests/bpf/.gitignore
-git add selftests
+   ${GITHUB_WORKSPACE}/selftests
 
 foldable end prepare_selftests
