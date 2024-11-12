@@ -38,7 +38,7 @@ runs:
         fi
     # setup environment
     - name: Setup environment
-      uses: libbpf/ci/setup-build-env@main
+      uses: theihor/libbpf-ci/setup-build-env@run-vmtest-v2
       with:
         pahole: ${{ inputs.pahole }}
         arch: ${{ inputs.arch }}
@@ -50,17 +50,17 @@ runs:
         cat CHECKPOINT-COMMIT
         echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
     - name: Get kernel source at checkpoint
-      uses: libbpf/ci/get-linux-source@main
+      uses: theihor/libbpf-ci/get-linux-source@run-vmtest-v2
       with:
         repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
         rev: ${{ env.CHECKPOINT }}
         dest: '${{ github.workspace }}/.kernel'
     - name: Patch kernel source
-      uses: libbpf/ci/patch-kernel@main
+      uses: theihor/libbpf-ci/patch-kernel@run-vmtest-v2
       with:
         patches-root: '${{ github.workspace }}/ci/diffs'
         repo-root: '.kernel'
-    - name: Prepare to build BPF selftests
+    - name: Configure kernel build
       shell: bash
       run: |
         source $GITHUB_ACTION_PATH/../../../ci/vmtest/helpers.sh
@@ -73,6 +73,7 @@ runs:
         make olddefconfig && make prepare
         cd -
         foldable end
+
     # 2. if kernel == LATEST, build kernel image from tree
     - name: Build kernel image
       if: ${{ inputs.kernel == 'LATEST' }}
@@ -88,46 +89,42 @@ runs:
     # else, just download prebuilt kernel image
     - name: Download prebuilt kernel
       if: ${{ inputs.kernel != 'LATEST' }}
-      uses: libbpf/ci/download-vmlinux@main
+      uses: theihor/libbpf-ci/download-vmlinux@run-vmtest-v2
       with:
         kernel: ${{ inputs.kernel }}
         arch: ${{ inputs.arch }}
-    # 3. build selftests
-    - name: Build BPF selftests
-      uses: ./.github/actions/build-selftests
+
+    - name: Prepare to build selftests
+      shell: bash
+      env:
+        PREPARE_SCRIPT: ${{ github.workspace }}/ci/vmtest/prepare-selftests-build-${{ inputs.kernel }}.sh
+        SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
+      run: |
+        if [ -f "${PREPARE_SCRIPT}" ]; then
+          bash "${PREPARE_SCRIPT}"
+        fi
+
+    - name: Build selftests/bpf
+      uses: theihor/libbpf-ci/build-selftests@run-vmtest-v2
+      env:
+        MAX_MAKE_JOBS: 32
+        VMLINUX_BTF: ${{ github.workspace }}/vmlinux
+        VMLINUX_H: ${{ inputs.kernel != 'LATEST' && format('{0}/.github/actions/build-selftests/vmlinux.h', github.workspace) || '' }}
       with:
-        repo-path: '.kernel'
-        kernel: ${{ inputs.kernel }}
+        arch: ${{ inputs.arch }}
+        kernel-root: ${{ github.workspace }}/.kernel
         llvm-version: ${{ inputs.llvm-version }}
 
     - name: Prepare to run selftests
       env:
         ALLOWLIST_FILE: /tmp/allowlist
         DENYLIST_FILE: /tmp/denylist
+        ARCH: ${{ inputs.arch }}
         KERNEL: ${{ inputs.kernel }}
-        SELFTESTS_BPF: ${{ github.workspace }}/selftests/bpf
+        SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
         VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
       shell: bash
-      run: |
-        cat "${SELFTESTS_BPF}/ALLOWLIST"                    \
-            "${SELFTESTS_BPF}/ALLOWLIST.${ARCH}"            \
-            "${VMTEST_CONFIGS}/ALLOWLIST"                   \
-            "${VMTEST_CONFIGS}/ALLOWLIST-${KERNEL}"         \
-            "${VMTEST_CONFIGS}/ALLOWLIST-${KERNEL}.${ARCH}" \
-          2> /dev/null > "${ALLOWLIST_FILE}" || true
-
-        cat "${SELFTESTS_BPF}/DENYLIST"                     \
-            "${SELFTESTS_BPF}/DENYLIST.${ARCH}"             \
-            "${VMTEST_CONFIGS}/DENYLIST"                    \
-            "${VMTEST_CONFIGS}/DENYLIST-${KERNEL}"          \
-            "${VMTEST_CONFIGS}/DENYLIST-${KERNEL}.${ARCH}"  \
-          2> /dev/null > "${DENYLIST_FILE}" || true
-
-        if [[ "${{ inputs.kernel }}" == "4.9.0" ]]; then
-          echo "KERNEL_TEST=test_progs_no_alu32" >> $GITHUB_ENV
-        elif [[ "${{ inputs.kernel }}" == "5.5.0" ]]; then
-          echo "KERNEL_TEST=test_progs test_progs_no_alu32" >> $GITHUB_ENV
-        fi
+      run: ${{ github.workspace }}/ci/vmtest/prepare-selftests-run.sh
 
     # 4. Run selftest via vmtest tool (https://github.com/danobi/vmtest)
     - name: Run selftests
@@ -141,5 +138,5 @@ runs:
         arch: ${{ inputs.arch }}
         kbuild-output: ${{ github.workspace }}/.kernel
         kernel-root: ${{ github.workspace }}/.kernel
-        kernel-test: ${{ env.KERNEL_TEST }}
+        kernel-test: ${{ env.KERNEL_TEST || '' }}
         vmlinuz: ${{ inputs.arch }}/vmlinuz-${{ inputs.kernel }}
