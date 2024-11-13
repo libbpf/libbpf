@@ -41,6 +41,7 @@ fi
 cd ${REPO_ROOT}/${REPO_PATH}
 make headers
 make \
+	KBUILD_MODPOST_WARN=1 \
 	CLANG=clang-${LLVM_VERSION} \
 	LLC=llc-${LLVM_VERSION} \
 	LLVM_STRIP=llvm-strip-${LLVM_VERSION} \
