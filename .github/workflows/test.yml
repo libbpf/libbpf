@@ -21,12 +21,6 @@ jobs:
           - kernel: 'LATEST'
             runs_on: ubuntu-24.04
             arch: 'x86_64'
-          - kernel: '5.5.0'
-            runs_on: ubuntu-24.04
-            arch: 'x86_64'
-          - kernel: '4.9.0'
-            runs_on: ubuntu-24.04
-            arch: 'x86_64'
     steps:
       - uses: actions/checkout@v4
         name: Checkout
