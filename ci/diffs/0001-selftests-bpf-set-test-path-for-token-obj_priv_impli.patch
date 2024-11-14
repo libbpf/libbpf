@@ -1,0 +1,85 @@
+From e3a4f5092e847ec00e2b66c060f2cef52b8d0177 Mon Sep 17 00:00:00 2001
+From: Ihor Solodrai <ihor.solodrai@pm.me>
+Date: Thu, 14 Nov 2024 12:49:34 -0800
+Subject: [PATCH bpf-next] selftests/bpf: set test path for
+ token/obj_priv_implicit_token_envvar
+
+token/obj_priv_implicit_token_envvar test may fail in an environment
+where the process executing tests can not write to the root path.
+
+Example:
+https://github.com/libbpf/libbpf/actions/runs/11844507007/job/33007897936
+
+Change default path used by the test to /tmp/bpf-token-fs, and make it
+runtime configurable via an environment variable.
+
+Signed-off-by: Ihor Solodrai <ihor.solodrai@pm.me>
+---
+ tools/testing/selftests/bpf/prog_tests/token.c | 18 +++++++++++-------
+ 1 file changed, 11 insertions(+), 7 deletions(-)
+
+diff --git a/tools/testing/selftests/bpf/prog_tests/token.c b/tools/testing/selftests/bpf/prog_tests/token.c
+index fe86e4fdb89c..39f5414b674b 100644
+--- a/tools/testing/selftests/bpf/prog_tests/token.c
++++ b/tools/testing/selftests/bpf/prog_tests/token.c
+@@ -828,8 +828,11 @@ static int userns_obj_priv_btf_success(int mnt_fd, struct token_lsm *lsm_skel)
+ 	return validate_struct_ops_load(mnt_fd, true /* should succeed */);
+ }
+ 
++static const char* token_bpffs_custom_dir() {
++	return getenv("BPF_SELFTESTS_BPF_TOKEN_DIR") ? : "/tmp/bpf-token-fs";
++}
++
+ #define TOKEN_ENVVAR "LIBBPF_BPF_TOKEN_PATH"
+-#define TOKEN_BPFFS_CUSTOM "/bpf-token-fs"
+ 
+ static int userns_obj_priv_implicit_token(int mnt_fd, struct token_lsm *lsm_skel)
+ {
+@@ -892,6 +895,7 @@ static int userns_obj_priv_implicit_token(int mnt_fd, struct token_lsm *lsm_skel
+ 
+ static int userns_obj_priv_implicit_token_envvar(int mnt_fd, struct token_lsm *lsm_skel)
+ {
++	const char *custom_dir = token_bpffs_custom_dir();
+ 	LIBBPF_OPTS(bpf_object_open_opts, opts);
+ 	struct dummy_st_ops_success *skel;
+ 	int err;
+@@ -909,10 +913,10 @@ static int userns_obj_priv_implicit_token_envvar(int mnt_fd, struct token_lsm *l
+ 	 * BPF token implicitly, unless pointed to it through
+ 	 * LIBBPF_BPF_TOKEN_PATH envvar
+ 	 */
+-	rmdir(TOKEN_BPFFS_CUSTOM);
+-	if (!ASSERT_OK(mkdir(TOKEN_BPFFS_CUSTOM, 0777), "mkdir_bpffs_custom"))
++	rmdir(custom_dir);
++	if (!ASSERT_OK(mkdir(custom_dir, 0777), "mkdir_bpffs_custom"))
+ 		goto err_out;
+-	err = sys_move_mount(mnt_fd, "", AT_FDCWD, TOKEN_BPFFS_CUSTOM, MOVE_MOUNT_F_EMPTY_PATH);
++	err = sys_move_mount(mnt_fd, "", AT_FDCWD, custom_dir, MOVE_MOUNT_F_EMPTY_PATH);
+ 	if (!ASSERT_OK(err, "move_mount_bpffs"))
+ 		goto err_out;
+ 
+@@ -925,7 +929,7 @@ static int userns_obj_priv_implicit_token_envvar(int mnt_fd, struct token_lsm *l
+ 		goto err_out;
+ 	}
+ 
+-	err = setenv(TOKEN_ENVVAR, TOKEN_BPFFS_CUSTOM, 1 /*overwrite*/);
++	err = setenv(TOKEN_ENVVAR, custom_dir, 1 /*overwrite*/);
+ 	if (!ASSERT_OK(err, "setenv_token_path"))
+ 		goto err_out;
+ 
+@@ -951,11 +955,11 @@ static int userns_obj_priv_implicit_token_envvar(int mnt_fd, struct token_lsm *l
+ 	if (!ASSERT_ERR(err, "obj_empty_token_path_load"))
+ 		goto err_out;
+ 
+-	rmdir(TOKEN_BPFFS_CUSTOM);
++	rmdir(custom_dir);
+ 	unsetenv(TOKEN_ENVVAR);
+ 	return 0;
+ err_out:
+-	rmdir(TOKEN_BPFFS_CUSTOM);
++	rmdir(custom_dir);
+ 	unsetenv(TOKEN_ENVVAR);
+ 	return -EINVAL;
+ }
+-- 
+2.47.0
+
