@@ -1,0 +1,445 @@
+From f66e9f529d6b5bc2f630e498e41f8118b6554070 Mon Sep 17 00:00:00 2001
+From: Eduard Zingerman <eddyz87@gmail.com>
+Date: Tue, 12 Nov 2024 03:09:02 -0800
+Subject: [PATCH] selftests/bpf: fix for bpf_signal stalls, watchdog for
+ test_progs
+
+Test case 'bpf_signal' had been recently reported to stall, both on
+the mailing list [1] and CI [2]. The stall is caused by CPU cycles
+perf event not being delivered within expected time frame, before test
+process enters system call and waits indefinitely.
+
+This patch-set addresses the issue in several ways:
+- A watchdog timer is added to test_progs.c runner:
+  - it prints current sub-test name to stderr if sub-test takes longer
+    than 10 seconds to finish;
+  - it terminates process executing sub-test if sub-test takes longer
+    than 120 seconds to finish.
+- The test case is updated to await perf event notification with a
+  timeout and a few retries, this serves two purposes:
+  - busy loops longer to increase the time frame for CPU cycles event
+    generation/delivery;
+  - makes a timeout, not stall, a worst case scenario.
+- The test case is updated to lower frequency of perf events, as high
+  frequency of such events caused events generation throttling,
+  which in turn delayed events delivery by amount of time sufficient
+  to cause test case failure.
+
+Note:
+
+  librt pthread-based timer API is used to implement watchdog timer.
+  I chose this API over SIGALRM because signal handler execution
+  within test process context was sufficient to trigger perf event
+  delivery for send_signal/send_signal_nmi_thread_remote test case,
+  w/o any additional changes. Thus I concluded that SIGALRM based
+  implementation interferes with tests execution.
+
+[1] https://lore.kernel.org/bpf/CAP01T75OUeE8E-Lw9df84dm8ag2YmHW619f1DmPSVZ5_O89+Bg@mail.gmail.com/
+[2] https://github.com/kernel-patches/bpf/actions/runs/11791485271/job/32843996871
+
+Eduard Zingerman (4):
+  selftests/bpf: watchdog timer for test_progs
+  selftests/bpf: add read_with_timeout() utility function
+  selftests/bpf: allow send_signal test to timeout
+  selftests/bpf: update send_signal to lower perf evemts frequency
+
+ tools/testing/selftests/bpf/Makefile          |   1 +
+ tools/testing/selftests/bpf/io_helpers.c      |  21 ++++
+ tools/testing/selftests/bpf/io_helpers.h      |   7 ++
+ .../selftests/bpf/prog_tests/bpf_iter.c       |   8 +-
+ .../testing/selftests/bpf/prog_tests/iters.c  |   4 +-
+ .../selftests/bpf/prog_tests/send_signal.c    |  35 +++---
+ tools/testing/selftests/bpf/test_progs.c      | 104 ++++++++++++++++++
+ tools/testing/selftests/bpf/test_progs.h      |   6 +
+ 8 files changed, 166 insertions(+), 20 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/io_helpers.c
+ create mode 100644 tools/testing/selftests/bpf/io_helpers.h
+
+--
+2.47.0
+---
+ tools/testing/selftests/bpf/Makefile          |   1 +
+ tools/testing/selftests/bpf/io_helpers.c      |  21 ++++
+ tools/testing/selftests/bpf/io_helpers.h      |   7 ++
+ .../selftests/bpf/prog_tests/bpf_iter.c       |   8 +-
+ .../testing/selftests/bpf/prog_tests/iters.c  |   4 +-
+ .../selftests/bpf/prog_tests/send_signal.c    |  35 +++---
+ tools/testing/selftests/bpf/test_progs.c      | 104 ++++++++++++++++++
+ tools/testing/selftests/bpf/test_progs.h      |   6 +
+ 8 files changed, 166 insertions(+), 20 deletions(-)
+ create mode 100644 tools/testing/selftests/bpf/io_helpers.c
+ create mode 100644 tools/testing/selftests/bpf/io_helpers.h
+
+diff --git a/tools/testing/selftests/bpf/Makefile b/tools/testing/selftests/bpf/Makefile
+index edef5df08cb2..b1080284522d 100644
+--- a/tools/testing/selftests/bpf/Makefile
++++ b/tools/testing/selftests/bpf/Makefile
+@@ -742,6 +742,7 @@ TRUNNER_EXTRA_SOURCES := test_progs.c		\
+ 			 unpriv_helpers.c 	\
+ 			 netlink_helpers.c	\
+ 			 jit_disasm_helpers.c	\
++			 io_helpers.c		\
+ 			 test_loader.c		\
+ 			 xsk.c			\
+ 			 disasm.c		\
+diff --git a/tools/testing/selftests/bpf/io_helpers.c b/tools/testing/selftests/bpf/io_helpers.c
+new file mode 100644
+index 000000000000..4ada0a74aa1f
+--- /dev/null
++++ b/tools/testing/selftests/bpf/io_helpers.c
+@@ -0,0 +1,21 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <sys/select.h>
++#include <unistd.h>
++#include <errno.h>
++
++int read_with_timeout(int fd, char *buf, size_t count, long usec)
++{
++	const long M = 1000 * 1000;
++	struct timeval tv = { usec / M, usec % M };
++	fd_set fds;
++	int err;
++
++	FD_ZERO(&fds);
++	FD_SET(fd, &fds);
++	err = select(fd + 1, &fds, NULL, NULL, &tv);
++	if (err < 0)
++		return err;
++	if (FD_ISSET(fd, &fds))
++		return read(fd, buf, count);
++	return -EAGAIN;
++}
+diff --git a/tools/testing/selftests/bpf/io_helpers.h b/tools/testing/selftests/bpf/io_helpers.h
+new file mode 100644
+index 000000000000..21e1134cd3ce
+--- /dev/null
++++ b/tools/testing/selftests/bpf/io_helpers.h
+@@ -0,0 +1,7 @@
++// SPDX-License-Identifier: GPL-2.0
++#include <unistd.h>
++
++/* As a regular read(2), but allows to specify a timeout in micro-seconds.
++ * Returns -EAGAIN on timeout.
++ */
++int read_with_timeout(int fd, char *buf, size_t count, long usec);
+diff --git a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
+index b8e1224cfd19..6f1bfacd7375 100644
+--- a/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
++++ b/tools/testing/selftests/bpf/prog_tests/bpf_iter.c
+@@ -265,10 +265,10 @@ static void *run_test_task_tid(void *arg)
+ 
+ 	linfo.task.tid = 0;
+ 	linfo.task.pid = getpid();
+-	/* This includes the parent thread, this thread,
++	/* This includes the parent thread, this thread, watchdog timer thread
+ 	 * and the do_nothing_wait thread
+ 	 */
+-	test_task_common(&opts, 2, 1);
++	test_task_common(&opts, 3, 1);
+ 
+ 	test_task_common_nocheck(NULL, &num_unknown_tid, &num_known_tid);
+ 	ASSERT_GT(num_unknown_tid, 2, "check_num_unknown_tid");
+@@ -297,7 +297,7 @@ static void test_task_pid(void)
+ 	opts.link_info = &linfo;
+ 	opts.link_info_len = sizeof(linfo);
+ 
+-	test_task_common(&opts, 1, 1);
++	test_task_common(&opts, 2, 1);
+ }
+ 
+ static void test_task_pidfd(void)
+@@ -315,7 +315,7 @@ static void test_task_pidfd(void)
+ 	opts.link_info = &linfo;
+ 	opts.link_info_len = sizeof(linfo);
+ 
+-	test_task_common(&opts, 1, 1);
++	test_task_common(&opts, 2, 1);
+ 
+ 	close(pidfd);
+ }
+diff --git a/tools/testing/selftests/bpf/prog_tests/iters.c b/tools/testing/selftests/bpf/prog_tests/iters.c
+index 89ff23c4a8bc..3cea71f9c500 100644
+--- a/tools/testing/selftests/bpf/prog_tests/iters.c
++++ b/tools/testing/selftests/bpf/prog_tests/iters.c
+@@ -192,8 +192,8 @@ static void subtest_task_iters(void)
+ 	syscall(SYS_getpgid);
+ 	iters_task__detach(skel);
+ 	ASSERT_EQ(skel->bss->procs_cnt, 1, "procs_cnt");
+-	ASSERT_EQ(skel->bss->threads_cnt, thread_num + 1, "threads_cnt");
+-	ASSERT_EQ(skel->bss->proc_threads_cnt, thread_num + 1, "proc_threads_cnt");
++	ASSERT_EQ(skel->bss->threads_cnt, thread_num + 2, "threads_cnt");
++	ASSERT_EQ(skel->bss->proc_threads_cnt, thread_num + 2, "proc_threads_cnt");
+ 	ASSERT_EQ(skel->bss->invalid_cnt, 0, "invalid_cnt");
+ 	pthread_mutex_unlock(&do_nothing_mutex);
+ 	for (int i = 0; i < thread_num; i++)
+diff --git a/tools/testing/selftests/bpf/prog_tests/send_signal.c b/tools/testing/selftests/bpf/prog_tests/send_signal.c
+index 1aed94ec14ef..1702aa592c2c 100644
+--- a/tools/testing/selftests/bpf/prog_tests/send_signal.c
++++ b/tools/testing/selftests/bpf/prog_tests/send_signal.c
+@@ -3,6 +3,7 @@
+ #include <sys/time.h>
+ #include <sys/resource.h>
+ #include "test_send_signal_kern.skel.h"
++#include "io_helpers.h"
+ 
+ static int sigusr1_received;
+ 
+@@ -24,6 +25,7 @@ static void test_send_signal_common(struct perf_event_attr *attr,
+ 	int pipe_c2p[2], pipe_p2c[2];
+ 	int err = -1, pmu_fd = -1;
+ 	volatile int j = 0;
++	int retry_count;
+ 	char buf[256];
+ 	pid_t pid;
+ 	int old_prio;
+@@ -163,21 +165,25 @@ static void test_send_signal_common(struct perf_event_attr *attr,
+ 	/* notify child that bpf program can send_signal now */
+ 	ASSERT_EQ(write(pipe_p2c[1], buf, 1), 1, "pipe_write");
+ 
+-	/* For the remote test, the BPF program is triggered from this
+-	 * process but the other process/thread is signaled.
+-	 */
+-	if (remote) {
+-		if (!attr) {
+-			for (int i = 0; i < 10; i++)
+-				usleep(1);
+-		} else {
+-			for (int i = 0; i < 100000000; i++)
+-				j /= i + 1;
++	for (retry_count = 0;;) {
++		/* For the remote test, the BPF program is triggered from this
++		 * process but the other process/thread is signaled.
++		 */
++		if (remote) {
++			if (!attr) {
++				for (int i = 0; i < 10; i++)
++					usleep(1);
++			} else {
++				for (int i = 0; i < 100000000; i++)
++					j /= i + 1;
++			}
+ 		}
++		/* wait for result */
++		err = read_with_timeout(pipe_c2p[0], buf, 1, 100);
++		if (err == -EAGAIN && retry_count++ < 10000)
++			continue;
++		break;
+ 	}
+-
+-	/* wait for result */
+-	err = read(pipe_c2p[0], buf, 1);
+ 	if (!ASSERT_GE(err, 0, "reading pipe"))
+ 		goto disable_pmu;
+ 	if (!ASSERT_GT(err, 0, "reading pipe error: size 0")) {
+@@ -223,7 +229,8 @@ static void test_send_signal_perf(bool signal_thread, bool remote)
+ static void test_send_signal_nmi(bool signal_thread, bool remote)
+ {
+ 	struct perf_event_attr attr = {
+-		.sample_period = 1,
++		.freq = 1,
++		.sample_freq = 1000,
+ 		.type = PERF_TYPE_HARDWARE,
+ 		.config = PERF_COUNT_HW_CPU_CYCLES,
+ 	};
+diff --git a/tools/testing/selftests/bpf/test_progs.c b/tools/testing/selftests/bpf/test_progs.c
+index 7421874380c2..6088d8222d59 100644
+--- a/tools/testing/selftests/bpf/test_progs.c
++++ b/tools/testing/selftests/bpf/test_progs.c
+@@ -16,6 +16,7 @@
+ #include <sys/socket.h>
+ #include <sys/un.h>
+ #include <bpf/btf.h>
++#include <time.h>
+ #include "json_writer.h"
+ 
+ #include "network_helpers.h"
+@@ -179,6 +180,88 @@ int usleep(useconds_t usec)
+ 	return syscall(__NR_nanosleep, &ts, NULL);
+ }
+ 
++/* Watchdog timer is started by watchdog_start() and stopped by watchdog_stop().
++ * If timer is active for longer than env.secs_till_notify,
++ * it prints the name of the current test to the stderr.
++ * If timer is active for longer than env.secs_till_kill,
++ * it kills the thread executing the test by sending a SIGSEGV signal to it.
++ */
++static void watchdog_timer_func(union sigval sigval)
++{
++	struct itimerspec timeout = {};
++	char test_name[256];
++	int err;
++
++	if (env.subtest_state)
++		snprintf(test_name, sizeof(test_name), "%s/%s",
++			 env.test->test_name, env.subtest_state->name);
++	else
++		snprintf(test_name, sizeof(test_name), "%s",
++			 env.test->test_name);
++
++	switch (env.watchdog_state) {
++	case WD_NOTIFY:
++		fprintf(env.stderr_saved, "WATCHDOG: test case %s executes for %d seconds...\n",
++			test_name, env.secs_till_notify);
++		timeout.it_value.tv_sec = env.secs_till_kill - env.secs_till_notify;
++		env.watchdog_state = WD_KILL;
++		err = timer_settime(env.watchdog, 0, &timeout, NULL);
++		if (err)
++			fprintf(env.stderr_saved, "Failed to arm watchdog timer\n");
++		break;
++	case WD_KILL:
++		fprintf(env.stderr_saved,
++			"WATCHDOG: test case %s executes for %d seconds, terminating with SIGSEGV\n",
++			test_name, env.secs_till_kill);
++		pthread_kill(env.main_thread, SIGSEGV);
++		break;
++	}
++}
++
++static void watchdog_start(void)
++{
++	struct itimerspec timeout = {};
++	int err;
++
++	if (env.secs_till_kill == 0)
++		return;
++	if (env.secs_till_notify > 0) {
++		env.watchdog_state = WD_NOTIFY;
++		timeout.it_value.tv_sec = env.secs_till_notify;
++	} else {
++		env.watchdog_state = WD_KILL;
++		timeout.it_value.tv_sec = env.secs_till_kill;
++	}
++	err = timer_settime(env.watchdog, 0, &timeout, NULL);
++	if (err)
++		fprintf(env.stderr_saved, "Failed to start watchdog timer\n");
++}
++
++static void watchdog_stop(void)
++{
++	struct itimerspec timeout = {};
++	int err;
++
++	env.watchdog_state = WD_NOTIFY;
++	err = timer_settime(env.watchdog, 0, &timeout, NULL);
++	if (err)
++		fprintf(env.stderr_saved, "Failed to stop watchdog timer\n");
++}
++
++static void watchdog_init(void)
++{
++	struct sigevent watchdog_sev = {
++		.sigev_notify = SIGEV_THREAD,
++		.sigev_notify_function = watchdog_timer_func,
++	};
++	int err;
++
++	env.main_thread = pthread_self();
++	err = timer_create(CLOCK_MONOTONIC, &watchdog_sev, &env.watchdog);
++	if (err)
++		fprintf(stderr, "Failed to initialize watchdog timer\n");
++}
++
+ static bool should_run(struct test_selector *sel, int num, const char *name)
+ {
+ 	int i;
+@@ -515,6 +598,7 @@ bool test__start_subtest(const char *subtest_name)
+ 
+ 	env.subtest_state = subtest_state;
+ 	stdio_hijack_init(&subtest_state->log_buf, &subtest_state->log_cnt);
++	watchdog_start();
+ 
+ 	return true;
+ }
+@@ -780,6 +864,7 @@ enum ARG_KEYS {
+ 	ARG_DEBUG = -1,
+ 	ARG_JSON_SUMMARY = 'J',
+ 	ARG_TRAFFIC_MONITOR = 'm',
++	ARG_WATCHDOG_TIMEOUT = 'w',
+ };
+ 
+ static const struct argp_option opts[] = {
+@@ -810,6 +895,8 @@ static const struct argp_option opts[] = {
+ 	{ "traffic-monitor", ARG_TRAFFIC_MONITOR, "NAMES", 0,
+ 	  "Monitor network traffic of tests with name matching the pattern (supports '*' wildcard)." },
+ #endif
++	{ "watchdog-timeout", ARG_WATCHDOG_TIMEOUT, "SECONDS", 0,
++	  "Kill the process if tests are not making progress for specified number of seconds." },
+ 	{},
+ };
+ 
+@@ -1035,6 +1122,16 @@ static error_t parse_arg(int key, char *arg, struct argp_state *state)
+ 					      true);
+ 		break;
+ #endif
++	case ARG_WATCHDOG_TIMEOUT:
++		env->secs_till_kill = atoi(arg);
++		if (env->secs_till_kill < 0) {
++			fprintf(stderr, "Invalid watchdog timeout: %s.\n", arg);
++			return -EINVAL;
++		}
++		if (env->secs_till_kill < env->secs_till_notify) {
++			env->secs_till_notify = 0;
++		}
++		break;
+ 	default:
+ 		return ARGP_ERR_UNKNOWN;
+ 	}
+@@ -1263,10 +1360,12 @@ static void run_one_test(int test_num)
+ 
+ 	stdio_hijack(&state->log_buf, &state->log_cnt);
+ 
++	watchdog_start();
+ 	if (test->run_test)
+ 		test->run_test();
+ 	else if (test->run_serial_test)
+ 		test->run_serial_test();
++	watchdog_stop();
+ 
+ 	/* ensure last sub-test is finalized properly */
+ 	if (env.subtest_state)
+@@ -1707,6 +1806,7 @@ static int worker_main_send_subtests(int sock, struct test_state *state)
+ static int worker_main(int sock)
+ {
+ 	save_netns();
++	watchdog_init();
+ 
+ 	while (true) {
+ 		/* receive command */
+@@ -1816,6 +1916,8 @@ int main(int argc, char **argv)
+ 
+ 	sigaction(SIGSEGV, &sigact, NULL);
+ 
++	env.secs_till_notify = 10;
++	env.secs_till_kill = 120;
+ 	err = argp_parse(&argp, argc, argv, 0, NULL, &env);
+ 	if (err)
+ 		return err;
+@@ -1824,6 +1926,8 @@ int main(int argc, char **argv)
+ 	if (err)
+ 		return err;
+ 
++	watchdog_init();
++
+ 	/* Use libbpf 1.0 API mode */
+ 	libbpf_set_strict_mode(LIBBPF_STRICT_ALL);
+ 	libbpf_set_print(libbpf_print_fn);
+diff --git a/tools/testing/selftests/bpf/test_progs.h b/tools/testing/selftests/bpf/test_progs.h
+index 7a58895867c3..74de33ae37e5 100644
+--- a/tools/testing/selftests/bpf/test_progs.h
++++ b/tools/testing/selftests/bpf/test_progs.h
+@@ -131,6 +131,12 @@ struct test_env {
+ 	pid_t *worker_pids; /* array of worker pids */
+ 	int *worker_socks; /* array of worker socks */
+ 	int *worker_current_test; /* array of current running test for each worker */
++
++	pthread_t main_thread;
++	int secs_till_notify;
++	int secs_till_kill;
++	timer_t watchdog; /* watch for stalled tests/subtests */
++	enum { WD_NOTIFY, WD_KILL } watchdog_state;
+ };
+ 
+ #define MAX_LOG_TRUNK_SIZE 8192
+-- 
+2.47.0
+
