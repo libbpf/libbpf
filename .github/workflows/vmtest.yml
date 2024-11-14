@@ -25,7 +25,7 @@ on:
       llvm-version:
         description: 'llvm version'
         required: false
-        default: '17'
+        default: '18'
         type: string
 jobs:
   vmtest:
