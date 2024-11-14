@@ -1,19 +1,17 @@
 name: libbpf-ci
 
-on: 
+on:
   pull_request:
   push:
   schedule:
     - cron:  '0 18 * * *'
 
-concurrency: 
+concurrency:
   group: ci-test-${{ github.head_ref }}
   cancel-in-progress: true
 
 jobs:
   vmtest:
-    runs-on: ${{ matrix.runs_on }}
-    name: Kernel ${{ matrix.kernel }} on ${{ matrix.arch }} + selftests
     strategy:
       fail-fast: false
       matrix:
@@ -21,15 +19,13 @@ jobs:
           - kernel: 'LATEST'
             runs_on: ubuntu-24.04
             arch: 'x86_64'
-    steps:
-      - uses: actions/checkout@v4
-        name: Checkout
-      - uses: ./.github/actions/setup
-        name: Setup
-      - uses: ./.github/actions/vmtest
-        name: vmtest
-        continue-on-error: false
-        timeout-minutes: 180
-        with:
-          kernel: ${{ matrix.kernel }}
-          arch: ${{ matrix.arch }}
+            llvm-version: '17'
+            pahole: 'master'
+    name: ${{ matrix.kernel }} kernel llvm-${{ matrix.llvm-version }} pahole@${{ matrix.pahole }}
+    uses: ./.github/workflows/vmtest.yml
+    with:
+      runs_on: ${{ matrix.runs_on }}
+      kernel: ${{ matrix.kernel }}
+      arch: ${{ matrix.arch }}
+      llvm-version: ${{ matrix.llvm-version }}
+      pahole: ${{ matrix.pahole }}
