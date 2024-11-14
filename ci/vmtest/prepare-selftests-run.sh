@@ -36,6 +36,6 @@ if [[ "${KERNEL}" == "5.5.0" ]]; then
     echo "KERNEL_TEST=test_progs test_progs_no_alu32" >> $GITHUB_ENV
 fi
 
-mkdir "${GITHUB_WORKSPACE}/selftests"
+mkdir -p "${GITHUB_WORKSPACE}/selftests"
 cp -R "${SELFTESTS_BPF}" "${GITHUB_WORKSPACE}/selftests"
 
