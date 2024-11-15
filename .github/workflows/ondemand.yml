@@ -3,34 +3,29 @@ name: ondemand
 on:
   workflow_dispatch:
     inputs:
-      kernel-origin:
-        description: 'git repo for linux kernel'
-        default: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
+      arch:
+        default: 'x86_64'
         required: true
-      kernel-rev:
-        description: 'rev/tag/branch for linux kernel'
+      llvm-version:
+        default: '18'
+        required: true
+      kernel:
+        default: 'LATEST'
+        required: true
+      pahole:
         default: "master"
         required: true
-      pahole-origin:
-        description: 'git repo for pahole'
-        default: 'https://git.kernel.org/pub/scm/devel/pahole/pahole.git'
-        required: true
-      pahole-rev:
-        description: 'ref/tag/branch for pahole'
-        default: "master"
+      runs-on:
+        default: 'ubuntu-24.04'
         required: true
 
 jobs:
   vmtest:
-    runs-on: ubuntu-latest
-    name: vmtest with customized pahole/Kernel
-    steps:
-      - uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - uses: ./.github/actions/vmtest
-        with:
-          kernel: 'LATEST'
-          kernel-rev: ${{ github.event.inputs.kernel-rev }}
-          kernel-origin: ${{ github.event.inputs.kernel-origin }}
-          pahole: ${{ github.event.inputs.pahole-rev }}
-          pahole-origin: ${{ github.event.inputs.pahole-origin }}
+    name: ${{ inputs.kernel }} kernel llvm-${{ inputs.llvm-version }} pahole@${{ inputs.pahole }}
+    uses: ./.github/workflows/vmtest.yml
+    with:
+      runs_on: ${{ inputs.runs-on }}
+      kernel: ${{ inputs.kernel }}
+      arch: ${{ inputs.arch }}
+      llvm-version: ${{ inputs.llvm-version }}
+      pahole: ${{ inputs.pahole }}
