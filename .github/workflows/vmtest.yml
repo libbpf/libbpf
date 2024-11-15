@@ -29,6 +29,7 @@ on:
         type: string
 jobs:
   vmtest:
+    name: llvm-${{ inputs.llvm-version }} pahole@${{ inputs.pahole }} linux-${{ inputs.kernel }}
     runs-on: ${{ inputs.runs_on }}
     steps:
 
@@ -114,6 +115,7 @@ jobs:
           DENYLIST_FILE: /tmp/denylist
           ARCH: ${{ inputs.arch }}
           KERNEL: ${{ inputs.kernel }}
+          LLVM_VERSION: ${{ inputs.llvm-version }}
           SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
           VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
         shell: bash

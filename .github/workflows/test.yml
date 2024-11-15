@@ -15,11 +15,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        arch: ['x86_64']
-        kernel: ['LATEST']
-        llvm-version: ['17', '18']
-        pahole: ['master', 'tmp.master']
-        runs_on: ['ubuntu-24.04']
+        include:
+          - kernel: 'LATEST'
+            runs_on: 'ubuntu-24.04'
+            arch: 'x86_64'
+            llvm-version: '18'
+            pahole: 'master'
+          - kernel: 'LATEST'
+            runs_on: 'ubuntu-24.04'
+            arch: 'x86_64'
+            llvm-version: '17'
+            pahole: 'master'
+          - kernel: 'LATEST'
+            runs_on: 'ubuntu-24.04'
+            arch: 'x86_64'
+            llvm-version: '18'
+            pahole: 'tmp.master'
     name: ${{ matrix.kernel }} kernel llvm-${{ matrix.llvm-version }} pahole@${{ matrix.pahole }}
     uses: ./.github/workflows/vmtest.yml
     with:
