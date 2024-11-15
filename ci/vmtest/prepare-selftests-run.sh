@@ -8,7 +8,10 @@ function append_into() {
     local files=("$@")
     echo -n > "$out"
     for file in "${files[@]}"; do
-        cat "$file" >> "$out" || true
+        if [[ -f "$file" ]]; then
+            echo "cat $file >> $out"
+            cat "$file" >> "$out"
+        fi
     done
 }
 
@@ -32,10 +35,13 @@ denylists=(
 
 append_into "${DENYLIST_FILE}" "${denylists[@]}"
 
-if [[ "${KERNEL}" == "5.5.0" ]]; then
-    echo "KERNEL_TEST=test_progs test_progs_no_alu32" >> $GITHUB_ENV
+if [[ "${LLVM_VERSION}" -lt 18 ]]; then
+    echo "KERNEL_TEST=test_progs test_progs_no_alu32 test_maps test_verifier" >> $GITHUB_ENV
+else # all
+    echo "KERNEL_TEST=test_progs test_progs_cpuv4 test_progs_no_alu32 test_maps test_verifier" >> $GITHUB_ENV
 fi
 
+echo "cp -R ${SELFTESTS_BPF} ${GITHUB_WORKSPACE}/selftests"
 mkdir -p "${GITHUB_WORKSPACE}/selftests"
 cp -R "${SELFTESTS_BPF}" "${GITHUB_WORKSPACE}/selftests"
 
