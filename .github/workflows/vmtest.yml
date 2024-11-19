@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup environment
-        uses: theihor/libbpf-ci/setup-build-env@run-vmtest-v2
+        uses: libbpf/ci/setup-build-env@v2
         with:
           pahole: ${{ inputs.pahole }}
           arch: ${{ inputs.arch }}
@@ -49,14 +49,14 @@ jobs:
           echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
 
       - name: Get kernel source at checkpoint
-        uses: theihor/libbpf-ci/get-linux-source@run-vmtest-v2
+        uses: libbpf/ci/get-linux-source@v2
         with:
           repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
           rev: ${{ env.CHECKPOINT }}
           dest: '${{ github.workspace }}/.kernel'
 
       - name: Patch kernel source
-        uses: theihor/libbpf-ci/patch-kernel@run-vmtest-v2
+        uses: libbpf/ci/patch-kernel@v2
         with:
           patches-root: '${{ github.workspace }}/ci/diffs'
           repo-root: '.kernel'
@@ -67,7 +67,7 @@ jobs:
           cd .kernel
           cat tools/testing/selftests/bpf/config \
               tools/testing/selftests/bpf/config.${{ inputs.arch }} > .config
-          # this file might or mihgt not exist depending on kernel version
+          # this file might or might not exist depending on kernel version
           cat tools/testing/selftests/bpf/config.vm >> .config || :
           make olddefconfig && make prepare
           cd -
@@ -83,7 +83,7 @@ jobs:
 
       - name: Download prebuilt kernel
         if: ${{ inputs.kernel != 'LATEST' }}
-        uses: theihor/libbpf-ci/download-vmlinux@run-vmtest-v2
+        uses: libbpf/ci/download-vmlinux@v2
         with:
           kernel: ${{ inputs.kernel }}
           arch: ${{ inputs.arch }}
@@ -99,7 +99,7 @@ jobs:
           fi
 
       - name: Build selftests/bpf
-        uses: theihor/libbpf-ci/build-selftests@run-vmtest-v2
+        uses: libbpf/ci/build-selftests@v2
         env:
           MAX_MAKE_JOBS: 32
           VMLINUX_BTF: ${{ github.workspace }}/vmlinux
@@ -127,7 +127,7 @@ jobs:
           DENYLIST_FILE: /tmp/denylist
           KERNEL: ${{ inputs.kernel }}
           VMLINUX: ${{ github.workspace }}/vmlinux
-        uses: theihor/libbpf-ci/run-vmtest@run-vmtest-v2
+        uses: libbpf/ci/run-vmtest@v2
         with:
           arch: ${{ inputs.arch }}
           kbuild-output: ${{ github.workspace }}/.kernel
