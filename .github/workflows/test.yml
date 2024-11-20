@@ -24,14 +24,9 @@ jobs:
           - kernel: 'LATEST'
             runs_on: 'ubuntu-24.04'
             arch: 'x86_64'
-            llvm-version: '17'
-            pahole: 'master'
-          - kernel: 'LATEST'
-            runs_on: 'ubuntu-24.04'
-            arch: 'x86_64'
             llvm-version: '18'
             pahole: 'tmp.master'
-    name: ${{ matrix.kernel }} kernel llvm-${{ matrix.llvm-version }} pahole@${{ matrix.pahole }}
+    name: Linux ${{ matrix.kernel }} llvm-${{ matrix.llvm-version }}
     uses: ./.github/workflows/vmtest.yml
     with:
       runs_on: ${{ matrix.runs_on }}
