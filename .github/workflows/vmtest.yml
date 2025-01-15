@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup environment
-        uses: libbpf/ci/setup-build-env@v2
+        uses: libbpf/ci/setup-build-env@v3
         with:
           pahole: ${{ inputs.pahole }}
           arch: ${{ inputs.arch }}
@@ -49,14 +49,14 @@ jobs:
           echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
 
       - name: Get kernel source at checkpoint
-        uses: libbpf/ci/get-linux-source@v2
+        uses: libbpf/ci/get-linux-source@v3
         with:
           repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
           rev: ${{ env.CHECKPOINT }}
           dest: '${{ github.workspace }}/.kernel'
 
       - name: Patch kernel source
-        uses: libbpf/ci/patch-kernel@v2
+        uses: libbpf/ci/patch-kernel@v3
         with:
           patches-root: '${{ github.workspace }}/ci/diffs'
           repo-root: '.kernel'
@@ -83,23 +83,13 @@ jobs:
 
       - name: Download prebuilt kernel
         if: ${{ inputs.kernel != 'LATEST' }}
-        uses: libbpf/ci/download-vmlinux@v2
+        uses: libbpf/ci/download-vmlinux@v3
         with:
           kernel: ${{ inputs.kernel }}
           arch: ${{ inputs.arch }}
 
-      - name: Prepare to build selftests
-        shell: bash
-        env:
-          PREPARE_SCRIPT: ${{ github.workspace }}/ci/vmtest/prepare-selftests-build-${{ inputs.kernel }}.sh
-          SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
-        run: |
-          if [ -f "${PREPARE_SCRIPT}" ]; then
-            bash "${PREPARE_SCRIPT}"
-          fi
-
       - name: Build selftests/bpf
-        uses: libbpf/ci/build-selftests@v2
+        uses: libbpf/ci/build-selftests@v3
         env:
           MAX_MAKE_JOBS: 32
           VMLINUX_BTF: ${{ github.workspace }}/vmlinux
@@ -109,28 +99,19 @@ jobs:
           kernel-root: ${{ github.workspace }}/.kernel
           llvm-version: ${{ inputs.llvm-version }}
 
-      - name: Prepare to run selftests
-        env:
-          ALLOWLIST_FILE: /tmp/allowlist
-          DENYLIST_FILE: /tmp/denylist
-          ARCH: ${{ inputs.arch }}
-          KERNEL: ${{ inputs.kernel }}
-          LLVM_VERSION: ${{ inputs.llvm-version }}
-          SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
-          VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
-        shell: bash
-        run: ${{ github.workspace }}/ci/vmtest/prepare-selftests-run.sh
-
       - name: Run selftests
         env:
           ALLOWLIST_FILE: /tmp/allowlist
           DENYLIST_FILE: /tmp/denylist
           KERNEL: ${{ inputs.kernel }}
           VMLINUX: ${{ github.workspace }}/vmlinux
-        uses: libbpf/ci/run-vmtest@v2
+          LLVM_VERSION: ${{ inputs.llvm-version }}
+          SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
+          VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
+        uses: libbpf/ci/run-vmtest@v3
         with:
           arch: ${{ inputs.arch }}
           kbuild-output: ${{ github.workspace }}/.kernel
           kernel-root: ${{ github.workspace }}/.kernel
-          kernel-test: ${{ env.KERNEL_TEST || '' }}
           vmlinuz: ${{ inputs.arch }}/vmlinuz-${{ inputs.kernel }}
+
