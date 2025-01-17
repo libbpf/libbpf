@@ -15,13 +15,10 @@ jobs:
       - uses: ./.github/actions/setup
       - name: Run coverity
         run: |
-          source "${GITHUB_WORKSPACE}"/ci/vmtest/helpers.sh
-          foldable start "Setup CI env"
           source /tmp/ci_setup
           export COVERITY_SCAN_NOTIFICATION_EMAIL="${AUTHOR_EMAIL}"
           export COVERITY_SCAN_BRANCH_PATTERN=${GITHUB_REF##refs/*/}
           export TRAVIS_BRANCH=${COVERITY_SCAN_BRANCH_PATTERN}
-          foldable end
           scripts/coverity.sh
         env:
           COVERITY_SCAN_TOKEN: ${{ secrets.COVERITY_SCAN_TOKEN }}
