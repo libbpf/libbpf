@@ -11271,7 +11271,7 @@ bpf_program__attach_kprobe_opts(const struct bpf_program *prog,
 	link = bpf_program__attach_perf_event_opts(prog, pfd, &pe_opts);
 	err = libbpf_get_error(link);
 	if (err) {
-		close(pfd);
+		bpf_link__destroy(link);
 		pr_warn("prog '%s': failed to attach to %s '%s+0x%zx': %s\n",
 			prog->name, retprobe ? "kretprobe" : "kprobe",
 			func_name, offset,
@@ -12514,7 +12514,7 @@ struct bpf_link *bpf_program__attach_tracepoint_opts(const struct bpf_program *p
 	link = bpf_program__attach_perf_event_opts(prog, pfd, &pe_opts);
 	err = libbpf_get_error(link);
 	if (err) {
-		close(pfd);
+		bpf_link__destroy(link);
 		pr_warn("prog '%s': failed to attach to tracepoint '%s/%s': %s\n",
 			prog->name, tp_category, tp_name,
 			errstr(err));
