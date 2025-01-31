@@ -61,31 +61,32 @@ jobs:
           - arch: aarch64
           - arch: ppc64le
           - arch: s390x
-          - arch: x86
+          - arch: amd64
     steps:
       - uses: actions/checkout@v4
         name: Checkout
+
+      - name: Setup QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          image: tonistiigi/binfmt:qemu-v8.1.5
+
       - uses: ./.github/actions/setup
         name: Pre-Setup
+
       - run: source /tmp/ci_setup && sudo -E $CI_ROOT/managers/ubuntu.sh
-        if: matrix.arch == 'x86'
+        if: matrix.arch == 'amd64'
         name: Setup
-      - uses: uraimo/run-on-arch-action@v2.8.1
-        name: Build in docker
-        if: matrix.arch != 'x86'
-        with:
-          distro:
-            ubuntu22.04
-          arch:
-            ${{ matrix.arch }}
-          setup:
-            cp /tmp/ci_setup $GITHUB_WORKSPACE
-          dockerRunArgs: |
-            --volume "${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE}"
-          shell: /bin/bash
-          install: |
-            export DEBIAN_FRONTEND=noninteractive
-            export TZ="America/Los_Angeles"
-            apt-get update -y
-            apt-get install -y tzdata build-essential sudo
-          run: source ${GITHUB_WORKSPACE}/ci_setup && $CI_ROOT/managers/ubuntu.sh
+
+      - name: Build in docker
+        if: matrix.arch != 'amd64'
+        run: |
+          cp /tmp/ci_setup ${GITHUB_WORKSPACE}
+          docker run --rm \
+                 --platform linux/${{ matrix.arch }} \
+                 -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} \
+                 -e GITHUB_WORKSPACE=${GITHUB_WORKSPACE} \
+                 -w /ci/workspace \
+                 ubuntu:noble \
+                 ${GITHUB_WORKSPACE}/ci/build-in-docker.sh
+
