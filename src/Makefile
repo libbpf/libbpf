@@ -26,6 +26,7 @@ endef
 
 $(call allow-override,CC,$(CROSS_COMPILE)cc)
 $(call allow-override,LD,$(CROSS_COMPILE)ld)
+PKG_CONFIG ?= pkg-config
 
 TOPDIR = ..
 
@@ -41,10 +42,12 @@ ALL_CFLAGS += $(CFLAGS) 						\
 	      $(EXTRA_CFLAGS)
 ALL_LDFLAGS += $(LDFLAGS) $(EXTRA_LDFLAGS)
 
+ifeq ($(shell command -v $(PKG_CONFIG) 2> /dev/null),)
+NO_PKG_CONFIG := 1
+endif
 ifdef NO_PKG_CONFIG
 	ALL_LDFLAGS += -lelf -lz
 else
-	PKG_CONFIG ?= pkg-config
 	ALL_CFLAGS += $(shell $(PKG_CONFIG) --cflags libelf zlib)
 	ALL_LDFLAGS += $(shell $(PKG_CONFIG) --libs libelf zlib)
 endif
