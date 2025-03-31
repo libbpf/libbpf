@@ -3182,6 +3182,47 @@ static int bpf_object__sanitize_btf(struct bpf_object *obj, struct btf *btf)
 			vlen = btf_vlen(t);
 			t->info = BTF_INFO_ENC(BTF_KIND_ENUM, 0, vlen);
 			t->size = sizeof(__u32); /* kernel enforced */
+
+		    /* since the btf_enum and btf_param has the same binary layout it's ok to use btf_param */
+		    struct btf_param* params = btf_params(t);
+		    int nparm;
+
+		    for (nparm = 0; nparm < vlen; ++nparm) {
+		        struct btf_param* param = &params[nparm];
+		        const char* param_name = btf__str_by_offset(btf, param->name_off);
+
+		        /*
+		         * kernel disallow any unnamed enum members which can be generated for,
+		         * as example, struct members like
+		         * struct quota_format_ops {
+		         *     ...
+		         *     int (*get_next_id)(struct super_block *, struct kqid *);
+		         *     ...
+		         * }
+		         */
+		        if (param_name && param_name[0]) {
+		            /* definitely has a name, valid it or no should decide kernel verifier */
+		            continue;
+		        }
+
+		        /*
+		         * generate an uniq name for each func_proto
+		         * I think that 32 bytes for name is surely enough for generated name
+		         */
+		        char new_param_name[32] = {0};
+		        snprintf(new_param_name, sizeof(new_param_name), "__parm_proto_%d_%d", nparm, i);
+
+		        const int new_param_name_off = btf__add_str(btf, new_param_name);
+
+                if (new_param_name_off < 0) {
+                    pr_warn("Error creating the name for func_proto param");
+                    return new_param_name_off;
+                }
+
+		        /* give a valid name to func_proto param as it now an enum member */
+		        param->name_off = new_param_name_off;
+		    }
+
 		} else if (!has_func && btf_is_func(t)) {
 			/* replace FUNC with TYPEDEF */
 			t->info = BTF_INFO_ENC(BTF_KIND_TYPEDEF, 0, 0);
