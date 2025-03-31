@@ -380,6 +380,8 @@ enum kern_feature_id {
 	FEAT_ARG_CTX_TAG,
 	/* Kernel supports '?' at the front of datasec names */
 	FEAT_BTF_QMARK_DATASEC,
+    /* Kernel supports kind flag */
+    FEAT_BTF_TYPE_KIND_FLAG,
 	__FEAT_CNT,
 };
 

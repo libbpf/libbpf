@@ -507,6 +507,33 @@ static int probe_kern_arg_ctx_tag(int token_fd)
 	return probe_fd(prog_fd);
 }
 
+static int probe_kern_btf_type_kind_flag(int token_fd)
+{
+    const char strs[] = "\0bpf_spin_lock\0val\0cnt\0l";
+    /* struct bpf_spin_lock {
+     *   int val;
+     * };
+     * struct val {
+     *   int cnt;
+     *   struct bpf_spin_lock l;
+     * };
+     */
+    __u32 types[] = {
+        /* int */
+        BTF_TYPE_INT_ENC(0, BTF_INT_SIGNED, 0, 32, 4),  /* [1] */
+        /* struct bpf_spin_lock */                      /* [2] */
+        BTF_TYPE_ENC(1, BTF_INFO_ENC(BTF_KIND_STRUCT, 1 /* kind bit */, 1), 4),
+        BTF_MEMBER_ENC(15, 1, 0), /* int val; */
+        /* struct val */                                /* [3] */
+        BTF_TYPE_ENC(15, BTF_INFO_ENC(BTF_KIND_STRUCT, 1 /* kind bit */, 2), 8),
+        BTF_MEMBER_ENC(19, 1, 0), /* int cnt; */
+        BTF_MEMBER_ENC(23, 2, 32),/* struct bpf_spin_lock l; */
+    };
+
+    return probe_fd(libbpf__load_raw_btf((char *)types, sizeof(types),
+                         strs, sizeof(strs), token_fd));
+}
+
 typedef int (*feature_probe_fn)(int /* token_fd */);
 
 static struct kern_feature_cache feature_cache;
@@ -582,6 +609,9 @@ static struct kern_feature_desc {
 	[FEAT_BTF_QMARK_DATASEC] = {
 		"BTF DATASEC names starting from '?'", probe_kern_btf_qmark_datasec,
 	},
+    [FEAT_BTF_TYPE_KIND_FLAG] = {
+	    "BTF btf_type can have the kind flags set", probe_kern_btf_type_kind_flag,
+    },
 };
 
 bool feat_supported(struct kern_feature_cache *cache, enum kern_feature_id feat_id)
