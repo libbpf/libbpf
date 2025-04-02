@@ -1,0 +1,71 @@
+From 8be3a12f9f266aaf3f06f0cfe0e90cfe4d956f3d Mon Sep 17 00:00:00 2001
+From: Song Liu <song@kernel.org>
+Date: Fri, 28 Mar 2025 12:31:24 -0700
+Subject: [PATCH 4001/4002] selftests/bpf: Fix verifier_bpf_fastcall test
+
+Commit [1] moves percpu data on x86 from address 0x000... to address
+0xfff...
+
+Before [1]:
+
+159020: 0000000000030700     0 OBJECT  GLOBAL DEFAULT   23 pcpu_hot
+
+After [1]:
+
+152602: ffffffff83a3e034     4 OBJECT  GLOBAL DEFAULT   35 pcpu_hot
+
+As a result, verifier_bpf_fastcall tests should now expect a negative
+value for pcpu_hot, IOW, the disassemble should show "r=" instead of
+"w=".
+
+Fix this in the test.
+
+Note that, a later change created a new variable "cpu_number" for
+bpf_get_smp_processor_id() [2]. The inlining logic is updated properly
+as part of this change, so there is no need to fix anything on the
+kernel side.
+
+[1] commit 9d7de2aa8b41 ("x86/percpu/64: Use relative percpu offsets")
+[2] commit 01c7bc5198e9 ("x86/smp: Move cpu number to percpu hot section")
+Reported-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Song Liu <song@kernel.org>
+Link: https://lore.kernel.org/r/20250328193124.808784-1-song@kernel.org
+Signed-off-by: Alexei Starovoitov <ast@kernel.org>
+---
+ tools/testing/selftests/bpf/progs/verifier_bpf_fastcall.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/tools/testing/selftests/bpf/progs/verifier_bpf_fastcall.c b/tools/testing/selftests/bpf/progs/verifier_bpf_fastcall.c
+index a9be6ae49454..c258b0722e04 100644
+--- a/tools/testing/selftests/bpf/progs/verifier_bpf_fastcall.c
++++ b/tools/testing/selftests/bpf/progs/verifier_bpf_fastcall.c
+@@ -12,7 +12,7 @@ SEC("raw_tp")
+ __arch_x86_64
+ __log_level(4) __msg("stack depth 8")
+ __xlated("4: r5 = 5")
+-__xlated("5: w0 = ")
++__xlated("5: r0 = ")
+ __xlated("6: r0 = &(void __percpu *)(r0)")
+ __xlated("7: r0 = *(u32 *)(r0 +0)")
+ __xlated("8: exit")
+@@ -704,7 +704,7 @@ SEC("raw_tp")
+ __arch_x86_64
+ __log_level(4) __msg("stack depth 32+0")
+ __xlated("2: r1 = 1")
+-__xlated("3: w0 =")
++__xlated("3: r0 =")
+ __xlated("4: r0 = &(void __percpu *)(r0)")
+ __xlated("5: r0 = *(u32 *)(r0 +0)")
+ /* bpf_loop params setup */
+@@ -753,7 +753,7 @@ __arch_x86_64
+ __log_level(4) __msg("stack depth 40+0")
+ /* call bpf_get_smp_processor_id */
+ __xlated("2: r1 = 42")
+-__xlated("3: w0 =")
++__xlated("3: r0 =")
+ __xlated("4: r0 = &(void __percpu *)(r0)")
+ __xlated("5: r0 = *(u32 *)(r0 +0)")
+ /* call bpf_get_prandom_u32 */
+-- 
+2.49.0
+
