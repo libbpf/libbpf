@@ -1,0 +1,69 @@
+From bd06a13f44e15e2e83561ea165061c445a15bd9e Mon Sep 17 00:00:00 2001
+From: Song Liu <song@kernel.org>
+Date: Thu, 27 Mar 2025 11:55:28 -0700
+Subject: [PATCH 4000/4002] selftests/bpf: Fix tests after fields reorder in
+ struct file
+
+The change in struct file [1] moved f_ref to the 3rd cache line.
+It made *(u64 *)file dereference invalid from the verifier point of view,
+because btf_struct_walk() walks into f_lock field, which is 4-byte long.
+
+Fix the selftests to deference the file pointer as a 4-byte access.
+
+[1] commit e249056c91a2 ("fs: place f_ref to 3rd cache line in struct file to resolve false sharing")
+Reported-by: Jakub Kicinski <kuba@kernel.org>
+Signed-off-by: Song Liu <song@kernel.org>
+Link: https://lore.kernel.org/r/20250327185528.1740787-1-song@kernel.org
+Signed-off-by: Alexei Starovoitov <ast@kernel.org>
+---
+ tools/testing/selftests/bpf/progs/test_module_attach.c    | 2 +-
+ tools/testing/selftests/bpf/progs/test_subprogs_extable.c | 6 +++---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/tools/testing/selftests/bpf/progs/test_module_attach.c b/tools/testing/selftests/bpf/progs/test_module_attach.c
+index fb07f5773888..7f3c233943b3 100644
+--- a/tools/testing/selftests/bpf/progs/test_module_attach.c
++++ b/tools/testing/selftests/bpf/progs/test_module_attach.c
+@@ -117,7 +117,7 @@ int BPF_PROG(handle_fexit_ret, int arg, struct file *ret)
+ 
+ 	bpf_probe_read_kernel(&buf, 8, ret);
+ 	bpf_probe_read_kernel(&buf, 8, (char *)ret + 256);
+-	*(volatile long long *)ret;
++	*(volatile int *)ret;
+ 	*(volatile int *)&ret->f_mode;
+ 	return 0;
+ }
+diff --git a/tools/testing/selftests/bpf/progs/test_subprogs_extable.c b/tools/testing/selftests/bpf/progs/test_subprogs_extable.c
+index e2a21fbd4e44..dcac69f5928a 100644
+--- a/tools/testing/selftests/bpf/progs/test_subprogs_extable.c
++++ b/tools/testing/selftests/bpf/progs/test_subprogs_extable.c
+@@ -21,7 +21,7 @@ static __u64 test_cb(struct bpf_map *map, __u32 *key, __u64 *val, void *data)
+ SEC("fexit/bpf_testmod_return_ptr")
+ int BPF_PROG(handle_fexit_ret_subprogs, int arg, struct file *ret)
+ {
+-	*(volatile long *)ret;
++	*(volatile int *)ret;
+ 	*(volatile int *)&ret->f_mode;
+ 	bpf_for_each_map_elem(&test_array, test_cb, NULL, 0);
+ 	triggered++;
+@@ -31,7 +31,7 @@ int BPF_PROG(handle_fexit_ret_subprogs, int arg, struct file *ret)
+ SEC("fexit/bpf_testmod_return_ptr")
+ int BPF_PROG(handle_fexit_ret_subprogs2, int arg, struct file *ret)
+ {
+-	*(volatile long *)ret;
++	*(volatile int *)ret;
+ 	*(volatile int *)&ret->f_mode;
+ 	bpf_for_each_map_elem(&test_array, test_cb, NULL, 0);
+ 	triggered++;
+@@ -41,7 +41,7 @@ int BPF_PROG(handle_fexit_ret_subprogs2, int arg, struct file *ret)
+ SEC("fexit/bpf_testmod_return_ptr")
+ int BPF_PROG(handle_fexit_ret_subprogs3, int arg, struct file *ret)
+ {
+-	*(volatile long *)ret;
++	*(volatile int *)ret;
+ 	*(volatile int *)&ret->f_mode;
+ 	bpf_for_each_map_elem(&test_array, test_cb, NULL, 0);
+ 	triggered++;
+-- 
+2.49.0
+
