@@ -217,11 +217,15 @@ static __bpf_fastcall __u32 (* const bpf_get_smp_processor_id)(void) = (void *) 
  * bpf_skb_store_bytes
  *
  * 	Store *len* bytes from address *from* into the packet
- * 	associated to *skb*, at *offset*. *flags* are a combination of
- * 	**BPF_F_RECOMPUTE_CSUM** (automatically recompute the
- * 	checksum for the packet after storing the bytes) and
- * 	**BPF_F_INVALIDATE_HASH** (set *skb*\ **->hash**, *skb*\
- * 	**->swhash** and *skb*\ **->l4hash** to 0).
+ * 	associated to *skb*, at *offset*. The *flags* are a combination
+ * 	of the following values:
+ *
+ * 	**BPF_F_RECOMPUTE_CSUM**
+ * 		Automatically update *skb*\ **->csum** after storing the
+ * 		bytes.
+ * 	**BPF_F_INVALIDATE_HASH**
+ * 		Set *skb*\ **->hash**, *skb*\ **->swhash** and *skb*\
+ * 		**->l4hash** to 0.
  *
  * 	A call to this helper is susceptible to change the underlying
  * 	packet buffer. Therefore, at load time, all checks on pointers
@@ -281,7 +285,7 @@ static long (* const bpf_l3_csum_replace)(struct __sk_buff *skb, __u32 offset, _
  * 	untouched (unless **BPF_F_MARK_ENFORCE** is added as well), and
  * 	for updates resulting in a null checksum the value is set to
  * 	**CSUM_MANGLED_0** instead. Flag **BPF_F_PSEUDO_HDR** indicates
- * 	the checksum is to be computed against a pseudo-header.
+ * 	that the modified header field is part of the pseudo-header.
  *
  * 	This helper works in combination with **bpf_csum_diff**\ (),
  * 	which does not update the checksum in-place, but offers more
