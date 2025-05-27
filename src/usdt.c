@@ -81,7 +81,7 @@
  * NOP instruction that kernel can replace with an interrupt instruction to
  * trigger instrumentation code (BPF program for all that we care about).
  *
- * Semaphore above is and optional feature. It records an address of a 2-byte
+ * Semaphore above is an optional feature. It records an address of a 2-byte
  * refcount variable (normally in '.probes' ELF section) used for signaling if
  * there is anything that is attached to USDT. This is useful for user
  * applications if, for example, they need to prepare some arguments that are
