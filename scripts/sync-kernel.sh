@@ -63,6 +63,7 @@ LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools 
 for p in "${!PATH_MAP[@]}"; do
 	LIBBPF_TREE_FILTER+="git mv -kf ${p} __libbpf/${PATH_MAP[${p}]} && "$'\\\n'
 done
+LIBBPF_TREE_FILTER+="find __libbpf/include/uapi/linux -type f -exec sed -i 's/_UAPI__LINUX/__LINUX/' {} + && "$'\\\n'
 LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.c,.gitignore} >/dev/null"
 
 cd_to()
@@ -347,7 +348,7 @@ diff -u ${TMP_DIR}/linux-view.ls ${TMP_DIR}/github-view.ls
 echo "Comparing file contents..."
 CONSISTENT=1
 for F in $(cat ${TMP_DIR}/linux-view.ls); do
-	if ! diff -u "${LINUX_ABS_DIR}/${F}" "${GITHUB_ABS_DIR}/${F}"; then
+	if ! diff -u <(sed 's/_UAPI__LINUX/__LINUX/' "${LINUX_ABS_DIR}/${F}") "${GITHUB_ABS_DIR}/${F}"; then
 		echo "${LINUX_ABS_DIR}/${F} and ${GITHUB_ABS_DIR}/${F} are different!"
 		CONSISTENT=0
 	fi
