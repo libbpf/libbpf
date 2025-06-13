@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
 /* Copyright (c) 2018 Facebook */
-#ifndef _UAPI__LINUX_BTF_H__
-#define _UAPI__LINUX_BTF_H__
+#ifndef __LINUX_BTF_H__
+#define __LINUX_BTF_H__
 
 #include <linux/types.h>
 
@@ -198,4 +198,4 @@ struct btf_enum64 {
 	__u32	val_hi32;
 };
 
-#endif /* _UAPI__LINUX_BTF_H__ */
+#endif /* __LINUX_BTF_H__ */
