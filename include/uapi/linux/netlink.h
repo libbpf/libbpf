@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: GPL-2.0 WITH Linux-syscall-note */
-#ifndef _UAPI__LINUX_NETLINK_H
-#define _UAPI__LINUX_NETLINK_H
+#ifndef __LINUX_NETLINK_H
+#define __LINUX_NETLINK_H
 
 #include <linux/kernel.h>
 #include <linux/socket.h> /* for __kernel_sa_family_t */
@@ -249,4 +249,4 @@ struct nla_bitfield32 {
 	__u32 selector;
 };
 
-#endif /* _UAPI__LINUX_NETLINK_H */
+#endif /* __LINUX_NETLINK_H */
