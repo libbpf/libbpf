@@ -1794,6 +1794,13 @@ union bpf_attr {
 				};
 				__u64		expected_revision;
 			} netkit;
+			struct {
+				union {
+					__u32	relative_fd;
+					__u32	relative_id;
+				};
+				__u64		expected_revision;
+			} cgroup;
 		};
 	} link_create;
 
@@ -2056,6 +2063,7 @@ union bpf_attr {
  * 		for updates resulting in a null checksum the value is set to
  * 		**CSUM_MANGLED_0** instead. Flag **BPF_F_PSEUDO_HDR** indicates
  * 		that the modified header field is part of the pseudo-header.
+ * 		Flag **BPF_F_IPV6** should be set for IPv6 packets.
  *
  * 		This helper works in combination with **bpf_csum_diff**\ (),
  * 		which does not update the checksum in-place, but offers more
@@ -2402,7 +2410,7 @@ union bpf_attr {
  * 		into it. An example is available in file
  * 		*samples/bpf/trace_output_user.c* in the Linux kernel source
  * 		tree (the eBPF program counterpart is in
- * 		*samples/bpf/trace_output_kern.c*).
+ *		*samples/bpf/trace_output.bpf.c*).
  *
  * 		**bpf_perf_event_output**\ () achieves better performance
  * 		than **bpf_trace_printk**\ () for sharing data with user
@@ -4972,6 +4980,9 @@ union bpf_attr {
  * 		the netns switch takes place from ingress to ingress without
  * 		going through the CPU's backlog queue.
  *
+ * 		*skb*\ **->mark** and *skb*\ **->tstamp** are not cleared during
+ * 		the netns switch.
+ *
  * 		The *flags* argument is reserved and must be 0. The helper is
  * 		currently only supported for tc BPF program types at the
  * 		ingress hook and for veth and netkit target device types. The
@@ -6069,6 +6080,7 @@ enum {
 	BPF_F_PSEUDO_HDR		= (1ULL << 4),
 	BPF_F_MARK_MANGLED_0		= (1ULL << 5),
 	BPF_F_MARK_ENFORCE		= (1ULL << 6),
+	BPF_F_IPV6			= (1ULL << 7),
 };
 
 /* BPF_FUNC_skb_set_tunnel_key and BPF_FUNC_skb_get_tunnel_key flags. */
@@ -6648,11 +6660,15 @@ struct bpf_link_info {
 		struct {
 			__aligned_u64 tp_name; /* in/out: tp_name buffer ptr */
 			__u32 tp_name_len;     /* in/out: tp_name buffer len */
+			__u32 :32;
+			__u64 cookie;
 		} raw_tracepoint;
 		struct {
 			__u32 attach_type;
 			__u32 target_obj_id; /* prog_id for PROG_EXT, otherwise btf object id */
 			__u32 target_btf_id; /* BTF type id inside the object */
+			__u32 :32;
+			__u64 cookie;
 		} tracing;
 		struct {
 			__u64 cgroup_id;

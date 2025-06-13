@@ -877,6 +877,21 @@ LIBBPF_API struct bpf_link *
 bpf_program__attach_netkit(const struct bpf_program *prog, int ifindex,
 			   const struct bpf_netkit_opts *opts);
 
+struct bpf_cgroup_opts {
+	/* size of this struct, for forward/backward compatibility */
+	size_t sz;
+	__u32 flags;
+	__u32 relative_fd;
+	__u32 relative_id;
+	__u64 expected_revision;
+	size_t :0;
+};
+#define bpf_cgroup_opts__last_field expected_revision
+
+LIBBPF_API struct bpf_link *
+bpf_program__attach_cgroup_opts(const struct bpf_program *prog, int cgroup_fd,
+				const struct bpf_cgroup_opts *opts);
+
 struct bpf_map;
 
 LIBBPF_API struct bpf_link *bpf_map__attach_struct_ops(const struct bpf_map *map);
@@ -1289,6 +1304,7 @@ enum bpf_tc_attach_point {
 	BPF_TC_INGRESS = 1 << 0,
 	BPF_TC_EGRESS  = 1 << 1,
 	BPF_TC_CUSTOM  = 1 << 2,
+	BPF_TC_QDISC   = 1 << 3,
 };
 
 #define BPF_TC_PARENT(a, b) 	\
@@ -1303,9 +1319,11 @@ struct bpf_tc_hook {
 	int ifindex;
 	enum bpf_tc_attach_point attach_point;
 	__u32 parent;
+	__u32 handle;
+	const char *qdisc;
 	size_t :0;
 };
-#define bpf_tc_hook__last_field parent
+#define bpf_tc_hook__last_field qdisc
 
 struct bpf_tc_opts {
 	size_t sz;
