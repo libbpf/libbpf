@@ -286,6 +286,7 @@ static long (* const bpf_l3_csum_replace)(struct __sk_buff *skb, __u32 offset, _
  * 	for updates resulting in a null checksum the value is set to
  * 	**CSUM_MANGLED_0** instead. Flag **BPF_F_PSEUDO_HDR** indicates
  * 	that the modified header field is part of the pseudo-header.
+ * 	Flag **BPF_F_IPV6** should be set for IPv6 packets.
  *
  * 	This helper works in combination with **bpf_csum_diff**\ (),
  * 	which does not update the checksum in-place, but offers more
@@ -688,7 +689,7 @@ static __u32 (* const bpf_get_route_realm)(struct __sk_buff *skb) = (void *) 24;
  * 	into it. An example is available in file
  * 	*samples/bpf/trace_output_user.c* in the Linux kernel source
  * 	tree (the eBPF program counterpart is in
- * 	*samples/bpf/trace_output_kern.c*).
+ * 	*samples/bpf/trace_output.bpf.c*).
  *
  * 	**bpf_perf_event_output**\ () achieves better performance
  * 	than **bpf_trace_printk**\ () for sharing data with user
@@ -3705,6 +3706,9 @@ static void *(* const bpf_this_cpu_ptr)(const void *percpu_ptr) = (void *) 154;
  * 	that the redirection happens to the *ifindex*' peer device and
  * 	the netns switch takes place from ingress to ingress without
  * 	going through the CPU's backlog queue.
+ *
+ * 	*skb*\ **->mark** and *skb*\ **->tstamp** are not cleared during
+ * 	the netns switch.
  *
  * 	The *flags* argument is reserved and must be 0. The helper is
  * 	currently only supported for tc BPF program types at the
