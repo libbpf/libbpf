@@ -12,8 +12,8 @@
  *
  * For licencing details see kernel-base/COPYING
  */
-#ifndef _UAPI_LINUX_PERF_EVENT_H
-#define _UAPI_LINUX_PERF_EVENT_H
+#ifndef _LINUX_PERF_EVENT_H
+#define _LINUX_PERF_EVENT_H
 
 #include <linux/types.h>
 #include <linux/ioctl.h>
@@ -1483,4 +1483,4 @@ union perf_sample_weight {
 #endif
 };
 
-#endif /* _UAPI_LINUX_PERF_EVENT_H */
+#endif /* _LINUX_PERF_EVENT_H */
