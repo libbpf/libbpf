@@ -3,8 +3,8 @@
 /*	Documentation/netlink/specs/netdev.yaml */
 /* YNL-GEN uapi header */
 
-#ifndef _UAPI_LINUX_NETDEV_H
-#define _UAPI_LINUX_NETDEV_H
+#ifndef _LINUX_NETDEV_H
+#define _LINUX_NETDEV_H
 
 #define NETDEV_FAMILY_NAME	"netdev"
 #define NETDEV_FAMILY_VERSION	1
@@ -228,4 +228,4 @@ enum {
 #define NETDEV_MCGRP_MGMT	"mgmt"
 #define NETDEV_MCGRP_PAGE_POOL	"page-pool"
 
-#endif /* _UAPI_LINUX_NETDEV_H */
+#endif /* _LINUX_NETDEV_H */
