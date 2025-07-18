@@ -35,43 +35,47 @@ if [[ "$SANITIZER" == undefined ]]; then
     CXXFLAGS+=" $UBSAN_FLAGS"
 fi
 
+export SKIP_LIBELF_REBUILD=${SKIP_LIBELF_REBUILD:=''}
+
 # Ideally libbelf should be built using release tarballs available
 # at https://sourceware.org/elfutils/ftp/. Unfortunately sometimes they
 # fail to compile (for example, elfutils-0.185 fails to compile with LDFLAGS enabled
 # due to https://bugs.gentoo.org/794601) so let's just point the script to
 # commits referring to versions of libelf that actually can be built
-rm -rf elfutils
-git clone https://sourceware.org/git/elfutils.git
-(
-cd elfutils
-git checkout 67a187d4c1790058fc7fd218317851cb68bb087c
-git log --oneline -1
+if [[ ! -e elfutils || "$SKIP_LIBELF_REBUILD" == "" ]]; then
+    rm -rf elfutils
+    git clone https://sourceware.org/git/elfutils.git
+    (
+        cd elfutils
+        git checkout 67a187d4c1790058fc7fd218317851cb68bb087c
+        git log --oneline -1
 
-# ASan isn't compatible with -Wl,--no-undefined: https://github.com/google/sanitizers/issues/380
-sed -i 's/^\(NO_UNDEFINED=\).*/\1/' configure.ac
+        # ASan isn't compatible with -Wl,--no-undefined: https://github.com/google/sanitizers/issues/380
+        sed -i 's/^\(NO_UNDEFINED=\).*/\1/' configure.ac
 
-# ASan isn't compatible with -Wl,-z,defs either:
-# https://clang.llvm.org/docs/AddressSanitizer.html#usage
-sed -i 's/^\(ZDEFS_LDFLAGS=\).*/\1/' configure.ac
+        # ASan isn't compatible with -Wl,-z,defs either:
+        # https://clang.llvm.org/docs/AddressSanitizer.html#usage
+        sed -i 's/^\(ZDEFS_LDFLAGS=\).*/\1/' configure.ac
 
-if [[ "$SANITIZER" == undefined ]]; then
-    # That's basicaly what --enable-sanitize-undefined does to turn off unaligned access
-    # elfutils heavily relies on on i386/x86_64 but without changing compiler flags along the way
-    sed -i 's/\(check_undefined_val\)=[0-9]/\1=1/' configure.ac
+        if [[ "$SANITIZER" == undefined ]]; then
+            # That's basicaly what --enable-sanitize-undefined does to turn off unaligned access
+            # elfutils heavily relies on on i386/x86_64 but without changing compiler flags along the way
+            sed -i 's/\(check_undefined_val\)=[0-9]/\1=1/' configure.ac
+        fi
+
+        autoreconf -i -f
+        if ! ./configure --enable-maintainer-mode --disable-debuginfod --disable-libdebuginfod \
+             --disable-demangler --without-bzlib --without-lzma --without-zstd \
+	     CC="$CC" CFLAGS="-Wno-error $CFLAGS" CXX="$CXX" CXXFLAGS="-Wno-error $CXXFLAGS" LDFLAGS="$CFLAGS"; then
+            cat config.log
+            exit 1
+        fi
+
+        make -C config -j$(nproc) V=1
+        make -C lib -j$(nproc) V=1
+        make -C libelf -j$(nproc) V=1
+    )
 fi
-
-autoreconf -i -f
-if ! ./configure --enable-maintainer-mode --disable-debuginfod --disable-libdebuginfod \
-            --disable-demangler --without-bzlib --without-lzma --without-zstd \
-	    CC="$CC" CFLAGS="-Wno-error $CFLAGS" CXX="$CXX" CXXFLAGS="-Wno-error $CXXFLAGS" LDFLAGS="$CFLAGS"; then
-    cat config.log
-    exit 1
-fi
-
-make -C config -j$(nproc) V=1
-make -C lib -j$(nproc) V=1
-make -C libelf -j$(nproc) V=1
-)
 
 make -C src BUILD_STATIC_ONLY=y V=1 clean
 make -C src -j$(nproc) CFLAGS="-I$(pwd)/elfutils/libelf $CFLAGS" BUILD_STATIC_ONLY=y V=1
