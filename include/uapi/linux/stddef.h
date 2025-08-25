@@ -2,7 +2,9 @@
 #ifndef _LINUX_STDDEF_H
 #define _LINUX_STDDEF_H
 
+#ifdef __KERNEL__
 
+#endif
 
 #ifndef __always_inline
 #define __always_inline inline
