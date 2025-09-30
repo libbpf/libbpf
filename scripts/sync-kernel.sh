@@ -64,7 +64,7 @@ LIBBPF_TREE_FILTER="mkdir -p __libbpf/include/uapi/linux __libbpf/include/tools 
 for p in "${!PATH_MAP[@]}"; do
 	LIBBPF_TREE_FILTER+="git mv -kf ${p} __libbpf/${PATH_MAP[${p}]} && "$'\\\n'
 done
-LIBBPF_TREE_FILTER+="find __libbpf/include/uapi/linux -type f -exec sed -i -e 's/_UAPI\(__\?LINUX\)/\1/g' -e 's@^#include <linux/compiler_types.h>@@' + && "$'\\\n'
+LIBBPF_TREE_FILTER+="find __libbpf/include/uapi/linux -type f -exec sed -i -e 's/_UAPI\(__\?LINUX\)/\1/g' -e 's@^#include <linux/compiler_types.h>@@' {} + && "$'\\\n'
 LIBBPF_TREE_FILTER+="git rm --ignore-unmatch -f __libbpf/src/{Makefile,Build,test_libbpf.c,.gitignore} >/dev/null"
 
 cd_to()
