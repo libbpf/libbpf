@@ -3558,7 +3558,7 @@ static int (* const bpf_inode_storage_delete)(void *map, void *inode) = (void *)
  * 	including the trailing NUL character. On error, a negative
  * 	value.
  */
-static long (* const bpf_d_path)(struct path *path, char *buf, __u32 sz) = (void *) 147;
+static long (* const bpf_d_path)(const struct path *path, char *buf, __u32 sz) = (void *) 147;
 
 /*
  * bpf_copy_from_user
