@@ -30,4 +30,8 @@ struct list_head {
 	struct list_head *next, *prev;
 };
 
+/* the following is needed on Android/Termux, where this linux/types.h is included by other include files */
+typedef unsigned __bitwise __poll_t;
+
+
 #endif
