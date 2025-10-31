@@ -237,7 +237,7 @@ static int btf_parse_hdr(struct btf *btf)
 	if (hdr->magic == bswap_16(BTF_MAGIC)) {
 		btf->swapped_endian = true;
 		if (bswap_32(hdr->hdr_len) != sizeof(struct btf_header)) {
-			pr_warn("Can't load BTF with non-native endianness due to unsupported header length %u\n",
+			pr_warn("Test: Can't load BTF with non-native endianness due to unsupported header length %u\n",
 				bswap_32(hdr->hdr_len));
 			return -ENOTSUP;
 		}
