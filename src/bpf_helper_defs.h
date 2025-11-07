@@ -4484,7 +4484,7 @@ static struct mptcp_sock *(* const bpf_skc_to_mptcp_sock)(void *sk) = (void *) 1
  * 	0 on success, -E2BIG if the size exceeds DYNPTR_MAX_SIZE,
  * 	-EINVAL if flags is not 0.
  */
-static long (* const bpf_dynptr_from_mem)(void *data, __u32 size, __u64 flags, struct bpf_dynptr *ptr) = (void *) 197;
+static long (* const bpf_dynptr_from_mem)(void *data, __u64 size, __u64 flags, struct bpf_dynptr *ptr) = (void *) 197;
 
 /*
  * bpf_ringbuf_reserve_dynptr
@@ -4542,7 +4542,7 @@ static void (* const bpf_ringbuf_discard_dynptr)(struct bpf_dynptr *ptr, __u64 f
  * 	of *src*'s data, -EINVAL if *src* is an invalid dynptr or if
  * 	*flags* is not 0.
  */
-static long (* const bpf_dynptr_read)(void *dst, __u32 len, const struct bpf_dynptr *src, __u32 offset, __u64 flags) = (void *) 201;
+static long (* const bpf_dynptr_read)(void *dst, __u64 len, const struct bpf_dynptr *src, __u64 offset, __u64 flags) = (void *) 201;
 
 /*
  * bpf_dynptr_write
@@ -4567,7 +4567,7 @@ static long (* const bpf_dynptr_read)(void *dst, __u32 len, const struct bpf_dyn
  * 	is a read-only dynptr or if *flags* is not correct. For skb-type dynptrs,
  * 	other errors correspond to errors returned by **bpf_skb_store_bytes**\ ().
  */
-static long (* const bpf_dynptr_write)(const struct bpf_dynptr *dst, __u32 offset, void *src, __u32 len, __u64 flags) = (void *) 202;
+static long (* const bpf_dynptr_write)(const struct bpf_dynptr *dst, __u64 offset, void *src, __u64 len, __u64 flags) = (void *) 202;
 
 /*
  * bpf_dynptr_data
@@ -4585,7 +4585,7 @@ static long (* const bpf_dynptr_write)(const struct bpf_dynptr *dst, __u32 offse
  * 	read-only, if the dynptr is invalid, or if the offset and length
  * 	is out of bounds.
  */
-static void *(* const bpf_dynptr_data)(const struct bpf_dynptr *ptr, __u32 offset, __u32 len) = (void *) 203;
+static void *(* const bpf_dynptr_data)(const struct bpf_dynptr *ptr, __u64 offset, __u64 len) = (void *) 203;
 
 /*
  * bpf_tcp_raw_gen_syncookie_ipv4
