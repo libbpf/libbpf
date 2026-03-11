@@ -12,11 +12,6 @@ on:
         required: true
         default: 'x86_64'
         type: string
-      kernel:
-        description: 'kernel version or LATEST'
-        required: true
-        default: 'LATEST'
-        type: string
       pahole:
         description: 'pahole rev or branch'
         required: false
@@ -73,7 +68,6 @@ jobs:
           cd -
 
       - name: Build kernel image
-        if: ${{ inputs.kernel == 'LATEST' }}
         shell: bash
         run: |
           cd .kernel
@@ -81,19 +75,11 @@ jobs:
           cp vmlinux ${{ github.workspace }}
           cd -
 
-      - name: Download prebuilt kernel
-        if: ${{ inputs.kernel != 'LATEST' }}
-        uses: libbpf/ci/download-vmlinux@v4
-        with:
-          kernel: ${{ inputs.kernel }}
-          arch: ${{ inputs.arch }}
-
       - name: Build selftests/bpf
         uses: libbpf/ci/build-selftests@v4
         env:
           MAX_MAKE_JOBS: 32
           VMLINUX_BTF: ${{ github.workspace }}/vmlinux
-          VMLINUX_H: ${{ inputs.kernel != 'LATEST' && format('{0}/.github/actions/build-selftests/vmlinux.h', github.workspace) || '' }}
         with:
           arch: ${{ inputs.arch }}
           kernel-root: ${{ github.workspace }}/.kernel
@@ -103,7 +89,6 @@ jobs:
         env:
           ALLOWLIST_FILE: /tmp/allowlist
           DENYLIST_FILE: /tmp/denylist
-          KERNEL: ${{ inputs.kernel }}
           VMLINUX: ${{ github.workspace }}/vmlinux
           LLVM_VERSION: ${{ inputs.llvm-version }}
           SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
@@ -113,5 +98,4 @@ jobs:
           arch: ${{ inputs.arch }}
           kbuild-output: ${{ github.workspace }}/.kernel
           kernel-root: ${{ github.workspace }}/.kernel
-          vmlinuz: ${{ inputs.arch }}/vmlinuz-${{ inputs.kernel }}
 
