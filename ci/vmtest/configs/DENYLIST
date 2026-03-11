@@ -1,17 +1,17 @@
 # TEMPORARY
-btf_dump/btf_dump: syntax
 bpf_cookie/perf_event
 kprobe_multi_bench_attach
-core_reloc/enum64val
-core_reloc/size___diff_sz
-core_reloc/type_based___diff_sz
-test_ima	# All of CI is broken on it following 6.3-rc1 merge
-
-lwt_reroute      # crashes kernel after netnext merge from 2ab1efad60ad "net/sched: cls_api: complement tcf_tfilter_dump_policy"
-tc_links_ingress # started failing after net-next merge from 2ab1efad60ad "net/sched: cls_api: complement tcf_tfilter_dump_policy"
-xdp_bonding/xdp_bonding_features     # started failing after net merge from 359e54a93ab4 "l2tp: pass correct message length to ip6_append_data"
-tc_redirect/tc_redirect_dtime # uapi breakage after net-next commit 885c36e59f46 ("net: Re-use and set mono_delivery_time bit for userspace tstamp packets")
-migrate_reuseport/IPv4 TCP_NEW_SYN_RECV reqsk_timer_handler # flaky, under investigation
-migrate_reuseport/IPv6 TCP_NEW_SYN_RECV reqsk_timer_handler # flaky, under investigation
-verify_pkcs7_sig # keeps failing
 verif_scale_pyperf600 # fails on newer Clangs
+decap_sanity  # weird failure with decap_sanity_ns netns already existing, TBD
+empty_skb # waiting the fix in bpf tree to make it to bpf-next
+bpf_nf/tc-bpf-ct # test consistently failing on x86: https://github.com/libbpf/libbpf/pull/698#issuecomment-1590341200
+bpf_nf/xdp-ct   # test consistently failing on x86: https://github.com/libbpf/libbpf/pull/698#issuecomment-1590341200
+find_vma # test consistently fails on latest kernel, see https://github.com/libbpf/libbpf/issues/754 for details
+send_signal/send_signal_nmi
+send_signal/send_signal_nmi_thread
+lwt_reroute # crashes kernel, fix pending upstream
+tc_links_ingress # fails, same fix is pending upstream
+tc_redirect		  # enough is enough, banned for life for flakiness
+map_kptr                  # kprobe rcu_tasks_trace_postgp not available in VM kernel
+test_profiler             # kretprobe do_filp_open not available in VM kernel
+sockmap_basic/sockmap udp multi channels  # flaky in CI
