@@ -36,7 +36,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup environment
-        uses: libbpf/ci/setup-build-env@v3
+        uses: libbpf/ci/setup-build-env@v4
         with:
           pahole: ${{ inputs.pahole }}
           arch: ${{ inputs.arch }}
@@ -49,14 +49,14 @@ jobs:
           echo "CHECKPOINT=$(cat CHECKPOINT-COMMIT)" >> $GITHUB_ENV
 
       - name: Get kernel source at checkpoint
-        uses: libbpf/ci/get-linux-source@v3
+        uses: libbpf/ci/get-linux-source@v4
         with:
           repo: 'https://git.kernel.org/pub/scm/linux/kernel/git/bpf/bpf-next.git'
           rev: ${{ env.CHECKPOINT }}
           dest: '${{ github.workspace }}/.kernel'
 
       - name: Patch kernel source
-        uses: libbpf/ci/patch-kernel@v3
+        uses: libbpf/ci/patch-kernel@v4
         with:
           patches-root: '${{ github.workspace }}/ci/diffs'
           repo-root: '.kernel'
@@ -83,13 +83,13 @@ jobs:
 
       - name: Download prebuilt kernel
         if: ${{ inputs.kernel != 'LATEST' }}
-        uses: libbpf/ci/download-vmlinux@v3
+        uses: libbpf/ci/download-vmlinux@v4
         with:
           kernel: ${{ inputs.kernel }}
           arch: ${{ inputs.arch }}
 
       - name: Build selftests/bpf
-        uses: libbpf/ci/build-selftests@v3
+        uses: libbpf/ci/build-selftests@v4
         env:
           MAX_MAKE_JOBS: 32
           VMLINUX_BTF: ${{ github.workspace }}/vmlinux
@@ -108,7 +108,7 @@ jobs:
           LLVM_VERSION: ${{ inputs.llvm-version }}
           SELFTESTS_BPF: ${{ github.workspace }}/.kernel/tools/testing/selftests/bpf
           VMTEST_CONFIGS: ${{ github.workspace }}/ci/vmtest/configs
-        uses: libbpf/ci/run-vmtest@v3
+        uses: libbpf/ci/run-vmtest@v4
         with:
           arch: ${{ inputs.arch }}
           kbuild-output: ${{ github.workspace }}/.kernel
