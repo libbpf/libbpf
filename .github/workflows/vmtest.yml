@@ -26,6 +26,9 @@ jobs:
   vmtest:
     name: pahole@${{ inputs.pahole }}
     runs-on: ${{ inputs.runs_on }}
+    container:
+      image: ghcr.io/kernel-patches/runner:kbuilder-debian-x86_64
+      options: --privileged
     steps:
 
       - uses: actions/checkout@v4
@@ -72,7 +75,7 @@ jobs:
         run: |
           cd .kernel
           make -j $((4*$(nproc))) all
-          cp vmlinux ${{ github.workspace }}
+          cp vmlinux $GITHUB_WORKSPACE
           cd -
 
       - name: Build selftests/bpf
