@@ -16,16 +16,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - kernel: 'LATEST'
-            runs_on: 'ubuntu-24.04'
+          - runs_on: 'ubuntu-24.04'
             arch: 'x86_64'
             llvm-version: '21'
             pahole: 'master'
-    name: Linux ${{ matrix.kernel }} llvm-${{ matrix.llvm-version }}
+    name: llvm-${{ matrix.llvm-version }}
     uses: ./.github/workflows/vmtest.yml
     with:
       runs_on: ${{ matrix.runs_on }}
-      kernel: ${{ matrix.kernel }}
       arch: ${{ matrix.arch }}
       llvm-version: ${{ matrix.llvm-version }}
       pahole: ${{ matrix.pahole }}
