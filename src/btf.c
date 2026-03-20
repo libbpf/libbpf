@@ -5494,7 +5494,6 @@ struct btf *btf__load_vmlinux_btf(void)
 	const char *sysfs_btf_path = "/sys/kernel/btf/vmlinux";
 	/* fall back locations, trying to find vmlinux on disk */
 	const char *locations[] = {
-		"/boot/vmlinux-%1$s",
 		"/lib/modules/%1$s/vmlinux-%1$s",
 		"/lib/modules/%1$s/build/vmlinux",
 		"/usr/lib/modules/%1$s/kernel/vmlinux",
