@@ -486,6 +486,7 @@ int elf_resolve_syms_offsets(const char *binary_path, int cnt,
 		goto out;
 	}
 
+	err = 0;
 	*poffsets = offsets;
 
 out:
