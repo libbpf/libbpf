@@ -90,7 +90,7 @@ BPF CO-RE (Compile Once – Run Everywhere)
 
 Libbpf supports building BPF CO-RE-enabled applications, which, in contrast to
 [BCC](https://github.com/iovisor/bcc/), do not require Clang/LLVM runtime
-being deployed to target servers and doesn't rely on kernel-devel headers
+being deployed to target servers and doesn't rely on kernel-level headers
 being available.
 
 It does rely on kernel to be built with [BTF type
