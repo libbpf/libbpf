@@ -592,13 +592,12 @@ static void emit_signature_match(struct bpf_gen *gen)
 		gen->hash_insn_offset[i] = gen->insn_cur - gen->insn_start;
 		emit2(gen, BPF_LD_IMM64_RAW_FULL(BPF_REG_3, 0, 0, 0, 0, 0));
 
-		off =  -(gen->insn_cur - gen->insn_start - gen->cleanup_label) / 8 - 1;
+		off = -(gen->insn_cur - gen->insn_start - gen->cleanup_label) / 8 - 2;
 		if (is_simm16(off)) {
 			emit(gen, BPF_MOV64_IMM(BPF_REG_7, -EINVAL));
 			emit(gen, BPF_JMP_REG(BPF_JNE, BPF_REG_2, BPF_REG_3, off));
 		} else {
 			gen->error = -ERANGE;
-			emit(gen, BPF_JMP_IMM(BPF_JA, 0, 0, -1));
 		}
 	}
 }
