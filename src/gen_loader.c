@@ -293,7 +293,6 @@ static void emit_check_err(struct bpf_gen *gen)
 		emit(gen, BPF_JMP_IMM(BPF_JSLT, BPF_REG_7, 0, off));
 	} else {
 		gen->error = -ERANGE;
-		emit(gen, BPF_JMP_IMM(BPF_JA, 0, 0, -1));
 	}
 }
 
