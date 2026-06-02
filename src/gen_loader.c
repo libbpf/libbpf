@@ -160,9 +160,15 @@ void bpf_gen__init(struct bpf_gen *gen, int log_level, int nr_progs, int nr_maps
 
 static int add_data(struct bpf_gen *gen, const void *data, __u32 size)
 {
-	__u32 size8 = roundup(size, 8);
 	__u64 zero = 0;
+	__u32 size8;
 	void *prev;
+
+	if (size > INT32_MAX) {
+		gen->error = -ERANGE;
+		return 0;
+	}
+	size8 = roundup(size, 8);
 
 	if (realloc_data_buf(gen, size8))
 		return 0;
