@@ -15,3 +15,4 @@ tc_redirect		  # enough is enough, banned for life for flakiness
 map_kptr                  # kprobe rcu_tasks_trace_postgp not available in VM kernel
 test_profiler             # kretprobe do_filp_open not available in VM kernel
 sockmap_basic/sockmap udp multi channels  # flaky in CI
+file_reader  # flaky: MADV_PAGEOUT page stays resident in CI VM, expected EFAULT never fires
