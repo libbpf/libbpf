@@ -1047,6 +1047,7 @@ enum bpf_map_type {
 	BPF_MAP_TYPE_CGRP_STORAGE,
 	BPF_MAP_TYPE_ARENA,
 	BPF_MAP_TYPE_INSN_ARRAY,
+	BPF_MAP_TYPE_RHASH,
 	__MAX_BPF_MAP_TYPE
 };
 
@@ -1545,6 +1546,11 @@ union bpf_attr {
 		 *
 		 * BPF_MAP_TYPE_ARENA - contains the address where user space
 		 * is going to mmap() the arena. It has to be page aligned.
+		 *
+		 * BPF_MAP_TYPE_RHASH - initial table size hint
+		 * (nelem_hint). 0 = use rhashtable default. Must be
+		 * <= min(max_entries, U16_MAX). Upper 32 bits reserved,
+		 * must be zero.
 		 */
 		__u64	map_extra;
 
