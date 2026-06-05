@@ -1,0 +1,33 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Mykyta Yatsenko <yatsenko@meta.com>
+Date: Wed, 03 Jun 2026 07:39:15 -0700
+Subject: [PATCH] selftests/bpf: Fix flaky file_reader test
+
+file_reader/on_open_expect_fault test expects page fault
+when reading pages from the test harness executable.
+It is not guaranteed that those are paged out, even
+after madvise(MADV_PAGEOUT).
+Relax the condition in the test to succeed with both
+0 and -EFAULT returned.
+
+Fixes: 784cdf931543 ("selftests/bpf: add file dynptr tests")
+Reported-by: Shung-Hsi Yu <shung-hsi.yu@suse.com>
+Closes: https://lore.kernel.org/all/ah6g7JSYOWGp2oAG@u94a/
+Signed-off-by: Mykyta Yatsenko <yatsenko@meta.com>
+---
+ tools/testing/selftests/bpf/progs/file_reader.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/tools/testing/selftests/bpf/progs/file_reader.c b/tools/testing/selftests/bpf/progs/file_reader.c
+index 462712ff3b8a..aa2c05cce2b3 100644
+--- a/tools/testing/selftests/bpf/progs/file_reader.c
++++ b/tools/testing/selftests/bpf/progs/file_reader.c
+@@ -50,7 +50,7 @@ int on_open_expect_fault(void *c)
+ 		goto out;
+ 
+ 	local_err = bpf_dynptr_read(tmp_buf, user_buf_sz, &dynptr, user_buf_sz, 0);
+-	if (local_err == -EFAULT) { /* Expect page fault */
++	if (local_err == -EFAULT || local_err == 0) { /* Expect page fault or success */
+ 		local_err = 0;
+ 		run_success = 1;
+ 	}
