@@ -11690,8 +11690,14 @@ static void gen_probe_legacy_event_name(char *buf, size_t buf_sz,
 }
 
 static int add_kprobe_event_legacy(const char *probe_name, bool retprobe,
-				   const char *kfunc_name, size_t offset)
+				   const char *kfunc_name, size_t offset,
+				   int maxactive)
 {
+	if (retprobe && maxactive > 0)
+		return append_to_file(tracefs_kprobe_events(), "r%d:%s/%s %s+0x%zx",
+				      maxactive, "kretprobes",
+				      probe_name, kfunc_name, offset);
+
 	return append_to_file(tracefs_kprobe_events(), "%c:%s/%s %s+0x%zx",
 			      retprobe ? 'r' : 'p',
 			      retprobe ? "kretprobes" : "kprobes",
@@ -11715,13 +11721,14 @@ static int determine_kprobe_perf_type_legacy(const char *probe_name, bool retpro
 }
 
 static int perf_event_kprobe_open_legacy(const char *probe_name, bool retprobe,
-					 const char *kfunc_name, size_t offset, int pid)
+					 const char *kfunc_name, size_t offset, int pid,
+					 int maxactive)
 {
 	const size_t attr_sz = sizeof(struct perf_event_attr);
 	struct perf_event_attr attr;
 	int type, pfd, err;
 
-	err = add_kprobe_event_legacy(probe_name, retprobe, kfunc_name, offset);
+	err = add_kprobe_event_legacy(probe_name, retprobe, kfunc_name, offset, maxactive);
 	if (err < 0) {
 		pr_warn("failed to add legacy kprobe event for '%s+0x%zx': %s\n",
 			kfunc_name, offset,
@@ -11808,7 +11815,7 @@ int probe_kern_syscall_wrapper(int token_fd)
 		char probe_name[MAX_EVENT_NAME_LEN];
 
 		gen_probe_legacy_event_name(probe_name, sizeof(probe_name), syscall_name, 0);
-		if (add_kprobe_event_legacy(probe_name, false, syscall_name, 0) < 0)
+		if (add_kprobe_event_legacy(probe_name, false, syscall_name, 0, 0) < 0)
 			return 0;
 
 		(void)remove_kprobe_event_legacy(probe_name, false);
@@ -11827,7 +11834,7 @@ bpf_program__attach_kprobe_opts(const struct bpf_program *prog,
 	struct bpf_link *link;
 	size_t offset;
 	bool retprobe, legacy;
-	int pfd, err;
+	int pfd, err, maxactive;
 
 	if (!OPTS_VALID(opts, bpf_kprobe_opts))
 		return libbpf_err_ptr(-EINVAL);
@@ -11835,6 +11842,7 @@ bpf_program__attach_kprobe_opts(const struct bpf_program *prog,
 	attach_mode = OPTS_GET(opts, attach_mode, PROBE_ATTACH_MODE_DEFAULT);
 	retprobe = OPTS_GET(opts, retprobe, false);
 	offset = OPTS_GET(opts, offset, 0);
+	maxactive = OPTS_GET(opts, maxactive, 0);
 	pe_opts.bpf_cookie = OPTS_GET(opts, bpf_cookie, 0);
 
 	legacy = determine_kprobe_perf_type() < 0;
@@ -11875,7 +11883,7 @@ bpf_program__attach_kprobe_opts(const struct bpf_program *prog,
 			return libbpf_err_ptr(-ENOMEM);
 
 		pfd = perf_event_kprobe_open_legacy(legacy_probe, retprobe, func_name,
-						    offset, -1 /* pid */);
+						    offset, -1 /* pid */, maxactive);
 	}
 	if (pfd < 0) {
 		err = pfd;
