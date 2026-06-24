@@ -384,7 +384,7 @@ int bpf_gen__finish(struct bpf_gen *gen, int nr_progs, int nr_maps)
 	int i;
 
 	if (nr_progs < gen->nr_progs || nr_maps != gen->nr_maps) {
-		pr_warn("nr_progs %d/%d nr_maps %d/%d mismatch\n",
+		pr_warn("nr_progs %d/%u nr_maps %d/%u mismatch\n",
 			nr_progs, gen->nr_progs, nr_maps, gen->nr_maps);
 		gen->error = -EFAULT;
 		return gen->error;
@@ -488,7 +488,7 @@ void bpf_gen__load_btf(struct bpf_gen *gen, const void *btf_raw_data,
 
 	attr.btf_size = tgt_endian(btf_raw_size);
 	btf_load_attr = add_data(gen, &attr, attr_size);
-	pr_debug("gen: load_btf: off %d size %d, attr: off %d size %d\n",
+	pr_debug("gen: load_btf: off %d size %u, attr: off %d size %d\n",
 		 btf_data, btf_raw_size, btf_load_attr, attr_size);
 
 	/* populate union bpf_attr with user provided log details */
@@ -534,7 +534,7 @@ void bpf_gen__map_create(struct bpf_gen *gen,
 	attr.btf_value_type_id = tgt_endian(map_attr->btf_value_type_id);
 
 	map_create_attr = add_data(gen, &attr, attr_size);
-	pr_debug("gen: map_create: %s idx %d type %d value_type_id %d, attr: off %d size %d\n",
+	pr_debug("gen: map_create: %s idx %d type %u value_type_id %u, attr: off %d size %d\n",
 		 map_name, map_idx, map_type, map_attr->btf_value_type_id,
 		 map_create_attr, attr_size);
 
@@ -1082,7 +1082,7 @@ void bpf_gen__prog_load(struct bpf_gen *gen,
 	license_off = add_data(gen, license, strlen(license) + 1);
 	/* add insns to blob of bytes */
 	insns_off = add_data(gen, insns, insn_cnt * sizeof(struct bpf_insn));
-	pr_debug("gen: prog_load: prog_idx %d type %d insn off %d insns_cnt %zd license off %d\n",
+	pr_debug("gen: prog_load: prog_idx %d type %u insn off %d insns_cnt %zu license off %d\n",
 		 prog_idx, prog_type, insns_off, insn_cnt, license_off);
 
 	/* convert blob insns to target endianness */
@@ -1105,21 +1105,21 @@ void bpf_gen__prog_load(struct bpf_gen *gen,
 	attr.func_info_rec_size = tgt_endian(load_attr->func_info_rec_size);
 	attr.func_info_cnt = tgt_endian(load_attr->func_info_cnt);
 	func_info = add_data(gen, load_attr->func_info, func_info_tot_sz);
-	pr_debug("gen: prog_load: func_info: off %d cnt %d rec size %d\n",
+	pr_debug("gen: prog_load: func_info: off %d cnt %u rec size %u\n",
 		 func_info, load_attr->func_info_cnt,
 		 load_attr->func_info_rec_size);
 
 	attr.line_info_rec_size = tgt_endian(load_attr->line_info_rec_size);
 	attr.line_info_cnt = tgt_endian(load_attr->line_info_cnt);
 	line_info = add_data(gen, load_attr->line_info, line_info_tot_sz);
-	pr_debug("gen: prog_load: line_info: off %d cnt %d rec size %d\n",
+	pr_debug("gen: prog_load: line_info: off %d cnt %u rec size %u\n",
 		 line_info, load_attr->line_info_cnt,
 		 load_attr->line_info_rec_size);
 
 	attr.core_relo_rec_size = tgt_endian((__u32)sizeof(struct bpf_core_relo));
 	attr.core_relo_cnt = tgt_endian(gen->core_relo_cnt);
 	core_relos = add_data(gen, gen->core_relos, core_relo_tot_sz);
-	pr_debug("gen: prog_load: core_relos: off %d cnt %d rec size %zd\n",
+	pr_debug("gen: prog_load: core_relos: off %d cnt %d rec size %zu\n",
 		 core_relos, gen->core_relo_cnt,
 		 sizeof(struct bpf_core_relo));
 
@@ -1234,7 +1234,7 @@ void bpf_gen__map_update_elem(struct bpf_gen *gen, int map_idx, void *pvalue,
 	}
 
 	map_update_attr = add_data(gen, &attr, attr_size);
-	pr_debug("gen: map_update_elem: idx %d, value: off %d size %d, attr: off %d size %d\n",
+	pr_debug("gen: map_update_elem: idx %d, value: off %d size %u, attr: off %d size %d\n",
 		 map_idx, value, value_size, map_update_attr, attr_size);
 	move_blob2blob(gen, attr_field(map_update_attr, map_fd), 4,
 		       blob_fd_array_off(gen, map_idx));
