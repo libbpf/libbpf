@@ -6,6 +6,7 @@ usage () {
 	echo "Set BPF_NEXT_BASELINE to override bpf-next tree commit, otherwise read from <libbpf-repo>/CHECKPOINT-COMMIT."
 	echo "Set BPF_BASELINE to override bpf tree commit, otherwise read from <libbpf-repo>/BPF-CHECKPOINT-COMMIT."
 	echo "Set MANUAL_MODE to 1 to manually control every cherry-picked commits."
+	echo "Set GIT to override which git binary is used (e.g. one that still ships filter-branch)."
 	exit 1
 }
 
@@ -35,6 +36,26 @@ WORKDIR=$(pwd)
 TMP_DIR=$(mktemp -d)
 
 trap "cd ${WORKDIR}; exit" INT TERM EXIT
+
+# History rewriting below relies on `git filter-branch`. It's deprecated and
+# some git distributions no longer ship it (its modern replacement is the
+# separately-installed git-filter-repo). Let the user point at a different git
+# binary via the GIT env var, and fail early with a clear hint if the selected
+# git can't run filter-branch, instead of dying halfway through the sync.
+GIT=${GIT:-git}
+git() { command "${GIT}" "$@"; }
+
+if ! git filter-branch -h >/dev/null 2>&1; then
+	echo "Error: '${GIT} filter-branch' is unavailable in this git installation."
+	echo ""
+	echo "This script uses 'git filter-branch' to rewrite history, but some git"
+	echo "builds drop this deprecated command (its modern replacement is the"
+	echo "separately-installed git-filter-repo)."
+	echo ""
+	echo "Re-run with a git that still bundles filter-branch via the GIT env var, e.g.:"
+	echo "    GIT=/usr/bin/git $0 $*"
+	exit 1
+fi
 
 declare -A PATH_MAP
 PATH_MAP=(									\
