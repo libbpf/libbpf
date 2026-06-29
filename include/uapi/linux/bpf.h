@@ -6843,6 +6843,15 @@ struct bpf_link_info {
 			__u32 pid;
 		} uprobe_multi;
 		struct {
+			__u32 attach_type;
+			__u32 count; /* in/out: tracing_multi target count */
+			__u32 btf_obj_id;
+			__u32 :32;
+			__aligned_u64 ids;
+			__aligned_u64 addrs;
+			__aligned_u64 cookies;
+		} tracing_multi;
+		struct {
 			__u32 type; /* enum bpf_perf_event_type */
 			__u32 :32;
 			union {
