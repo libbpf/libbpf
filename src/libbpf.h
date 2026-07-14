@@ -563,10 +563,17 @@ struct bpf_kprobe_opts {
 	bool retprobe;
 	/* kprobe attach mode */
 	enum probe_attach_mode attach_mode;
+
+	/*
+	 * max number of instances of kretprobe that can be active at
+	 * one time; only applicable to legacy kprobes (0 = kernel default)
+	 */
+	int maxactive;
+
 	size_t :0;
 };
 
-#define bpf_kprobe_opts__last_field attach_mode
+#define bpf_kprobe_opts__last_field maxactive
 
 /**
  * @brief **bpf_program__attach_kprobe()** attaches a BPF program to a
