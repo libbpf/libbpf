@@ -1,5 +1,7 @@
 Valid-License-Identifier: LGPL-2.1
+Valid-License-Identifier: LGPL-2.1-only
 Valid-License-Identifier: LGPL-2.1+
+Valid-License-Identifier: LGPL-2.1-or-later
 SPDX-URL: https://spdx.org/licenses/LGPL-2.1.html
 Usage-Guide:
   To use this license in source code, put one of the following SPDX
@@ -7,16 +9,20 @@ Usage-Guide:
   guidelines in the licensing rules documentation.
   For 'GNU Lesser General Public License (LGPL) version 2.1 only' use:
     SPDX-License-Identifier: LGPL-2.1
+  or:
+    SPDX-License-Identifier: LGPL-2.1-only
   For 'GNU Lesser General Public License (LGPL) version 2.1 or any later
   version' use:
     SPDX-License-Identifier: LGPL-2.1+
+  or:
+    SPDX-License-Identifier: LGPL-2.1-or-later
 License-Text:
 
 GNU LESSER GENERAL PUBLIC LICENSE
 Version 2.1, February 1999
 
 Copyright (C) 1991, 1999 Free Software Foundation, Inc.
-51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
+<https://fsf.org/>
 
 Everyone is permitted to copy and distribute verbatim copies of this
 license document, but changing it is not allowed.
@@ -486,9 +492,9 @@ FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser General Public License
 for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with this library; if not, write to the Free Software Foundation,
-Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA Also add
-information on how to contact you by electronic and paper mail.
+along with this library; if not, see <https://www.gnu.org/licenses/>.
+
+Also add information on how to contact you by electronic and paper mail.
 
 You should also get your employer (if you work as a programmer) or your
 school, if any, to sign a "copyright disclaimer" for the library, if
