@@ -11738,7 +11738,7 @@ static int perf_event_open_probe(bool uprobe, bool retprobe, const char *name,
 				errstr(bit));
 			return bit;
 		}
-		attr.config |= 1 << bit;
+		attr.config |= 1ULL << bit;
 	}
 	attr.size = attr_sz;
 	attr.type = type;
