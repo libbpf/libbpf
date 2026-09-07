@@ -12,6 +12,11 @@
 #include <asm/types.h>
 #include <asm/posix_types.h>
 
+#ifdef __SIZEOF_INT128__
+typedef __signed__ __int128 __s128 __attribute__((aligned(16)));
+typedef unsigned __int128 __u128 __attribute__((aligned(16)));
+#endif
+
 #define __bitwise__
 #define __bitwise __bitwise__
 
