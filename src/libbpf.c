@@ -3018,20 +3018,8 @@ static int bpf_object__init_user_btf_map(struct bpf_object *obj,
 }
 
 static int init_arena_map_data(struct bpf_object *obj, struct bpf_map *map,
-			       const char *sec_name, int sec_idx,
 			       void *data, size_t data_sz)
 {
-	const long page_sz = sysconf(_SC_PAGE_SIZE);
-	const size_t data_alloc_sz = roundup(data_sz, page_sz);
-	size_t mmap_sz;
-
-	mmap_sz = bpf_map_mmap_sz(map);
-	if (data_alloc_sz > mmap_sz) {
-		pr_warn("elf: sec '%s': declared ARENA map size (%zu) is too small to hold global __arena variables of size %zu\n",
-			sec_name, mmap_sz, data_sz);
-		return -E2BIG;
-	}
-
 	obj->arena_data = malloc(data_sz);
 	if (!obj->arena_data)
 		return -ENOMEM;
@@ -3107,8 +3095,7 @@ static int bpf_object__init_user_btf_maps(struct bpf_object *obj, bool strict,
 		obj->arena_map_idx = i;
 
 		if (obj->efile.arena_data) {
-			err = init_arena_map_data(obj, map, ARENA_SEC, obj->efile.arena_data_shndx,
-						  obj->efile.arena_data->d_buf,
+			err = init_arena_map_data(obj, map, obj->efile.arena_data->d_buf,
 						  obj->efile.arena_data->d_size);
 			if (err)
 				return err;
@@ -7489,12 +7476,20 @@ static int bpf_object__relocate(struct bpf_object *obj, const char *targ_btf_pat
 		bpf_object__sort_relos(obj);
 	}
 
-	/* place globals at the end of the arena (if supported) */
-	if (obj->arena_map_idx >= 0 && kernel_supports(obj, FEAT_LDIMM64_FULL_RANGE_OFF)) {
+	if (obj->arena_map_idx >= 0) {
 		struct bpf_map *arena_map = &obj->maps[obj->arena_map_idx];
+		size_t data_sz = roundup(obj->arena_data_sz, sysconf(_SC_PAGE_SIZE));
+		size_t mmap_sz = bpf_map_mmap_sz(arena_map);
 
-		obj->arena_data_off = bpf_map_mmap_sz(arena_map) -
-				      roundup(obj->arena_data_sz, sysconf(_SC_PAGE_SIZE));
+		if (data_sz > mmap_sz) {
+			pr_warn("map '%s': declared ARENA map size (%zu) is too small to hold global __arena variables of size %zu\n",
+				arena_map->name, mmap_sz, obj->arena_data_sz);
+			return -E2BIG;
+		}
+
+		/* place globals at the end of the arena (if supported) */
+		if (kernel_supports(obj, FEAT_LDIMM64_FULL_RANGE_OFF))
+			obj->arena_data_off = mmap_sz - data_sz;
 	}
 
 	/* Before relocating calls pre-process relocations and mark
