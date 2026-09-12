@@ -1011,6 +1011,28 @@ bpf_program__set_expected_attach_type(struct bpf_program *prog,
 LIBBPF_API __u32 bpf_program__flags(const struct bpf_program *prog);
 LIBBPF_API int bpf_program__set_flags(struct bpf_program *prog, __u32 flags);
 
+/**
+ * @brief **bpf_program__add_flags()** adds one or more flags to the BPF
+ * program, preserving any existing flags.
+ *
+ * @param prog BPF program
+ * @param flags the flags to add
+ *
+ * @return 0, on success; negative error code, otherwise
+ */
+LIBBPF_API int bpf_program__add_flags(struct bpf_program *prog, __u32 flags);
+
+/**
+ * @brief **bpf_program__clear_flags()** clears one or more flags from the BPF
+ * program, preserving any other flags not explicitly cleared.
+ *
+ * @param prog BPF program
+ * @param flags the flags to clear
+ *
+ * @return 0, on success; negative error code, otherwise
+ */
+LIBBPF_API int bpf_program__clear_flags(struct bpf_program *prog, __u32 flags);
+
 /* Per-program log level and log buffer getters/setters.
  * See bpf_object_open_opts comments regarding log_level and log_buf
  * interactions.
