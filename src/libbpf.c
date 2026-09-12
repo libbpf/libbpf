@@ -9934,6 +9934,16 @@ int bpf_program__set_flags(struct bpf_program *prog, __u32 flags)
 	return 0;
 }
 
+int bpf_program__add_flags(struct bpf_program *prog, __u32 flags)
+{
+	return bpf_program__set_flags(prog, prog->prog_flags | flags);
+}
+
+int bpf_program__clear_flags(struct bpf_program *prog, __u32 flags)
+{
+	return bpf_program__set_flags(prog, prog->prog_flags & ~flags);
+}
+
 __u32 bpf_program__log_level(const struct bpf_program *prog)
 {
 	return prog->log_level;
