@@ -1,0 +1,48 @@
+name: PR source routing
+
+on:
+  pull_request_target:
+    branches:
+      - master
+    types: [opened, reopened, synchronize, edited, labeled, unlabeled]
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Optional PR number; leave blank to inspect all open PRs
+        required: false
+        type: string
+      dry_run:
+        description: Report actions without commenting on or closing PRs
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  route:
+    if: github.repository == 'libbpf/libbpf'
+    runs-on: ubuntu-slim
+    steps:
+      # Never execute policy code from a manually selected ref or PR branch.
+      - name: Check out routing policy
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          sparse-checkout: .github/scripts
+          persist-credentials: false
+
+      - name: Install PyGithub
+        run: |
+          python3 -m venv "$RUNNER_TEMP/pr-policy-venv"
+          "$RUNNER_TEMP/pr-policy-venv/bin/pip" install --disable-pip-version-check --no-input --quiet PyGithub==2.10.0
+
+      - name: Route pull requests
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          "$RUNNER_TEMP/pr-policy-venv/bin/python" .github/scripts/pr_policy.py
