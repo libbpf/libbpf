@@ -751,6 +751,8 @@ struct bpf_object {
 	bool btf_modules_loaded;
 	size_t btf_module_cnt;
 	size_t btf_module_cap;
+	char **btf_module_allowlist;
+	ssize_t btf_module_allowlist_cnt;
 
 	/* optional log settings passed to BPF_BTF_LOAD and BPF_PROG_LOAD commands */
 	char *log_buf;
@@ -5843,6 +5845,21 @@ int bpf_core_add_cands(struct bpf_core_cand *local_cand,
 	return 0;
 }
 
+static bool is_btf_mod_allowed(const struct bpf_object *obj, const char *name)
+{
+	ssize_t i;
+
+	if (obj->btf_module_allowlist_cnt < 0)
+		return true;
+
+	for (i = 0; i < obj->btf_module_allowlist_cnt; i++) {
+		if (strcmp(obj->btf_module_allowlist[i], name) == 0)
+			return true;
+	}
+
+	return false;
+}
+
 static int load_module_btfs(struct bpf_object *obj)
 {
 	struct bpf_btf_info info;
@@ -5863,6 +5880,9 @@ static int load_module_btfs(struct bpf_object *obj)
 
 	/* kernel too old to support module BTFs */
 	if (!kernel_supports(obj, FEAT_MODULE_BTF))
+		return 0;
+
+	if (obj->btf_module_allowlist_cnt == 0)
 		return 0;
 
 	while (true) {
@@ -5907,6 +5927,11 @@ static int load_module_btfs(struct bpf_object *obj)
 			continue;
 		}
 
+		if (!is_btf_mod_allowed(obj, name)) {
+			close(fd);
+			continue;
+		}
+
 		btf = btf_get_from_fd(fd, obj->btf_vmlinux);
 		err = libbpf_get_error(btf);
 		if (err) {
@@ -5931,6 +5956,9 @@ static int load_module_btfs(struct bpf_object *obj)
 			break;
 		}
 		obj->btf_module_cnt++;
+
+		if (obj->btf_module_allowlist_cnt == obj->btf_module_cnt)
+			break;
 	}
 
 	if (err) {
@@ -8481,6 +8509,8 @@ static struct bpf_object *bpf_object_open(const char *path, const void *obj_buf,
 					  const struct bpf_object_open_opts *opts)
 {
 	const char *kconfig, *btf_tmp_path, *token_path;
+	size_t mod_allow_cnt, i, j;
+	const char **mod_allow;
 	struct bpf_object *obj;
 	int err;
 	char *log_buf;
@@ -8525,6 +8555,22 @@ static struct bpf_object *bpf_object_open(const char *path, const void *obj_buf,
 	if (token_path && strlen(token_path) >= PATH_MAX)
 		return ERR_PTR(-ENAMETOOLONG);
 
+	mod_allow = OPTS_GET(opts, btf_module_allowlist, NULL);
+	mod_allow_cnt = OPTS_GET(opts, btf_module_allowlist_cnt, 0);
+
+	if (mod_allow_cnt > SSIZE_MAX || (!mod_allow && mod_allow_cnt > 0))
+		return ERR_PTR(-EINVAL);
+
+	for (i = 0; i < mod_allow_cnt; i++) {
+		if (!mod_allow[i] || !mod_allow[i][0])
+			return ERR_PTR(-EINVAL);
+
+		for (j = 0; j < i; j++) {
+			if (strcmp(mod_allow[i], mod_allow[j]) == 0)
+				return ERR_PTR(-EINVAL);
+		}
+	}
+
 	obj = bpf_object__new(path, obj_buf, obj_buf_sz, obj_name);
 	if (IS_ERR(obj))
 		return obj;
@@ -8560,6 +8606,24 @@ static struct bpf_object *bpf_object_open(const char *path, const void *obj_buf,
 		if (!obj->kconfig) {
 			err = -ENOMEM;
 			goto out;
+		}
+	}
+
+	obj->btf_module_allowlist_cnt = mod_allow ? mod_allow_cnt : -1;
+	if (mod_allow_cnt > 0) {
+		obj->btf_module_allowlist =
+			calloc(mod_allow_cnt, sizeof(*obj->btf_module_allowlist));
+		if (!obj->btf_module_allowlist) {
+			err = -ENOMEM;
+			goto out;
+		}
+
+		for (i = 0; i < mod_allow_cnt; i++) {
+			obj->btf_module_allowlist[i] = strdup(mod_allow[i]);
+			if (!obj->btf_module_allowlist[i]) {
+				err = -ENOMEM;
+				goto out;
+			}
 		}
 	}
 
@@ -9684,6 +9748,12 @@ void bpf_object__close(struct bpf_object *obj)
 	for (i = 0; i < obj->jumptable_map_cnt; i++)
 		close(obj->jumptable_maps[i].fd);
 	zfree(&obj->jumptable_maps);
+
+	if (obj->btf_module_allowlist) {
+		for (i = 0; i < obj->btf_module_allowlist_cnt; i++)
+			zfree(&obj->btf_module_allowlist[i]);
+		zfree(&obj->btf_module_allowlist);
+	}
 
 	free(obj);
 }
