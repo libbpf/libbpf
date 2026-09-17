@@ -4867,15 +4867,18 @@ union bpf_attr {
  * 		The non-negative copied *buf* length equal to or less than
  * 		*size* on success, or a negative error in case of failure.
  *
- * long bpf_load_hdr_opt(struct bpf_sock_ops *skops, void *searchby_res, u32 len, u64 flags)
+ * long bpf_load_hdr_opt(void *ctx, void *searchby_res, u32 len, u64 flags)
  *	Description
  *		Load header option.  Support reading a particular TCP header
- *		option for bpf program (**BPF_PROG_TYPE_SOCK_OPS**).
+ *		option for bpf program (**BPF_PROG_TYPE_SOCK_OPS**).  For the
+ *		**bpf_tcp_ops** struct_ops, this helper can be called from the
+ *		**parse_hdr**\ () and **write_hdr_opt**\ () operators.
  *
- *		If *flags* is 0, it will search the option from the
- *		*skops*\ **->skb_data**.  The comment in **struct bpf_sock_ops**
- *		has details on what skb_data contains under different
- *		*skops*\ **->op**.
+ *		If *flags* is 0, it will search the option from the packet
+ *		associated with the current operation.  For
+ *		**BPF_PROG_TYPE_SOCK_OPS**, the comment in
+ *		**struct bpf_sock_ops** has details on what skb_data
+ *		contains under different *op*.
  *
  *		The first byte of the *searchby_res* specifies the
  *		kind that it wants to search.
@@ -4908,6 +4911,8 @@ union bpf_attr {
  *
  *		* **BPF_LOAD_HDR_OPT_TCP_SYN** to search from the
  *		  saved_syn packet or the just-received syn packet.
+ *		  Not supported by the **bpf_tcp_ops** struct_ops, which
+ *		  rejects all flags.
  *
  *	Return
  *		> 0 when found, the header option is copied to *searchby_res*.
@@ -4928,9 +4933,9 @@ union bpf_attr {
  *		packet.
  *
  *		**-EPERM** if the helper cannot be used under the current
- *		*skops*\ **->op**.
+ *		operation.
  *
- * long bpf_store_hdr_opt(struct bpf_sock_ops *skops, const void *from, u32 len, u64 flags)
+ * long bpf_store_hdr_opt(void *ctx, const void *from, u32 len, u64 flags)
  *	Description
  *		Store header option.  The data will be copied
  *		from buffer *from* with length *len* to the TCP header.
@@ -4946,7 +4951,9 @@ union bpf_attr {
  *		by searching the same option in the outgoing skb.
  *
  *		This helper can only be called during
- *		**BPF_SOCK_OPS_WRITE_HDR_OPT_CB**.
+ *		**BPF_SOCK_OPS_WRITE_HDR_OPT_CB**, or from the
+ *		**write_hdr_opt**\ () operator of the **bpf_tcp_ops**
+ *		struct_ops.
  *
  *	Return
  *		0 on success, or negative error in case of failure:
@@ -4961,9 +4968,9 @@ union bpf_attr {
  *		**-EFAULT** on failure to parse the existing header options.
  *
  *		**-EPERM** if the helper cannot be used under the current
- *		*skops*\ **->op**.
+ *		operation.
  *
- * long bpf_reserve_hdr_opt(struct bpf_sock_ops *skops, u32 len, u64 flags)
+ * long bpf_reserve_hdr_opt(void *ctx, u32 len, u64 flags)
  *	Description
  *		Reserve *len* bytes for the bpf header option.  The
  *		space will be used by **bpf_store_hdr_opt**\ () later in
@@ -4973,7 +4980,9 @@ union bpf_attr {
  *		the total number of bytes will be reserved.
  *
  *		This helper can only be called during
- *		**BPF_SOCK_OPS_HDR_OPT_LEN_CB**.
+ *		**BPF_SOCK_OPS_HDR_OPT_LEN_CB**, or from the
+ *		**hdr_opt_len**\ () operator of the **bpf_tcp_ops**
+ *		struct_ops.
  *
  *	Return
  *		0 on success, or negative error in case of failure:
@@ -4983,7 +4992,7 @@ union bpf_attr {
  *		**-ENOSPC** if there is not enough space in the header.
  *
  *		**-EPERM** if the helper cannot be used under the current
- *		*skops*\ **->op**.
+ *		operation.
  *
  * void *bpf_inode_storage_get(struct bpf_map *map, void *inode, void *value, u64 flags)
  *	Description
