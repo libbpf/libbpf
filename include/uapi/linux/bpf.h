@@ -1756,7 +1756,7 @@ union bpf_attr {
 			__u32	prog_cnt;
 			__u32	count;
 		};
-		__u32		:32;
+		__u32		type_id;
 		/* output: per-program attach_flags.
 		 * not allowed to be set during effective query.
 		 */
@@ -6890,6 +6890,8 @@ struct bpf_link_info {
 		} xdp;
 		struct {
 			__u32 map_id;
+			__u32 :32;
+			__u64 cgroup_id;
 		} struct_ops;
 		struct {
 			__u32 pf;
