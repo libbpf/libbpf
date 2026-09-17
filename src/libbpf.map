@@ -458,6 +458,7 @@ LIBBPF_1.7.0 {
 
 LIBBPF_1.8.0 {
 	global:
+		bpf_map__attach_cgroup_opts;
 		bpf_program__add_flags;
 		bpf_program__attach_tracing_multi;
 		bpf_program__clear_flags;
