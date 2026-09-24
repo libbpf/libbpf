@@ -463,6 +463,12 @@ LIBBPF_1.8.0 {
 		bpf_program__attach_tracing_multi;
 		bpf_program__clear_flags;
 		bpf_program__clone;
+		btf__add_loc_param;
+		btf__add_loc_param_value;
+		btf__add_loc_proto;
+		btf__add_loc_proto_param;
+		btf__add_locsec;
+		btf__add_locsec_loc;
 		btf__find_by_name_kind_own;
 		btf__new_empty_opts;
 } LIBBPF_1.7.0;
