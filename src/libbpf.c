@@ -2524,6 +2524,9 @@ static const char *__btf_kind_str(__u16 kind)
 	case BTF_KIND_DECL_TAG: return "decl_tag";
 	case BTF_KIND_TYPE_TAG: return "type_tag";
 	case BTF_KIND_ENUM64: return "enum64";
+	case BTF_KIND_LOC_PARAM: return "loc_param";
+	case BTF_KIND_LOC_PROTO: return "loc_proto";
+	case BTF_KIND_LOCSEC: return "locsec";
 	default: return "unknown";
 	}
 }
