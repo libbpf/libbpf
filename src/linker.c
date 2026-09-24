@@ -2274,6 +2274,24 @@ static int linker_append_elf_relos(struct bpf_linker *linker, struct src_obj *ob
 						insn->imm += sec->dst_off / sizeof(struct bpf_insn);
 					else
 						insn->imm += sec->dst_off;
+				} else if (sym_type == R_BPF_64_ABS64 &&
+					   (sec->shdr->sh_flags & SHF_EXECINSTR)) {
+					/*
+					 * A pointer to a static function in a data section,
+					 * which is stored in place as an offset of the
+					 * function in its section. Data sections are kept
+					 * in the byte order of the object.
+					 */
+					void *ptr = dst_linked_sec->raw_data + dst_rel->r_offset;
+					__u64 off;
+
+					memcpy(&off, ptr, sizeof(off));
+					if (linker->swapped_endian)
+						off = bswap_64(off);
+					off += sec->dst_off;
+					if (linker->swapped_endian)
+						off = bswap_64(off);
+					memcpy(ptr, &off, sizeof(off));
 				} else {
 					pr_warn("relocation against STT_SECTION in non-exec section is not supported!\n");
 					return -EINVAL;
