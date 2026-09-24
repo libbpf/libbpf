@@ -986,7 +986,12 @@ done:
 int btf__align_of(const struct btf *btf, __u32 id)
 {
 	const struct btf_type *t = btf__type_by_id(btf, id);
-	__u16 kind = btf_kind(t);
+	__u16 kind;
+
+	if (!t)
+		return libbpf_err(-EINVAL);
+
+	kind = btf_kind(t);
 
 	switch (kind) {
 	case BTF_KIND_INT:
