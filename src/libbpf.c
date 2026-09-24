@@ -546,6 +546,7 @@ struct bpf_struct_ops {
 #define PERCPU_SEC ".percpu"
 #define BSS_SEC ".bss"
 #define RODATA_SEC ".rodata"
+#define DATA_REL_RO_SEC ".data.rel.ro"
 #define KCONFIG_SEC ".kconfig"
 #define KSYMS_SEC ".ksyms"
 #define STRUCT_OPS_SEC ".struct_ops"
@@ -4062,6 +4063,17 @@ static int bpf_object__elf_collect(struct bpf_object *obj)
 				err = bpf_object__add_programs(obj, data, name, idx);
 				if (err)
 					return err;
+			} else if (strcmp(name, DATA_REL_RO_SEC) == 0 ||
+				   str_has_pfx(name, DATA_REL_RO_SEC ".")) {
+				/*
+				 * Constants with pointers in them, e.g. vtables,
+				 * that position independent code keeps here to
+				 * have them relocated. There is nothing that
+				 * writes to it after that.
+				 */
+				sec_desc->sec_type = SEC_RODATA;
+				sec_desc->shdr = sh;
+				sec_desc->data = data;
 			} else if (strcmp(name, DATA_SEC) == 0 ||
 				   str_has_pfx(name, DATA_SEC ".")) {
 				sec_desc->sec_type = SEC_DATA;
@@ -4114,6 +4126,8 @@ static int bpf_object__elf_collect(struct bpf_object *obj)
 			if (!section_have_execinstr(obj, targ_sec_idx) &&
 			    strcmp(name, ".rel" RODATA_SEC) &&
 			    !str_has_pfx(name, ".rel" RODATA_SEC ".") &&
+			    strcmp(name, ".rel" DATA_REL_RO_SEC) &&
+			    !str_has_pfx(name, ".rel" DATA_REL_RO_SEC ".") &&
 			    strcmp(name, ".rel" STRUCT_OPS_SEC) &&
 			    strcmp(name, ".rel" STRUCT_OPS_LINK_SEC) &&
 			    strcmp(name, ".rel?" STRUCT_OPS_SEC) &&
