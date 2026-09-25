@@ -936,6 +936,33 @@ union bpf_iter_link_info {
  * 		0 on success or -1 if an error occurred (in which case,
  * 		*errno* is set appropriately).
  *
+ * BPF_PROG_STREAM_OPEN
+ *	Description
+ *		Open a file descriptor for one of the BPF streams associated
+ *		with the program identified by *prog_fd*. The stream is selected
+ *		by *stream_id*.
+ *
+ *		The returned file descriptor supports **read**\ (2) and
+ *		**poll**\ (2). Reads block while the stream is empty unless
+ *		**BPF_F_STREAM_NONBLOCK** is specified in *flags*. A non-blocking
+ *		read of an empty stream fails with **EAGAIN**.
+ *
+ *		**poll**\ (2) reports **POLLIN** when data is available and
+ *		**POLLHUP** once the program has been freed, that is, after every
+ *		reference to it, including links and other file descriptors, has
+ *		been dropped. Hangup may lag the final release because program
+ *		teardown is deferred. Buffered data remains readable after
+ *		**POLLHUP** and a read returns zero after all such data has been
+ *		consumed.
+ *
+ *		The file descriptor is read-only and has the close-on-exec flag
+ *		set. It is not seekable and **lseek**\ (2) fails with **ESPIPE**.
+ *		*flags* may only contain **BPF_F_STREAM_NONBLOCK**.
+ *
+ *	Return
+ *		A new file descriptor (a nonnegative integer), or -1 if an
+ *		error occurred (in which case, *errno* is set appropriately).
+ *
  * NOTES
  *	eBPF objects (maps and programs) can be shared between processes.
  *
@@ -993,6 +1020,7 @@ enum bpf_cmd {
 	BPF_TOKEN_CREATE,
 	BPF_PROG_STREAM_READ_BY_FD,
 	BPF_PROG_ASSOC_STRUCT_OPS,
+	BPF_PROG_STREAM_OPEN,
 	__MAX_BPF_CMD,
 	BPF_COMMON_ATTRS = 1 << 16, /* Indicate carrying syscall common attrs. */
 };
@@ -1524,6 +1552,11 @@ enum {
 	BPF_STREAM_STDERR = 2,
 };
 
+/* flags for BPF_PROG_STREAM_OPEN command */
+enum {
+	BPF_F_STREAM_NONBLOCK = (1U << 0),
+};
+
 union bpf_attr {
 	struct { /* anonymous struct used by BPF_MAP_CREATE command */
 		__u32	map_type;	/* one of enum bpf_map_type */
@@ -1949,6 +1982,12 @@ union bpf_attr {
 		__u32		prog_fd;
 		__u32		flags;
 	} prog_assoc_struct_ops;
+
+	struct {
+		__u32		prog_fd;
+		__u32		stream_id;
+		__u32		flags;
+	} prog_stream_open;
 
 } __attribute__((aligned(8)));
 
