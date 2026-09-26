@@ -2159,8 +2159,13 @@ add_sym:
 	dst_sym->st_name = name_off;
 	dst_sym->st_info = sym->st_info;
 	dst_sym->st_other = sym->st_other;
-	dst_sym->st_shndx = dst_sec ? dst_sec->sec_idx : sym->st_shndx;
-	dst_sym->st_value = (src_sec ? src_sec->dst_off : 0) + sym->st_value;
+	if (sym_is_extern) {
+		dst_sym->st_shndx = SHN_UNDEF;
+		dst_sym->st_value = 0;
+	} else {
+		dst_sym->st_shndx = dst_sec ? dst_sec->sec_idx : sym->st_shndx;
+		dst_sym->st_value = (src_sec ? src_sec->dst_off : 0) + sym->st_value;
+	}
 	dst_sym->st_size = sym->st_size;
 
 	obj->sym_map[src_sym_idx] = dst_sym_idx;
@@ -2592,6 +2597,10 @@ static int linker_append_btf(struct bpf_linker *linker, struct src_obj *obj)
 					continue;
 
 				dst_var = &dst_sec->sec_vars[glob_sym->var_idx];
+				if (!glob_sym->is_extern) {
+					Elf64_Sym *sym = get_sym_by_idx(linker, glob_sym->sym_idx);
+					dst_var->offset = sym->st_value;
+				}
 				/* Because underlying BTF type might have
 				 * changed, so might its size have changed, so
 				 * re-calculate and update it in sec_var.
