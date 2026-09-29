@@ -143,7 +143,7 @@ static void btf_dump_printf(const struct btf_dump *d, const char *fmt, ...)
 	va_end(args);
 }
 
-static int btf_dump_mark_referenced(struct btf_dump *d);
+static int btf_dump_mark_referenced(struct btf_dump *d, const struct btf_type *t);
 static int btf_dump_resize(struct btf_dump *d);
 
 struct btf_dump *btf_dump__new(const struct btf *btf,
@@ -195,6 +195,8 @@ err:
 static int btf_dump_resize(struct btf_dump *d)
 {
 	int err, last_id = btf__type_cnt(d->btf) - 1;
+	const struct btf_type *t;
+	__u32 i;
 
 	if (last_id <= d->last_id)
 		return 0;
@@ -212,10 +214,13 @@ static int btf_dump_resize(struct btf_dump *d)
 		d->type_states[0].emit_state = EMITTED;
 	}
 
-	/* eagerly determine referenced types for anon enums */
-	err = btf_dump_mark_referenced(d);
-	if (err)
-		return err;
+	for (i = d->last_id + 1; i <= last_id; i++) {
+		t = btf__type_by_id(d->btf, i);
+
+		err = btf_dump_mark_referenced(d, t);
+		if (err)
+			return err;
+	}
 
 	d->last_id = last_id;
 	return 0;
@@ -312,71 +317,64 @@ int btf_dump__dump_type(struct btf_dump *d, __u32 id)
  * top-level anonymous enum won't be referenced by anything, while embedded
  * one will.
  */
-static int btf_dump_mark_referenced(struct btf_dump *d)
+static int btf_dump_mark_referenced(struct btf_dump *d, const struct btf_type *t)
 {
-	int i, j, n = btf__type_cnt(d->btf);
-	const struct btf_type *t;
-	__u32 vlen;
+	__u32 j, vlen = btf_vlen(t);
 
-	for (i = d->last_id + 1; i < n; i++) {
-		t = btf__type_by_id(d->btf, i);
-		vlen = btf_vlen(t);
+	switch (btf_kind(t)) {
+	case BTF_KIND_INT:
+	case BTF_KIND_ENUM:
+	case BTF_KIND_ENUM64:
+	case BTF_KIND_FWD:
+	case BTF_KIND_FLOAT:
+	case BTF_KIND_LOC_PARAM:
+	case BTF_KIND_LOC_PROTO:
+	case BTF_KIND_LOCSEC:
+		break;
 
-		switch (btf_kind(t)) {
-		case BTF_KIND_INT:
-		case BTF_KIND_ENUM:
-		case BTF_KIND_ENUM64:
-		case BTF_KIND_FWD:
-		case BTF_KIND_FLOAT:
-		case BTF_KIND_LOC_PARAM:
-		case BTF_KIND_LOC_PROTO:
-		case BTF_KIND_LOCSEC:
-			break;
+	case BTF_KIND_VOLATILE:
+	case BTF_KIND_CONST:
+	case BTF_KIND_RESTRICT:
+	case BTF_KIND_PTR:
+	case BTF_KIND_TYPEDEF:
+	case BTF_KIND_FUNC:
+	case BTF_KIND_VAR:
+	case BTF_KIND_DECL_TAG:
+	case BTF_KIND_TYPE_TAG:
+		d->type_states[t->type].referenced = 1;
+		break;
 
-		case BTF_KIND_VOLATILE:
-		case BTF_KIND_CONST:
-		case BTF_KIND_RESTRICT:
-		case BTF_KIND_PTR:
-		case BTF_KIND_TYPEDEF:
-		case BTF_KIND_FUNC:
-		case BTF_KIND_VAR:
-		case BTF_KIND_DECL_TAG:
-		case BTF_KIND_TYPE_TAG:
-			d->type_states[t->type].referenced = 1;
-			break;
+	case BTF_KIND_ARRAY: {
+		const struct btf_array *a = btf_array(t);
 
-		case BTF_KIND_ARRAY: {
-			const struct btf_array *a = btf_array(t);
+		d->type_states[a->index_type].referenced = 1;
+		d->type_states[a->type].referenced = 1;
+		break;
+	}
+	case BTF_KIND_STRUCT:
+	case BTF_KIND_UNION: {
+		const struct btf_member *m = btf_members(t);
 
-			d->type_states[a->index_type].referenced = 1;
-			d->type_states[a->type].referenced = 1;
-			break;
-		}
-		case BTF_KIND_STRUCT:
-		case BTF_KIND_UNION: {
-			const struct btf_member *m = btf_members(t);
+		for (j = 0; j < vlen; j++, m++)
+			d->type_states[m->type].referenced = 1;
+		break;
+	}
+	case BTF_KIND_FUNC_PROTO: {
+		const struct btf_param *p = btf_params(t);
 
-			for (j = 0; j < vlen; j++, m++)
-				d->type_states[m->type].referenced = 1;
-			break;
-		}
-		case BTF_KIND_FUNC_PROTO: {
-			const struct btf_param *p = btf_params(t);
+		for (j = 0; j < vlen; j++, p++)
+			d->type_states[p->type].referenced = 1;
+		break;
+	}
+	case BTF_KIND_DATASEC: {
+		const struct btf_var_secinfo *v = btf_var_secinfos(t);
 
-			for (j = 0; j < vlen; j++, p++)
-				d->type_states[p->type].referenced = 1;
-			break;
-		}
-		case BTF_KIND_DATASEC: {
-			const struct btf_var_secinfo *v = btf_var_secinfos(t);
-
-			for (j = 0; j < vlen; j++, v++)
-				d->type_states[v->type].referenced = 1;
-			break;
-		}
-		default:
-			return -EINVAL;
-		}
+		for (j = 0; j < vlen; j++, v++)
+			d->type_states[v->type].referenced = 1;
+		break;
+	}
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }
