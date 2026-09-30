@@ -6255,8 +6255,11 @@ bpf_object__relocate_core(struct bpf_object *obj, const char *targ_btf_path)
 		pr_debug("sec '%s': found %u CO-RE relocations\n", sec_name, sec->num_info);
 
 		for_each_btf_ext_rec(seg, sec, i, rec) {
-			if (rec->insn_off % BPF_INSN_SZ)
-				return -EINVAL;
+			if (rec->insn_off % BPF_INSN_SZ) {
+				err = -EINVAL;
+				goto out;
+			}
+
 			insn_idx = rec->insn_off / BPF_INSN_SZ;
 			prog = find_prog_by_sec_insn(obj, sec_idx, insn_idx);
 			if (!prog) {
@@ -6283,8 +6286,10 @@ bpf_object__relocate_core(struct bpf_object *obj, const char *targ_btf_path)
 			 * relocated, so it's enough to just subtract in-section offset
 			 */
 			insn_idx = insn_idx - prog->sec_insn_off;
-			if (insn_idx >= prog->insns_cnt)
-				return -EINVAL;
+			if (insn_idx >= prog->insns_cnt) {
+				err = -EINVAL;
+				goto out;
+			}
 			insn = &prog->insns[insn_idx];
 
 			if (is_ldimm64_insn(insn) && (size_t)insn_idx + 1 >= prog->insns_cnt) {
