@@ -34,4 +34,5 @@ while read -r email; do
     grep_lines "${email}$" "${LINUX_MAILMAP}" >> "${tmpfile}"
 done < <(git log --format='<%ae>' | sort -u)
 
-sort -u "${tmpfile}" > "${LIBBPF_MAILMAP}"
+# Sort independently of the locale, for the result not to depend on who runs it
+LC_ALL=C sort -u "${tmpfile}" > "${LIBBPF_MAILMAP}"
