@@ -21,6 +21,18 @@ This document goes over the process of syncing libbpf sources from Linux repo
 to this Github repository. Feel free to contribute fixes and additions if you
 run into new problems not outlined here.
 
+Automated sync
+--------------
+
+The [libbpf-sync workflow](.github/workflows/libbpf-sync.yml) runs the sync
+monthly; to sync on demand, run it manually with `dry_run` disabled. If the
+sync needs no human input, the workflow opens a `libbpf-sync-*` PR. Approve
+its workflow runs to start libbpf CI, and push any CI fixes on top of it, as
+described below. No new sync is attempted while such a PR is open.
+
+If the workflow run fails, sync manually following the rest of this document.
+The run's artifact has the sync log.
+
 Setup expectations
 ------------------
 
