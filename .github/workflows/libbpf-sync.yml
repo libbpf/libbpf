@@ -1,0 +1,158 @@
+name: libbpf-sync
+
+on:
+  schedule:
+    # Monthly, on the 1st
+    - cron: '17 13 1 * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Run the sync without pushing a branch or opening a pull request
+        required: true
+        default: true
+        type: boolean
+
+permissions: {}
+
+concurrency:
+  group: libbpf-sync
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # Runs code from the kernel trees (bpf_doc.py), so it gets a read-only token
+  # and hands the result over to the publish job as an artifact.
+  sync:
+    # Forks may only dry-run
+    if: github.repository == 'libbpf/libbpf' || (github.event_name == 'workflow_dispatch' && inputs.dry_run)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      branch: ${{ steps.sync.outputs.branch }}
+      head_sha: ${{ steps.sync.outputs.head_sha }}
+    env:
+      DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run || false }}
+    steps:
+      - name: Check for open sync pull requests
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REF: ${{ github.ref }}
+        run: |
+          if [ "${DRY_RUN}" != true ] && [ "${REF}" != refs/heads/master ]; then
+            echo "::error::Only dry runs are allowed from ${REF}"
+            exit 1
+          fi
+          open=$(gh pr list --repo "${GITHUB_REPOSITORY}" --base master --state open --limit 1000 \
+                   --json headRefName,url \
+                   --jq '[.[] | select(.headRefName | startswith("libbpf-sync-")) | .url] | join(" ")')
+          if [ -z "${open}" ]; then
+            exit 0
+          fi
+          if [ "${DRY_RUN}" = true ]; then
+            echo "::warning::Sync pull request already open, dry-running anyway: ${open}"
+          else
+            echo "::notice::Sync pull request already open, skipping: ${open}"
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Checkout libbpf
+        if: steps.gate.outputs.skip != 'true'
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up git
+        if: steps.gate.outputs.skip != 'true'
+        run: |
+          git config --global user.name 'libbpf-bot'
+          git config --global user.email 'bot+libbpf@kernel.org'
+          git config --global checkout.workers 0
+          git --version
+          if ! git filter-branch -h > /dev/null 2>&1; then
+            echo "::error::git filter-branch is not available"
+            exit 1
+          fi
+          command -v patch python3
+
+      - name: Fetch bpf-next and bpf trees
+        if: steps.gate.outputs.skip != 'true'
+        run: .github/scripts/sync-fetch-kernel.sh "${GITHUB_WORKSPACE}" "${RUNNER_TEMP}/linux"
+
+      - name: Sync
+        id: sync
+        if: steps.gate.outputs.skip != 'true'
+        run: .github/scripts/sync-run.sh "${GITHUB_WORKSPACE}" "${RUNNER_TEMP}/linux" "${RUNNER_TEMP}/out"
+
+      - name: Upload sync results
+        if: ${{ !cancelled() && steps.gate.outputs.skip != 'true' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: libbpf-sync-${{ github.run_id }}
+          path: ${{ runner.temp }}/out
+          if-no-files-found: ignore
+          overwrite: true
+
+  publish:
+    needs: sync
+    if: needs.sync.outputs.branch != '' && !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    env:
+      BRANCH: ${{ needs.sync.outputs.branch }}
+      HEAD_SHA: ${{ needs.sync.outputs.head_sha }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout libbpf
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Download sync results
+        uses: actions/download-artifact@v7
+        with:
+          name: libbpf-sync-${{ github.run_id }}
+          path: ${{ runner.temp }}/out
+
+      - name: Push sync branch and open pull request
+        run: |
+          out="${RUNNER_TEMP}/out"
+          if [[ "${BRANCH}" != libbpf-sync-* ]]; then
+            echo "::error::Unexpected sync branch name '${BRANCH}'"
+            exit 1
+          fi
+
+          git bundle verify -q "${out}/sync.bundle"
+          git fetch -q "${out}/sync.bundle" "refs/heads/${BRANCH}:refs/heads/${BRANCH}"
+          if [ "$(git rev-parse "refs/heads/${BRANCH}")" != "${HEAD_SHA}" ]; then
+            echo "::error::Sync bundle doesn't match ${HEAD_SHA}"
+            exit 1
+          fi
+
+          # A sync pull request could have been opened while the sync was running
+          open=$(gh pr list --base master --state open --limit 1000 \
+                   --json headRefName,url \
+                   --jq '[.[] | select(.headRefName | startswith("libbpf-sync-")) | .url] | join(" ")')
+          if [ -n "${open}" ]; then
+            echo "::notice::Sync pull request already open, not publishing: ${open}"
+            exit 0
+          fi
+
+          git push origin "refs/heads/${BRANCH}:refs/heads/${BRANCH}"
+          title="Libbpf sync $(TZ=UTC git log -n1 --format=%cd --date=format-local:%Y-%m-%dT%H:%M:%SZ "refs/heads/${BRANCH}")"
+          if ! gh pr create --base master --head "${BRANCH}" --title "${title}" \
+                 --body-file "${out}/pr-body.md"; then
+            echo "::error::Failed to open a pull request, deleting ${BRANCH}"
+            git push origin --delete "${BRANCH}"
+            exit 1
+          fi
