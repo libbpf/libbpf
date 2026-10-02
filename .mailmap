@@ -1,23 +1,27 @@
 Alexei Starovoitov <ast@kernel.org> <alexei.starovoitov@gmail.com>
+Alice Mikityanska <alice.kernel@fastmail.im> <maximmi@mellanox.com>
+Alice Mikityanska <alice.kernel@fastmail.im> <maximmi@nvidia.com>
 Antoine Tenart <atenart@kernel.org> <antoine.tenart@bootlin.com>
 Benjamin Tissoires <bentiss@kernel.org> <benjamin.tissoires@redhat.com>
 Björn Töpel <bjorn@kernel.org> <bjorn.topel@intel.com>
+Brendan Jackman <brendan.jackman@linux.dev> <jackmanb@google.com>
 Changbin Du <changbin.du@intel.com> <changbin.du@gmail.com>
 Colin Ian King <colin.i.king@gmail.com> <colin.king@canonical.com>
 Dan Carpenter <error27@gmail.com> <dan.carpenter@oracle.com>
 Geliang Tang <geliang@kernel.org> <geliang.tang@suse.com>
+Haowen Bai <baihaowen88@gmail.com> <baihaowen@meizu.com>
 Herbert Xu <herbert@gondor.apana.org.au>
 Jakub Kicinski <kuba@kernel.org> <jakub.kicinski@netronome.com>
 Jason Xing <kerneljasonxing@gmail.com>  <kernelxing@tencent.com>
 Jean-Philippe Brucker <jpb@kernel.org> <jean-philippe@linaro.org>
 Jesper Dangaard Brouer <hawk@kernel.org> <brouer@redhat.com>
 Joe Damato <joe@dama.to> <jdamato@fastly.com>
+JP Kobryn <jp.kobryn@linux.dev> <inwardvessel@gmail.com>
 Kees Cook <kees@kernel.org> <keescook@chromium.org>
 Kuniyuki Iwashima <kuniyu@google.com> <kuniyu@amazon.co.jp>
 Leo Yan <leo.yan@linux.dev> <leo.yan@linaro.org>
 Mark Starovoytov <mstarovo@pm.me> <mstarovoitov@marvell.com>
-Maxim Mikityanskiy <maxtram95@gmail.com> <maximmi@mellanox.com>
-Maxim Mikityanskiy <maxtram95@gmail.com> <maximmi@nvidia.com>
+Ondrej Mosnáček <omosnacek@gmail.com> <omosnace@redhat.com>
 Puranjay Mohan <puranjay@kernel.org> <puranjay12@gmail.com>
 Quentin Monnet <qmo@kernel.org> <quentin@isovalent.com>
 Quentin Monnet <qmo@kernel.org> <quentin.monnet@netronome.com>
