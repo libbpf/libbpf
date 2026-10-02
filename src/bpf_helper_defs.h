@@ -1294,8 +1294,34 @@ static long (* const bpf_setsockopt)(void *bpf_socket, int level, int optname, v
  *
  * 	* **BPF_F_ADJ_ROOM_DECAP_L3_IPV4**,
  * 	  **BPF_F_ADJ_ROOM_DECAP_L3_IPV6**:
- * 	  Indicate the new IP header version after decapsulating the outer
- * 	  IP header. Used when the inner and outer IP versions are different.
+ * 	  Indicate the new IP header version after decapsulating the
+ * 	  outer IP header. Used when the inner and outer IP versions
+ * 	  are different. These flags only trigger a protocol change
+ * 	  without clearing any tunnel-specific GSO flags.
+ *
+ * 	* **BPF_F_ADJ_ROOM_DECAP_L4_GRE**:
+ * 	  Clear GRE tunnel GSO flags (SKB_GSO_GRE and SKB_GSO_GRE_CSUM)
+ * 	  when decapsulating a GRE tunnel.
+ *
+ * 	* **BPF_F_ADJ_ROOM_DECAP_L4_UDP**:
+ * 	  Clear UDP tunnel GSO flags (SKB_GSO_UDP_TUNNEL and
+ * 	  SKB_GSO_UDP_TUNNEL_CSUM) when decapsulating a UDP tunnel.
+ *
+ * 	* **BPF_F_ADJ_ROOM_DECAP_IPXIP4**:
+ * 	  Clear IPIP/SIT tunnel GSO flag (SKB_GSO_IPXIP4) when decapsulating
+ * 	  a tunnel with an outer IPv4 header (IPv4-in-IPv4 or IPv6-in-IPv4).
+ *
+ * 	* **BPF_F_ADJ_ROOM_DECAP_IPXIP6**:
+ * 	  Clear IPv6 encapsulation tunnel GSO flag (SKB_GSO_IPXIP6) when
+ * 	  decapsulating a tunnel with an outer IPv6 header (IPv6-in-IPv6
+ * 	  or IPv4-in-IPv6).
+ *
+ * 	When using the decapsulation flags above, the skb->encapsulation
+ * 	flag is automatically cleared if all tunnel-specific GSO flags
+ * 	(SKB_GSO_UDP_TUNNEL, SKB_GSO_UDP_TUNNEL_CSUM, SKB_GSO_GRE,
+ * 	SKB_GSO_GRE_CSUM, SKB_GSO_IPXIP4, SKB_GSO_IPXIP6) have been
+ * 	removed from the packet. This handles cases where all tunnel
+ * 	layers have been decapsulated.
  *
  * 	A call to this helper is susceptible to change the underlying
  * 	packet buffer. Therefore, at load time, all checks on pointers
@@ -1864,6 +1890,47 @@ static long (* const bpf_skb_load_bytes_relative)(const void *skb, __u32 offset,
  * 		Use the mark present in *params*->mark for the fib lookup.
  * 		This option should not be used with BPF_FIB_LOOKUP_DIRECT,
  * 		as it only has meaning for full lookups.
+ * 	**BPF_FIB_LOOKUP_VLAN**
+ * 		If the fib lookup resolves to a VLAN device whose
+ * 		parent is a real (non-VLAN) device, set
+ * 		*params*->h_vlan_proto and *params*->h_vlan_TCI from
+ * 		the VLAN device and replace *params*->ifindex with the
+ * 		parent's ifindex. *params*->h_vlan_TCI carries the VID
+ * 		only, with PCP and DEI bits zero; a consumer wanting to
+ * 		set egress priority writes PCP itself. *params*->smac is
+ * 		the VLAN device's own address, which can differ from the
+ * 		parent's. Only the immediate parent is resolved; if it
+ * 		is itself a VLAN device (QinQ) or in another namespace,
+ * 		the egress cannot be reduced to a physical device plus
+ * 		one tag and the lookup returns
+ * 		**BPF_FIB_LKUP_RET_VLAN_FAILURE** with *params*->ifindex
+ * 		left at the input. To obtain the VLAN device's own
+ * 		ifindex, repeat the lookup without
+ * 		**BPF_FIB_LOOKUP_VLAN**, re-initializing *params*
+ * 		first: output fields overwrite the inputs they share
+ * 		storage with. The swap and the vlan fields
+ * 		are written only on success; other output fields keep
+ * 		the helper's existing behaviour, so a frag-needed result
+ * 		still reports the route mtu in *params*->mtu_result.
+ * 		This flag is only valid for XDP programs; tc programs
+ * 		receive -EINVAL since they can redirect to the VLAN
+ * 		device directly.
+ * 	**BPF_FIB_LOOKUP_VLAN_INPUT**
+ * 		Treat *params*->h_vlan_proto and *params*->h_vlan_TCI
+ * 		as an input VLAN tag and run the lookup as if ingress
+ * 		had happened on the VLAN subinterface carrying that tag
+ * 		on *params*->ifindex. The VID is the low 12 bits of
+ * 		*params*->h_vlan_TCI; *params*->h_vlan_proto must be
+ * 		ETH_P_8021Q or ETH_P_8021AD in network byte order, else
+ * 		**-EINVAL**. If *params*->ifindex is itself a VLAN
+ * 		device, its inner (QinQ) subinterface is matched; for a
+ * 		bond or team, pass the master's ifindex. An unmatched
+ * 		tag, a down device, or one in another namespace returns
+ * 		**BPF_FIB_LKUP_RET_NOT_FWDED**, mirroring real ingress.
+ * 		A VID of 0 is looked up literally, so do not set this
+ * 		flag for priority-tagged frames. Cannot be combined with
+ * 		**BPF_FIB_LOOKUP_TBID** or **BPF_FIB_LOOKUP_OUTPUT**
+ * 		(returns **-EINVAL**).
  *
  * 	*ctx* is either **struct xdp_md** for XDP programs or
  * 	**struct sk_buff** tc cls_act programs.
@@ -3236,6 +3303,7 @@ static void (* const bpf_ringbuf_discard)(void *data, __u64 flags) = (void *) 13
  * 	* **BPF_RB_RING_SIZE**: The size of ring buffer.
  * 	* **BPF_RB_CONS_POS**: Consumer position (can wrap around).
  * 	* **BPF_RB_PROD_POS**: Producer(s) position (can wrap around).
+ * 	* **BPF_RB_OVERWRITE_POS**: Overwrite position (can wrap around).
  *
  * 	Data returned is just a momentary snapshot of actual values
  * 	and could be inaccurate, so this facility should be used to
@@ -3376,12 +3444,15 @@ static long (* const bpf_get_task_stack)(struct task_struct *task, void *buf, __
  * bpf_load_hdr_opt
  *
  * 	Load header option.  Support reading a particular TCP header
- * 	option for bpf program (**BPF_PROG_TYPE_SOCK_OPS**).
+ * 	option for bpf program (**BPF_PROG_TYPE_SOCK_OPS**).  For the
+ * 	**bpf_tcp_ops** struct_ops, this helper can be called from the
+ * 	**parse_hdr**\ () and **write_hdr_opt**\ () operators.
  *
- * 	If *flags* is 0, it will search the option from the
- * 	*skops*\ **->skb_data**.  The comment in **struct bpf_sock_ops**
- * 	has details on what skb_data contains under different
- * 	*skops*\ **->op**.
+ * 	If *flags* is 0, it will search the option from the packet
+ * 	associated with the current operation.  For
+ * 	**BPF_PROG_TYPE_SOCK_OPS**, the comment in
+ * 	**struct bpf_sock_ops** has details on what skb_data
+ * 	contains under different *op*.
  *
  * 	The first byte of the *searchby_res* specifies the
  * 	kind that it wants to search.
@@ -3414,6 +3485,8 @@ static long (* const bpf_get_task_stack)(struct task_struct *task, void *buf, __
  *
  * 	* **BPF_LOAD_HDR_OPT_TCP_SYN** to search from the
  * 	  saved_syn packet or the just-received syn packet.
+ * 	  Not supported by the **bpf_tcp_ops** struct_ops, which
+ * 	  rejects all flags.
  *
  *
  * Returns
@@ -3435,9 +3508,9 @@ static long (* const bpf_get_task_stack)(struct task_struct *task, void *buf, __
  * 	packet.
  *
  * 	**-EPERM** if the helper cannot be used under the current
- * 	*skops*\ **->op**.
+ * 	operation.
  */
-static long (* const bpf_load_hdr_opt)(struct bpf_sock_ops *skops, void *searchby_res, __u32 len, __u64 flags) = (void *) 142;
+static long (* const bpf_load_hdr_opt)(void *ctx, void *searchby_res, __u32 len, __u64 flags) = (void *) 142;
 
 /*
  * bpf_store_hdr_opt
@@ -3456,7 +3529,9 @@ static long (* const bpf_load_hdr_opt)(struct bpf_sock_ops *skops, void *searchb
  * 	by searching the same option in the outgoing skb.
  *
  * 	This helper can only be called during
- * 	**BPF_SOCK_OPS_WRITE_HDR_OPT_CB**.
+ * 	**BPF_SOCK_OPS_WRITE_HDR_OPT_CB**, or from the
+ * 	**write_hdr_opt**\ () operator of the **bpf_tcp_ops**
+ * 	struct_ops.
  *
  *
  * Returns
@@ -3472,9 +3547,9 @@ static long (* const bpf_load_hdr_opt)(struct bpf_sock_ops *skops, void *searchb
  * 	**-EFAULT** on failure to parse the existing header options.
  *
  * 	**-EPERM** if the helper cannot be used under the current
- * 	*skops*\ **->op**.
+ * 	operation.
  */
-static long (* const bpf_store_hdr_opt)(struct bpf_sock_ops *skops, const void *from, __u32 len, __u64 flags) = (void *) 143;
+static long (* const bpf_store_hdr_opt)(void *ctx, const void *from, __u32 len, __u64 flags) = (void *) 143;
 
 /*
  * bpf_reserve_hdr_opt
@@ -3487,7 +3562,9 @@ static long (* const bpf_store_hdr_opt)(struct bpf_sock_ops *skops, const void *
  * 	the total number of bytes will be reserved.
  *
  * 	This helper can only be called during
- * 	**BPF_SOCK_OPS_HDR_OPT_LEN_CB**.
+ * 	**BPF_SOCK_OPS_HDR_OPT_LEN_CB**, or from the
+ * 	**hdr_opt_len**\ () operator of the **bpf_tcp_ops**
+ * 	struct_ops.
  *
  *
  * Returns
@@ -3498,9 +3575,9 @@ static long (* const bpf_store_hdr_opt)(struct bpf_sock_ops *skops, const void *
  * 	**-ENOSPC** if there is not enough space in the header.
  *
  * 	**-EPERM** if the helper cannot be used under the current
- * 	*skops*\ **->op**.
+ * 	operation.
  */
-static long (* const bpf_reserve_hdr_opt)(struct bpf_sock_ops *skops, __u32 len, __u64 flags) = (void *) 144;
+static long (* const bpf_reserve_hdr_opt)(void *ctx, __u32 len, __u64 flags) = (void *) 144;
 
 /*
  * bpf_inode_storage_get
