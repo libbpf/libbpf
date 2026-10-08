@@ -7340,6 +7340,29 @@ enum {
 					 */
 };
 
+/*
+ * Most callbacks of struct bpf_tcp_ops are placed in the slow
+ * path (e.g., one-shot connection setup or unlikely events like
+ * timers) and are invoked simply by defining non-NULL callbacks.
+ *
+ * Callbacks in the fast path, however, would incur noticeable
+ * overhead even when set to NULL, so they are disabled by default
+ * and must be explicitly enabled per socket via bpf_tcp_ops_set_flags().
+ *
+ * The flags are per-socket and shared by all effective bpf_tcp_ops
+ * programs.
+ */
+enum {
+	/* .rtt() */
+	BPF_TCP_OPS_FLAG_RTT			= (1 << 0),
+	/* .parse_hdr() */
+	BPF_TCP_OPS_FLAG_PARSE_HDR_OPT_ALL	= (1 << 1),
+	BPF_TCP_OPS_FLAG_PARSE_HDR_OPT_UNKNOWN	= (1 << 2),
+	/* .hdr_opt_len() and .write_hdr_opt() */
+	BPF_TCP_OPS_FLAG_WRITE_HDR_OPT		= (1 << 3),
+	BPF_TCP_OPS_FLAG_ALL			= (1 << 4) - 1,
+};
+
 /* List of TCP states. There is a build check in net/ipv4/tcp.c to detect
  * changes between the TCP and BPF versions. Ideally this should never happen.
  * If it does, we need to add code to convert them before calling
