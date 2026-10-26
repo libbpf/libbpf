@@ -422,7 +422,10 @@ union bpf_iter_link_info; /* defined in up-to-date linux/bpf.h */
 struct bpf_link_create_opts {
 	size_t sz; /* size of this struct for forward/backward compatibility */
 	__u32 flags;
-	union bpf_iter_link_info *iter_info;
+	union {
+		union bpf_iter_link_info *iter_info;
+		struct bpf_log_opts *log_opts;
+	};
 	__u32 iter_info_len;
 	__u32 target_btf_id;
 	union {

@@ -794,6 +794,8 @@ int bpf_link_create(int prog_fd, int target_fd,
 {
 	const size_t attr_sz = offsetofend(union bpf_attr, link_create);
 	__u32 target_btf_id, iter_info_len, relative_id;
+	union bpf_iter_link_info *iter_info = NULL;
+	struct bpf_log_opts *log_opts = NULL;
 	int fd, err, relative_fd;
 	union bpf_attr attr;
 
@@ -802,6 +804,14 @@ int bpf_link_create(int prog_fd, int target_fd,
 
 	iter_info_len = OPTS_GET(opts, iter_info_len, 0);
 	target_btf_id = OPTS_GET(opts, target_btf_id, 0);
+
+	if (iter_info_len && attach_type != BPF_TRACE_ITER)
+		return libbpf_err(-EINVAL);
+
+	if (iter_info_len)
+		iter_info = OPTS_GET(opts, iter_info, (void *)0);
+	else
+		log_opts = OPTS_GET(opts, log_opts, (void *)0);
 
 	/* validate we don't have unexpected combinations of non-zero fields */
 	if (iter_info_len || target_btf_id) {
@@ -824,7 +834,7 @@ int bpf_link_create(int prog_fd, int target_fd,
 
 	switch (attach_type) {
 	case BPF_TRACE_ITER:
-		attr.link_create.iter_info = ptr_to_u64(OPTS_GET(opts, iter_info, (void *)0));
+		attr.link_create.iter_info = ptr_to_u64(iter_info);
 		attr.link_create.iter_info_len = iter_info_len;
 		break;
 	case BPF_PERF_EVENT:
@@ -960,12 +970,12 @@ int bpf_link_create(int prog_fd, int target_fd,
 			return libbpf_err(-EINVAL);
 		break;
 	default:
-		if (!OPTS_ZEROED(opts, flags))
+		if (!OPTS_ZEROED(opts, iter_info_len))
 			return libbpf_err(-EINVAL);
 		break;
 	}
 proceed:
-	fd = sys_bpf_fd(BPF_LINK_CREATE, &attr, attr_sz);
+	fd = __sys_bpf_fd(BPF_LINK_CREATE, &attr, attr_sz, log_opts);
 	if (fd >= 0)
 		return fd;
 	/* we'll get EINVAL if LINK_CREATE doesn't support attaching fentry
@@ -973,6 +983,10 @@ proceed:
 	 */
 	err = -errno;
 	if (err != -EINVAL)
+		return libbpf_err(err);
+
+	/* bpf_raw_tracepoint_open() does not support log_opts */
+	if (log_opts)
 		return libbpf_err(err);
 
 	/* if user used features not supported by
