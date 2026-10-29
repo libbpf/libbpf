@@ -838,10 +838,6 @@ void bpf_program__unload(struct bpf_program *prog)
 		return;
 
 	zclose(prog->fd);
-
-	zfree(&prog->func_info);
-	zfree(&prog->line_info);
-	zfree(&prog->subprogs);
 }
 
 static void bpf_program__exit(struct bpf_program *prog)
@@ -850,6 +846,9 @@ static void bpf_program__exit(struct bpf_program *prog)
 		return;
 
 	bpf_program__unload(prog);
+	zfree(&prog->func_info);
+	zfree(&prog->line_info);
+	zfree(&prog->subprogs);
 	zfree(&prog->name);
 	zfree(&prog->sec_name);
 	zfree(&prog->insns);
