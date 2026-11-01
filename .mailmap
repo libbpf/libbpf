@@ -8,23 +8,24 @@ Brendan Jackman <brendan.jackman@linux.dev> <jackmanb@google.com>
 Changbin Du <changbin.du@intel.com> <changbin.du@gmail.com>
 Colin Ian King <colin.i.king@gmail.com> <colin.king@canonical.com>
 Dan Carpenter <error27@gmail.com> <dan.carpenter@oracle.com>
+Eric Dumazet <edumazet@kernel.org> <edumazet@google.com>
 Geliang Tang <geliang@kernel.org> <geliang.tang@suse.com>
 Haowen Bai <baihaowen88@gmail.com> <baihaowen@meizu.com>
 Herbert Xu <herbert@gondor.apana.org.au>
+JP Kobryn <jp.kobryn@linux.dev> <inwardvessel@gmail.com>
 Jakub Kicinski <kuba@kernel.org> <jakub.kicinski@netronome.com>
 Jason Xing <kerneljasonxing@gmail.com>  <kernelxing@tencent.com>
 Jean-Philippe Brucker <jpb@kernel.org> <jean-philippe@linaro.org>
 Jesper Dangaard Brouer <hawk@kernel.org> <brouer@redhat.com>
 Joe Damato <joe@dama.to> <jdamato@fastly.com>
-JP Kobryn <jp.kobryn@linux.dev> <inwardvessel@gmail.com>
 Kees Cook <kees@kernel.org> <keescook@chromium.org>
 Kuniyuki Iwashima <kuniyu@google.com> <kuniyu@amazon.co.jp>
 Leo Yan <leo.yan@linux.dev> <leo.yan@linaro.org>
 Mark Starovoytov <mstarovo@pm.me> <mstarovoitov@marvell.com>
 Ondrej Mosnáček <omosnacek@gmail.com> <omosnace@redhat.com>
 Puranjay Mohan <puranjay@kernel.org> <puranjay12@gmail.com>
-Quentin Monnet <qmo@kernel.org> <quentin@isovalent.com>
 Quentin Monnet <qmo@kernel.org> <quentin.monnet@netronome.com>
+Quentin Monnet <qmo@kernel.org> <quentin@isovalent.com>
 Stanislav Fomichev <sdf@fomichev.me> <sdf@google.com>
 Vadim Fedorenko <vadim.fedorenko@linux.dev> <vadfed@meta.com>
 Vadim Fedorenko <vadim.fedorenko@linux.dev> <vfedorenko@novek.ru>
