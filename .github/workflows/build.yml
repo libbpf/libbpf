@@ -74,7 +74,7 @@ jobs:
       - uses: ./.github/actions/setup
         name: Pre-Setup
 
-      - run: source /tmp/ci_setup && sudo -E $CI_ROOT/managers/ubuntu.sh
+      - run: source /tmp/ci_setup && sudo --preserve-env=REPO_ROOT $CI_ROOT/managers/ubuntu.sh
         if: matrix.arch == 'amd64'
         name: Setup
 
